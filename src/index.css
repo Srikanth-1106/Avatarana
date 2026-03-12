@@ -1,0 +1,34 @@
+:root {
+  --bg-main: #0F0F0E;
+  --text-main: #E4E1DE;
+  --primary: #DA5D65;
+  --accent-dark: #D6242F;
+  --muted: #5D574F;
+  --secondary: #5C9E9C;
+  --tertiary: #387490;
+  
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+}
