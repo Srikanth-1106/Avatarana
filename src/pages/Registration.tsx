@@ -73,34 +73,339 @@ export default function Registration() {
   if (submitted) {
     return (
       <div className="page-container success-view">
-        <div className="success-card glass-card">
-          <div className="success-icon-wrapper">
-            <CheckCircle2 size={80} className="success-icon" />
-            <Sparkles className="sparkle-1" />
-            <Sparkles className="sparkle-2" />
-          </div>
-          <h1 className="title highlight">Registration Successful!</h1>
-          <p className="subtitle">
-            Welcome to the AVATARANA 2026 family! Your community region lead will reach out to you with further instructions.
-          </p>
-          <div className="success-details">
-            <div className="detail-item">
-              <span className="detail-label">Participant</span>
-              <span className="detail-value">{formData.name}</span>
-            </div>
-            <div className="detail-item">
-              <span className="detail-label">Events</span>
-              <span className="detail-value">{selectedEvents.length} Selected</span>
-            </div>
-          </div>
-          <button onClick={() => {
-            setSubmitted(false);
-            setFormData({ name: '', phone: '', age: '', region: '', category: '' });
-            setSelectedEvents([]);
-          }} className="btn-primary">
-            Register Another Participant
-          </button>
+        <div className="background-decorations">
+          <div className="decor-blob blob-1"></div>
+          <div className="decor-blob blob-2" style={{background: 'var(--tertiary)'}}></div>
         </div>
+
+        <div className="success-content animate-scale-in">
+          <div className="celebration-header">
+            <div className="trophy-wrapper">
+              <div className="glow-ring"></div>
+              <Trophy size={60} className="trophy-icon" />
+              <Sparkles className="sparkle s1" />
+              <Sparkles className="sparkle s2" />
+              <Sparkles className="sparkle s3" />
+            </div>
+            <h1 className="title highlight">Registration Confirmed!</h1>
+            <p className="subtitle">You're officially part of AVATARANA 2026.</p>
+          </div>
+
+          <div className="ticket-card glass-card">
+            <div className="ticket-header">
+              <div className="ticket-type">PARTICIPANT PASS</div>
+              <div className="ticket-id">#{Math.random().toString(36).substring(2, 8).toUpperCase()}</div>
+            </div>
+            
+            <div className="ticket-body">
+              <div className="ticket-info">
+                <div className="info-node">
+                  <label>NAME</label>
+                  <span>{formData.name}</span>
+                </div>
+                <div className="info-node">
+                  <label>REGION</label>
+                  <span>{formData.region.replace('-', ' ').toUpperCase()}</span>
+                </div>
+                <div className="info-row">
+                  <div className="info-node">
+                    <label>CATEGORY</label>
+                    <span>{formData.category}</span>
+                  </div>
+                  <div className="info-node">
+                    <label>AGE</label>
+                    <span>{formData.age} Yrs</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="ticket-divider">
+                <div className="notch left"></div>
+                <div className="dash-line"></div>
+                <div className="notch right"></div>
+              </div>
+
+              <div className="ticket-events">
+                <label><Grid size={14} /> REGISTERED EVENTS</label>
+                <div className="event-pills">
+                  {selectedEvents.map(id => {
+                    const event = eventsData.find(e => e.id === id);
+                    return (
+                      <span key={id} className="event-pill">
+                        {event?.name || id}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="ticket-footer">
+              <div className="qr-placeholder">
+                <CheckCircle2 size={32} />
+              </div>
+              <div className="footer-text">
+                <p>Present this at the registration desk</p>
+                <small>Our regional lead will contact you at {formData.phone}</small>
+              </div>
+            </div>
+          </div>
+
+          <div className="success-actions">
+            <button onClick={() => {
+              setSubmitted(false);
+              setFormData({ name: '', phone: '', age: '', region: '', category: '' });
+              setSelectedEvents([]);
+            }} className="btn-secondary">
+              Register Another
+            </button>
+            <button onClick={() => window.print()} className="btn-outline">
+              Print Confirmation
+            </button>
+          </div>
+        </div>
+
+        <style>{`
+          .success-view {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 85vh;
+            perspective: 1000px;
+          }
+
+          .success-content {
+            width: 100%;
+            max-width: 550px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2.5rem;
+            z-index: 1;
+          }
+
+          .celebration-header {
+            text-align: center;
+            animation: fadeInDown 0.8s ease-out;
+          }
+
+          .trophy-wrapper {
+            position: relative;
+            margin-bottom: 1.5rem;
+            display: inline-flex;
+          }
+
+          .trophy-icon {
+            color: #FFD700;
+            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.4));
+            z-index: 2;
+          }
+
+          .glow-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: pulse-ring 2s infinite;
+          }
+
+          .sparkle {
+            position: absolute;
+            color: var(--secondary);
+            animation: sparkle-float 3s infinite;
+            opacity: 0;
+          }
+
+          .s1 { top: -10px; left: -20px; animation-delay: 0s; }
+          .s2 { top: -20px; right: -10px; animation-delay: 1s; }
+          .s3 { bottom: 0; right: -30px; animation-delay: 2s; }
+
+          /* Ticket Styling */
+          .ticket-card {
+            width: 100%;
+            padding: 0;
+            overflow: hidden;
+            background: rgba(22, 22, 20, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+            animation: slideUpFade 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+          }
+
+          .ticket-header {
+            background: linear-gradient(90deg, var(--primary), var(--accent-dark));
+            padding: 1.25rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          }
+
+          .ticket-type {
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            font-size: 0.8rem;
+            color: var(--bg-main);
+          }
+
+          .ticket-id {
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            color: rgba(0, 0, 0, 0.5);
+            font-size: 0.9rem;
+          }
+
+          .ticket-body {
+            padding: 2.5rem 2rem;
+          }
+
+          .ticket-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+          }
+
+          .info-node label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--muted);
+            letter-spacing: 0.05em;
+            margin-bottom: 0.4rem;
+          }
+
+          .info-node span {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+          }
+
+          .info-row {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 2rem;
+          }
+
+          .ticket-divider {
+            position: relative;
+            margin: 2.5rem -2rem;
+            display: flex;
+            align-items: center;
+          }
+
+          .notch {
+            width: 40px;
+            height: 40px;
+            background: var(--bg-main);
+            border-radius: 50%;
+            position: absolute;
+            z-index: 2;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+          }
+
+          .notch.left { left: -20px; }
+          .notch.right { right: -20px; }
+
+          .dash-line {
+            width: 100%;
+            height: 1px;
+            border-bottom: 2px dashed rgba(255, 255, 255, 0.1);
+          }
+
+          .ticket-events label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 1rem;
+          }
+
+          .event-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+          }
+
+          .event-pill {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+          }
+
+          .ticket-footer {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+          }
+
+          .qr-placeholder {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: black;
+          }
+
+          .footer-text p {
+            margin: 0;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--text-main);
+          }
+
+          .footer-text small {
+            color: var(--muted);
+            font-size: 0.75rem;
+          }
+
+          .success-actions {
+            display: flex;
+            gap: 1rem;
+            animation: fadeIn 1s ease-out 0.8s both;
+          }
+
+          /* New Animations */
+          @keyframes pulse-ring {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.2; }
+            100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
+          }
+
+          @keyframes sparkle-float {
+            0%, 100% { transform: scale(0) rotate(0deg); opacity: 0; }
+            50% { transform: scale(1.2) rotate(180deg); opacity: 0.8; }
+          }
+
+          @keyframes fadeInDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+          }
+
+          @keyframes slideUpFade {
+            from { transform: translateY(40px) rotateX(10deg); opacity: 0; }
+            to { transform: translateY(0) rotateX(0); opacity: 1; }
+          }
+
+          @media (max-width: 600px) {
+            .ticket-card { border-radius: 12px; }
+            .info-row { grid-template-columns: 1fr; gap: 1rem; }
+            .success-actions { flex-direction: column; width: 100%; }
+            .success-view { padding: 4rem 1rem; }
+          }
+        `}</style>
       </div>
     );
   }
