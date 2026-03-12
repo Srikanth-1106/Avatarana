@@ -6,6 +6,9 @@ import PointsSystem from './pages/Points';
 import Registration from './pages/Registration';
 import Leaderboard from './pages/Leaderboard';
 import Schedule from './pages/Schedule';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import { AuthProvider } from './context/AuthContext';
 import './App.css';
 
 // Placeholder empty components to prevent routing errors initially
@@ -20,22 +23,26 @@ const Placeholder = ({ title }: { title: string }) => (
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Home />} />
-          <Route path="events" element={<Events />} />
-          <Route path="points" element={<PointsSystem />} />
-          <Route path="register" element={<Registration />} />
-          <Route path="leaderboard" element={<Leaderboard />} />
-          <Route path="schedule" element={<Schedule />} />
-          
-          <Route path="about" element={<Placeholder title="About the Event" />} />
-          <Route path="gallery" element={<Placeholder title="Event Gallery" />} />
-          <Route path="contact" element={<Placeholder title="Contact Organizers" />} />
-        </Route>
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="events" element={<Events />} />
+            <Route path="points" element={<PointsSystem />} />
+            <Route path="register" element={<Registration />} />
+            <Route path="leaderboard" element={<Leaderboard />} />
+            <Route path="schedule" element={<Schedule />} />
+            <Route path="login" element={<Login />} />
+            <Route path="signup" element={<Signup />} />
+            
+            <Route path="about" element={<Placeholder title="About the Event" />} />
+            <Route path="gallery" element={<Placeholder title="Event Gallery" />} />
+            <Route path="contact" element={<Placeholder title="Contact Organizers" />} />
+          </Route>
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 
