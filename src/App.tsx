@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import Home from './pages/Home';
+import About from './pages/About';
 import Events from './pages/Events';
 import PointsSystem from './pages/Points';
 import Registration from './pages/Registration';
@@ -36,7 +37,7 @@ function App() {
             <Route path="login" element={<Login />} />
             <Route path="signup" element={<Signup />} />
             
-            <Route path="about" element={<Placeholder title="About the Event" />} />
+            <Route path="about" element={<About />} />
             <Route path="gallery" element={<Placeholder title="Event Gallery" />} />
             <Route path="contact" element={<Placeholder title="Contact Organizers" />} />
           </Route>

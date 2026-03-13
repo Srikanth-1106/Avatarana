@@ -1,5 +1,8 @@
-import { useState } from 'react';
-import { CheckCircle2, User, Phone, Calendar, MapPin, Grid, Trophy, Sparkles, Check, Info, Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
+import { CheckCircle2, User, Phone, Calendar, MapPin, Grid, Trophy, Sparkles, Check, Info, Loader2, Camera, Upload, Trash2, FileText } from 'lucide-react';
 import { eventsData } from '../data/eventsData';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -10,6 +13,12 @@ export default function Registration() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const [photo, setPhoto] = useState<string | null>(null);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const ticketRef = useRef<HTMLDivElement>(null);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -18,6 +27,25 @@ export default function Registration() {
     region: '',
     category: ''
   });
+
+  useEffect(() => {
+    const eventId = searchParams.get('event');
+    if (eventId) {
+      const event = eventsData.find(e => e.id === eventId);
+      if (event) {
+        setFormData(prev => ({ ...prev, category: event.category }));
+        setSelectedEvents([event.id]);
+        
+        // Minor delay to ensure state updates and category filters the events grid
+        setTimeout(() => {
+          const selectionGrid = document.querySelector('.events-selection-grid');
+          if (selectionGrid) {
+            selectionGrid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 100);
+      }
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +85,159 @@ export default function Registration() {
     }
   };
 
+  const handleDownload = async () => {
+    if (ticketRef.current) {
+      try {
+        setLoading(true);
+        
+        // Create a simplified ghost ticket for reliable capture
+        const ghostContainer = document.createElement('div');
+        ghostContainer.style.position = 'absolute';
+        ghostContainer.style.left = '-9999px';
+        ghostContainer.style.top = '0';
+        ghostContainer.style.width = '450px';
+        ghostContainer.style.background = '#0f0f0e';
+        ghostContainer.style.padding = '40px';
+        document.body.appendChild(ghostContainer);
+
+        const ticketMarkup = `
+          <div style="background: #161614; border: 1px solid #333; border-radius: 16px; overflow: hidden; font-family: sans-serif; color: #e4e1de; width: 100%;">
+            <div style="background: #da5d65; color: #ffffff; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; letter-spacing: 0.1em;">
+              <span style="font-size: 12px;">PARTICIPANT PASS</span>
+              <span style="font-size: 12px; opacity: 0.8;">#${Math.random().toString(36).substring(2, 8).toUpperCase()}</span>
+            </div>
+            
+            <div style="padding: 30px; display: flex; gap: 20px; align-items: flex-start;">
+              ${photo ? `<div style="width: 120px; height: 140px; border-radius: 8px; overflow: hidden; border: 1px solid #444; background: #000; flex-shrink: 0;">
+                <img src="${photo}" style="width: 100%; height: 100%; object-fit: cover;" />
+              </div>` : ''}
+              
+              <div style="flex: 1; display: flex; flex-direction: column; gap: 15px;">
+                <div>
+                  <label style="display: block; font-size: 10px; color: #777; margin-bottom: 4px; font-weight: bold;">NAME</label>
+                  <span style="font-size: 18px; font-weight: bold; color: #ffffff;">${formData.name}</span>
+                </div>
+                <div>
+                  <label style="display: block; font-size: 10px; color: #777; margin-bottom: 4px; font-weight: bold;">REGION</label>
+                  <span style="font-size: 16px; font-weight: bold; color: #ffffff;">${formData.region.replace('-', ' ').toUpperCase()}</span>
+                </div>
+                <div style="display: flex; gap: 20px;">
+                  <div>
+                    <label style="display: block; font-size: 10px; color: #777; margin-bottom: 4px; font-weight: bold;">CATEGORY</label>
+                    <span style="font-size: 14px; color: #ffffff;">${formData.category}</span>
+                  </div>
+                  <div>
+                    <label style="display: block; font-size: 10px; color: #777; margin-bottom: 4px; font-weight: bold;">AGE</label>
+                    <span style="font-size: 14px; color: #ffffff;">${formData.age} Yrs</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="padding: 20px; border-top: 1px dashed #333; background: #1a1a18;">
+              <label style="display: block; font-size: 10px; color: #da5d65; margin-bottom: 10px; font-weight: bold;">REGISTERED EVENTS</label>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                ${selectedEvents.map(id => {
+                  const event = eventsData.find(e => e.id === id);
+                  return `<span style="background: rgba(228,225,222,0.1); border: 1px solid #333; padding: 4px 10px; border-radius: 6px; font-size: 12px; color: #e4e1de;">${event?.name || id}</span>`;
+                }).join('')}
+              </div>
+            </div>
+
+            <div style="padding: 20px; background: rgba(0,0,0,0.2); display: flex; align-items: center; gap: 15px; border-top: 1px solid #222;">
+              <div style="width: 40px; height: 40px; background: #ffffff; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #000;">✓</div>
+              <div style="flex: 1;">
+                <p style="margin: 0; font-size: 13px; font-weight: bold; color: #ffffff;">Present this at registration desk</p>
+                <p style="margin: 0; font-size: 11px; color: #777;">Avatarana 2026 - Official Participant ID</p>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        ghostContainer.innerHTML = ticketMarkup;
+
+        // Ensure images in ghost are loaded
+        const ghostImages = ghostContainer.querySelectorAll('img');
+        await Promise.all(Array.from(ghostImages).map(img => {
+          if (img.complete) return Promise.resolve();
+          return new Promise(resolve => { img.onload = resolve; img.onerror = resolve; });
+        }));
+
+        const canvas = await html2canvas(ghostContainer, {
+          backgroundColor: '#0f0f0e',
+          scale: 2,
+          logging: false,
+          useCORS: true,
+          allowTaint: true
+        });
+        
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'px',
+          format: [canvas.width / 2, canvas.height / 2]
+        });
+        
+        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 2, canvas.height / 2);
+        pdf.save(`Avatarana_Pass_${formData.name.replace(/\s+/g, '_')}.pdf`);
+        
+        document.body.removeChild(ghostContainer);
+      } catch (err) {
+        console.error("PDF generation failed:", err);
+        alert("Failed to generate PDF. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const startCamera = async () => {
+    setIsCameraOpen(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      console.error("Camera access denied:", err);
+      alert("Could not access camera. Please check permissions.");
+      setIsCameraOpen(false);
+    }
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(video, 0, 0);
+      const dataUrl = canvas.toDataURL('image/jpeg');
+      setPhoto(dataUrl);
+      stopCamera();
+    }
+  };
+
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+    }
+    setIsCameraOpen(false);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhoto(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const toggleEvent = (eventId: string) => {
     setSelectedEvents(prev => 
       prev.includes(eventId) 
@@ -91,30 +272,37 @@ export default function Registration() {
             <p className="subtitle">You're officially part of AVATARANA 2026.</p>
           </div>
 
-          <div className="ticket-card glass-card">
+          <div className="ticket-card glass-card" ref={ticketRef}>
             <div className="ticket-header">
               <div className="ticket-type">PARTICIPANT PASS</div>
               <div className="ticket-id">#{Math.random().toString(36).substring(2, 8).toUpperCase()}</div>
             </div>
             
             <div className="ticket-body">
-              <div className="ticket-info">
-                <div className="info-node">
-                  <label>NAME</label>
-                  <span>{formData.name}</span>
-                </div>
-                <div className="info-node">
-                  <label>REGION</label>
-                  <span>{formData.region.replace('-', ' ').toUpperCase()}</span>
-                </div>
-                <div className="info-row">
+              <div className="ticket-main-info">
+                {photo && (
+                  <div className="ticket-photo-wrapper">
+                    <img src={photo} alt="Participant" className="ticket-photo" />
+                  </div>
+                )}
+                <div className="ticket-info">
                   <div className="info-node">
-                    <label>CATEGORY</label>
-                    <span>{formData.category}</span>
+                    <label>NAME</label>
+                    <span>{formData.name}</span>
                   </div>
                   <div className="info-node">
-                    <label>AGE</label>
-                    <span>{formData.age} Yrs</span>
+                    <label>REGION</label>
+                    <span>{formData.region.replace('-', ' ').toUpperCase()}</span>
+                  </div>
+                  <div className="info-row">
+                    <div className="info-node">
+                      <label>CATEGORY</label>
+                      <span>{formData.category}</span>
+                    </div>
+                    <div className="info-node">
+                      <label>AGE</label>
+                      <span>{formData.age} Yrs</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -152,15 +340,16 @@ export default function Registration() {
           </div>
 
           <div className="success-actions">
+            <button onClick={handleDownload} className="btn-primary">
+              <FileText size={18} /> Download PDF Pass
+            </button>
             <button onClick={() => {
               setSubmitted(false);
               setFormData({ name: '', phone: '', age: '', region: '', category: '' });
               setSelectedEvents([]);
+              setPhoto(null);
             }} className="btn-secondary">
               Register Another
-            </button>
-            <button onClick={() => window.print()} className="btn-outline">
-              Print Confirmation
             </button>
           </div>
         </div>
@@ -265,6 +454,29 @@ export default function Registration() {
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
+            flex: 1;
+          }
+
+          .ticket-main-info {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+          }
+
+          .ticket-photo-wrapper {
+            width: 150px;
+            height: 180px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+            flex-shrink: 0;
+          }
+
+          .ticket-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
           }
 
           .info-node label {
@@ -516,6 +728,50 @@ export default function Registration() {
                 </div>
               </div>
             </div>
+
+            {/* Photo Section */}
+            <div className="form-group photo-upload-section">
+              <label>Participant Photo</label>
+              <div className="photo-controls">
+                {!photo && !isCameraOpen && (
+                  <div className="photo-placeholder-grid">
+                    <button type="button" onClick={startCamera} className="photo-btn">
+                      <Camera size={20} /> Take Photo
+                    </button>
+                    <button type="button" onClick={() => document.getElementById('file-upload')?.click()} className="photo-btn">
+                      <Upload size={20} /> Upload
+                    </button>
+                    <input 
+                      type="file" 
+                      id="file-upload" 
+                      hidden 
+                      accept="image/*" 
+                      onChange={handleFileUpload} 
+                    />
+                  </div>
+                )}
+
+                {isCameraOpen && (
+                  <div className="camera-view">
+                    <video ref={videoRef} autoPlay playsInline className="video-preview" />
+                    <div className="camera-actions">
+                      <button type="button" onClick={capturePhoto} className="btn-primary">Capture</button>
+                      <button type="button" onClick={stopCamera} className="btn-outline">Cancel</button>
+                    </div>
+                  </div>
+                )}
+
+                {photo && !isCameraOpen && (
+                  <div className="photo-preview-container">
+                    <img src={photo} alt="Preview" className="photo-preview" />
+                    <button type="button" onClick={() => setPhoto(null)} className="delete-photo">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                )}
+              </div>
+              <canvas ref={canvasRef} style={{display: 'none'}} />
+            </div>
           </div>
 
           {/* Right Column: Events Selection */}
@@ -685,6 +941,110 @@ export default function Registration() {
 
         input:focus + .input-icon, select:focus + .input-icon {
           color: var(--primary);
+        }
+
+        /* Photo Upload Styling */
+        .photo-upload-section {
+          margin-top: 1rem;
+        }
+
+        .photo-controls {
+          min-height: 120px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(15, 15, 14, 0.4);
+          border: 1px dashed rgba(228, 225, 222, 0.2);
+          border-radius: 16px;
+          overflow: hidden;
+          position: relative;
+        }
+
+        .photo-placeholder-grid {
+          display: flex;
+          gap: 1rem;
+          padding: 2rem;
+        }
+
+        .photo-btn {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.5rem;
+          background: rgba(228, 225, 222, 0.05);
+          border: 1px solid rgba(228, 225, 222, 0.1);
+          color: var(--text-main);
+          padding: 1rem 1.5rem;
+          border-radius: 12px;
+          cursor: pointer;
+          font-weight: 600;
+          font-size: 0.85rem;
+          transition: all 0.2s;
+        }
+
+        .photo-btn:hover {
+          background: rgba(228, 225, 222, 0.1);
+          border-color: var(--primary);
+        }
+
+        .camera-view {
+          width: 100%;
+          position: relative;
+          background: #000;
+        }
+
+        .video-preview {
+          width: 100%;
+          max-height: 300px;
+          display: block;
+        }
+
+        .camera-actions {
+          position: absolute;
+          bottom: 1rem;
+          left: 0;
+          right: 0;
+          display: flex;
+          justify-content: center;
+          gap: 1rem;
+        }
+
+        .photo-preview-container {
+          position: relative;
+          width: 100%;
+          height: 200px;
+          display: flex;
+          justify-content: center;
+          background: #000;
+        }
+
+        .photo-preview {
+          height: 100%;
+          width: auto;
+          max-width: 100%;
+          object-fit: contain;
+        }
+
+        .delete-photo {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          background: rgba(239, 68, 68, 0.8);
+          border: none;
+          color: white;
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .delete-photo:hover {
+          background: #ef4444;
+          transform: scale(1.1);
         }
 
         /* Custom Events Grid */

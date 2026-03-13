@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { eventsData } from '../data/eventsData';
 import { Users, User, Medal } from 'lucide-react';
 
@@ -32,22 +33,31 @@ export default function Events() {
 
       <div className="events-grid">
         {filteredEvents.map(event => (
-          <div key={event.id} className="event-card glass-card">
-            <div className="event-header">
-              <span className="event-badge">{event.category} {event.subCategory ? `- ${event.subCategory}` : ''}</span>
-              <span className="event-type">
-                {event.type === 'Group' ? <Users size={16} /> : <User size={16} />}
-                {event.type}
-              </span>
+          <Link 
+            key={event.id} 
+            to={`/register?event=${event.id}`} 
+            className="event-card-link"
+          >
+            <div className="event-card glass-card">
+              <div className="event-header">
+                <span className="event-badge">{event.category} {event.subCategory ? `- ${event.subCategory}` : ''}</span>
+                <span className="event-type">
+                  {event.type === 'Group' ? <Users size={16} /> : <User size={16} />}
+                  {event.type}
+                </span>
+              </div>
+              <h3 className="event-title">{event.name}</h3>
+              <p className="event-desc">{event.description}</p>
+              
+              <div className="event-points">
+                <Medal size={16} className="icon-primary"/>
+                <span>Points: 1st ({event.points.first}) | 2nd ({event.points.second}) {event.points.third && `| 3rd (${event.points.third})`}</span>
+              </div>
+              <div className="event-footer">
+                <span className="register-now">Register for this event →</span>
+              </div>
             </div>
-            <h3 className="event-title">{event.name}</h3>
-            <p className="event-desc">{event.description}</p>
-            
-            <div className="event-points">
-              <Medal size={16} className="icon-primary"/>
-              <span>Points: 1st ({event.points.first}) | 2nd ({event.points.second}) {event.points.third && `| 3rd (${event.points.third})`}</span>
-            </div>
-          </div>
+          </Link>
         ))}
       </div>
 
@@ -83,10 +93,34 @@ export default function Events() {
           grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
           gap: 1.5rem;
         }
+        .event-card-link {
+          text-decoration: none;
+          color: inherit;
+          display: block;
+          transition: transform 0.3s ease;
+        }
+        .event-card-link:hover {
+          transform: translateY(-8px);
+        }
         .event-card {
           display: flex;
           flex-direction: column;
           gap: 1rem;
+          height: 100%;
+        }
+        .event-footer {
+          margin-top: auto;
+          padding-top: 1rem;
+          border-top: 1px solid rgba(228, 225, 222, 0.05);
+        }
+        .register-now {
+          font-size: 0.9rem;
+          font-weight: 700;
+          color: var(--primary);
+          transition: opacity 0.2s;
+        }
+        .event-card-link:hover .register-now {
+          opacity: 0.8;
         }
         .event-header {
           display: flex;
