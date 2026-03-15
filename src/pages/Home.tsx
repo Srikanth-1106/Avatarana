@@ -2,6 +2,38 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Trophy, Medal, CalendarHeart, ArrowRight, Sparkles, MessageCircle, Heart } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { motion } from 'framer-motion';
+import { AnimatedSection } from '../components/AnimatedSection';
+
+// SVG Ring Component
+const CountdownRing = ({ value, label, total }: { value: number; label: string; total: number }) => {
+  const radius = 35;
+  const circumference = 2 * Math.PI * radius;
+  // Progress logic
+  const strokeDashoffset = circumference - (value / total) * circumference;
+
+  return (
+    <div className="countdown-ring-container">
+      <svg className="countdown-svg" viewBox="0 0 80 80">
+        <circle
+          className="countdown-bg-ring"
+          cx="40" cy="40" r={radius}
+        />
+        <motion.circle
+          className="countdown-progress-ring"
+          cx="40" cy="40" r={radius}
+          strokeDasharray={circumference}
+          animate={{ strokeDashoffset }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        />
+      </svg>
+      <div className="countdown-content">
+        <span className="countdown-value">{value}</span>
+        <span className="countdown-label">{label}</span>
+      </div>
+    </div>
+  );
+};
 
 // Countdown Timer Component
 const CountdownTimer = () => {
@@ -33,23 +65,11 @@ const CountdownTimer = () => {
   }, []);
 
   return (
-    <div className="countdown-container">
-      <div className="countdown-box">
-        <span className="countdown-value">{timeLeft.days}</span>
-        <span className="countdown-label">Days</span>
-      </div>
-      <div className="countdown-box">
-        <span className="countdown-value">{timeLeft.hours}</span>
-        <span className="countdown-label">Hours</span>
-      </div>
-      <div className="countdown-box">
-        <span className="countdown-value">{timeLeft.minutes}</span>
-        <span className="countdown-label">Mins</span>
-      </div>
-      <div className="countdown-box">
-        <span className="countdown-value">{timeLeft.seconds}</span>
-        <span className="countdown-label">Secs</span>
-      </div>
+    <div className="countdown-container rings-layout">
+      <CountdownRing value={timeLeft.days} label="Days" total={365} />
+      <CountdownRing value={timeLeft.hours} label="Hours" total={24} />
+      <CountdownRing value={timeLeft.minutes} label="Mins" total={60} />
+      <CountdownRing value={timeLeft.seconds} label="Secs" total={60} />
     </div>
   );
 };
@@ -63,7 +83,7 @@ const RegistrationCounter = () => {
       const { count, error } = await supabase
         .from('registrations')
         .select('*', { count: 'exact', head: true });
-      
+
       if (!error && count !== null) {
         setRegCount(count + 214); // Adding user's specific starting number for effect
       } else {
@@ -83,6 +103,7 @@ const RegistrationCounter = () => {
 
 export default function Home() {
   const [count, setCount] = useState(0);
+  const [selectedShoutout, setSelectedShoutout] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -108,18 +129,43 @@ export default function Home() {
 
   return (
     <div className="page-container home-page">
+      {/* Shoutout Modal Overlay — tap again to dismiss */}
+      {selectedShoutout && (
+        <div className="shoutout-modal-overlay" onClick={() => setSelectedShoutout(null)}>
+          <div className="shoutout-modal-card glass-card">
+            <MessageCircle size={36} className="icon-primary" />
+            <p className="modal-text">{selectedShoutout}</p>
+            <span className="modal-hint">Tap anywhere to close</span>
+          </div>
+        </div>
+      )}
+
       {/* Hero Section */}
-      <section className="hero-section">
+      <AnimatedSection className="hero-section" direction="up">
         <div className="hero-content-inner">
-          <div className="badge animate-slide-down">AVATARANA 2026</div>
-          <h1 className="title">One Arena. One Community.<br/><span className="highlight">Endless Excitement.</span></h1>
-          
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", bounce: 0.5 }}
+            className="badge"
+          >
+            AVATARANA 2026
+          </motion.div>
+          <motion.h1
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="title"
+          >
+            One Arena. One Community.<br /><span className="highlight">Endless Excitement.</span>
+          </motion.h1>
+
           <CountdownTimer />
-          
+
           <p className="subtitle single-line">
             Join the biggest community sports festival. Compete, celebrate, and create unforgettable memories.
           </p>
-          
+
           <RegistrationCounter />
 
           <div className="hero-actions">
@@ -131,48 +177,48 @@ export default function Home() {
             </Link>
           </div>
         </div>
-      </section>
+      </AnimatedSection>
 
       {/* Stats Section */}
-      <section className="stats-section">
-        <div className="stat-card glass-card">
+      <AnimatedSection className="stats-section" direction="up" staggerChildren={true}>
+        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="stat-card glass-card">
           <Users className="icon-secondary" size={40} />
           <h2 className="stat-number">5</h2>
           <p className="stat-label">Categories</p>
-        </div>
-        <div className="stat-card glass-card">
+        </motion.div>
+        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="stat-card glass-card">
           <Trophy className="icon-primary" size={40} />
           <h2 className="stat-number">{count}+</h2>
           <p className="stat-label">Events</p>
-        </div>
-        <div className="stat-card glass-card">
+        </motion.div>
+        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="stat-card glass-card">
           <Medal className="icon-tertiary" size={40} />
           <h2 className="stat-number">All</h2>
           <p className="stat-label">Ages Welcome</p>
-        </div>
-        <div className="stat-card glass-card">
+        </motion.div>
+        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="stat-card glass-card">
           <CalendarHeart className="icon-secondary" size={40} />
           <h2 className="stat-number">1</h2>
           <p className="stat-label">Community</p>
-        </div>
-      </section>
+        </motion.div>
+      </AnimatedSection>
 
       {/* Community Wall */}
-      <section className="community-wall">
+      <AnimatedSection className="community-wall" direction="up">
         <div className="section-header center-align">
-          <h2 style={{fontSize: '1.5rem', opacity: 0.6}}><MessageCircle size={20} style={{verticalAlign: 'middle', marginRight: '0.5rem'}}/> Community Shoutouts</h2>
+          <h2 style={{ fontSize: '1.5rem', opacity: 0.6 }}><MessageCircle size={20} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} /> Community Shoutouts</h2>
         </div>
         <div className="marquee">
           {[...shoutouts, ...shoutouts].map((text, i) => (
-            <div key={i} className="shoutout-card">
+            <div key={i} className="shoutout-card" onClick={() => setSelectedShoutout(text)}>
               {text}
             </div>
           ))}
         </div>
-      </section>
+      </AnimatedSection>
 
       {/* Intro Section */}
-      <section className="intro-section">
+      <AnimatedSection className="intro-section" direction="up">
         <div className="section-header">
           <h2>About The Festival</h2>
           <div className="divider"></div>
@@ -198,10 +244,10 @@ export default function Home() {
             <Link to="/points" className="btn-outline">Learn Scoring System</Link>
           </div>
         </div>
-      </section>
+      </AnimatedSection>
 
       {/* Brand Mention */}
-      <section className="brand-mention">
+      <AnimatedSection className="brand-mention" direction="up">
         <a href="https://aapaavani.com/" target="_blank" rel="noopener noreferrer" className="brand-link">
           <div className="brand-content">
             <div className="brand-logo-container">
@@ -217,7 +263,7 @@ export default function Home() {
             </div>
           </div>
         </a>
-      </section>
+      </AnimatedSection>
     </div>
   );
 }

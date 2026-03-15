@@ -6,6 +6,8 @@ import { CheckCircle2, User, Phone, Calendar, MapPin, Grid, Trophy, Sparkles, Ch
 import { eventsData } from '../data/eventsData';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import { motion } from 'framer-motion';
+import { AnimatedSection } from '../components/AnimatedSection';
 
 export default function Registration() {
   const [submitted, setSubmitted] = useState(false);
@@ -19,7 +21,7 @@ export default function Registration() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ticketRef = useRef<HTMLDivElement>(null);
-  
+
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -30,19 +32,12 @@ export default function Registration() {
 
   useEffect(() => {
     const eventId = searchParams.get('event');
+    window.scrollTo(0, 0);
     if (eventId) {
       const event = eventsData.find(e => e.id === eventId);
       if (event) {
         setFormData(prev => ({ ...prev, category: event.category }));
         setSelectedEvents([event.id]);
-        
-        // Minor delay to ensure state updates and category filters the events grid
-        setTimeout(() => {
-          const selectionGrid = document.querySelector('.events-selection-grid');
-          if (selectionGrid) {
-            selectionGrid.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }, 100);
       }
     }
   }, [searchParams]);
@@ -89,7 +84,7 @@ export default function Registration() {
     if (ticketRef.current) {
       try {
         setLoading(true);
-        
+
         // Create a simplified ghost ticket for reliable capture
         const ghostContainer = document.createElement('div');
         ghostContainer.style.position = 'absolute';
@@ -138,9 +133,9 @@ export default function Registration() {
               <label style="display: block; font-size: 10px; color: #da5d65; margin-bottom: 10px; font-weight: bold;">REGISTERED EVENTS</label>
               <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                 ${selectedEvents.map(id => {
-                  const event = eventsData.find(e => e.id === id);
-                  return `<span style="background: rgba(228,225,222,0.1); border: 1px solid #333; padding: 4px 10px; border-radius: 6px; font-size: 12px; color: #e4e1de;">${event?.name || id}</span>`;
-                }).join('')}
+          const event = eventsData.find(e => e.id === id);
+          return `<span style="background: rgba(228,225,222,0.1); border: 1px solid #333; padding: 4px 10px; border-radius: 6px; font-size: 12px; color: #e4e1de;">${event?.name || id}</span>`;
+        }).join('')}
               </div>
             </div>
 
@@ -153,7 +148,7 @@ export default function Registration() {
             </div>
           </div>
         `;
-        
+
         ghostContainer.innerHTML = ticketMarkup;
 
         // Ensure images in ghost are loaded
@@ -170,17 +165,17 @@ export default function Registration() {
           useCORS: true,
           allowTaint: true
         });
-        
+
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF({
           orientation: 'portrait',
           unit: 'px',
           format: [canvas.width / 2, canvas.height / 2]
         });
-        
+
         pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 2, canvas.height / 2);
         pdf.save(`Avatarana_Pass_${formData.name.replace(/\s+/g, '_')}.pdf`);
-        
+
         document.body.removeChild(ghostContainer);
       } catch (err) {
         console.error("PDF generation failed:", err);
@@ -239,9 +234,9 @@ export default function Registration() {
   };
 
   const toggleEvent = (eventId: string) => {
-    setSelectedEvents(prev => 
-      prev.includes(eventId) 
-        ? prev.filter(id => id !== eventId) 
+    setSelectedEvents(prev =>
+      prev.includes(eventId)
+        ? prev.filter(id => id !== eventId)
         : [...prev, eventId]
     );
   };
@@ -256,10 +251,15 @@ export default function Registration() {
       <div className="page-container success-view">
         <div className="background-decorations">
           <div className="decor-blob blob-1"></div>
-          <div className="decor-blob blob-2" style={{background: 'var(--tertiary)'}}></div>
+          <div className="decor-blob blob-2" style={{ background: 'var(--tertiary)' }}></div>
         </div>
 
-        <div className="success-content animate-scale-in">
+        <motion.div
+          className="success-content"
+          initial={{ scale: 0.8, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          transition={{ type: "spring", bounce: 0.4, duration: 0.8 }}
+        >
           <div className="celebration-header">
             <div className="trophy-wrapper">
               <div className="glow-ring"></div>
@@ -277,7 +277,7 @@ export default function Registration() {
               <div className="ticket-type">PARTICIPANT PASS</div>
               <div className="ticket-id">#{Math.random().toString(36).substring(2, 8).toUpperCase()}</div>
             </div>
-            
+
             <div className="ticket-body">
               <div className="ticket-main-info">
                 {photo && (
@@ -352,7 +352,7 @@ export default function Registration() {
               Register Another
             </button>
           </div>
-        </div>
+        </motion.div>
 
         <style>{`
           .success-view {
@@ -629,193 +629,195 @@ export default function Registration() {
         <div className="decor-blob blob-2"></div>
       </div>
 
-      <div className="section-header">
+      <AnimatedSection className="section-header" direction="up">
         <div className="badge animate-slide-down">REGISTRATION OPEN</div>
         <h1 className="title animate-fade-in"><span className="highlight">Join the</span> Championship</h1>
         <p className="subtitle animate-fade-in-delayed">Fill out the details below to secure your spot in AVATARANA 2026.</p>
         <div className="divider"></div>
-      </div>
+      </AnimatedSection>
 
-      <form className="registration-form" onSubmit={handleSubmit}>
-        <div className="form-layout-grid">
-          {/* Left Column: Personal Info */}
-          <div className="form-section glass-card animate-slide-up">
-            <h3 className="section-title"><User size={20} /> Personal Information</h3>
-            <div className="form-group">
-              <label htmlFor="name">Full Name</label>
-              <div className="input-wrapper">
-                <User className="input-icon" size={18} />
-                <input 
-                  type="text" 
-                  id="name" 
-                  required 
-                  placeholder="Enter full name" 
-                  value={formData.name}
-                  onChange={e => setFormData({...formData, name: e.target.value})}
-                />
-              </div>
-            </div>
-
-            <div className="form-row">
+      <AnimatedSection className="registration-form" direction="up" delay={0.2}>
+        <form onSubmit={handleSubmit}>
+          <div className="form-layout-grid">
+            {/* Left Column: Personal Info */}
+            <div className="form-section glass-card animate-slide-up">
+              <h3 className="section-title"><User size={20} /> Personal Information</h3>
               <div className="form-group">
-                <label htmlFor="phone">Phone Number</label>
+                <label htmlFor="name">Full Name</label>
                 <div className="input-wrapper">
-                  <Phone className="input-icon" size={18} />
-                  <input 
-                    type="tel" 
-                    id="phone" 
-                    required 
-                    placeholder="+91 xxxxxxxxxx" 
-                    value={formData.phone}
-                    onChange={e => setFormData({...formData, phone: e.target.value})}
+                  <User className="input-icon" size={18} />
+                  <input
+                    type="text"
+                    id="name"
+                    required
+                    placeholder="Enter full name"
+                    value={formData.name}
+                    onChange={e => setFormData({ ...formData, name: e.target.value })}
                   />
                 </div>
               </div>
-              <div className="form-group">
-                <label htmlFor="age">Age</label>
-                <div className="input-wrapper">
-                  <Calendar className="input-icon" size={18} />
-                  <input 
-                    type="number" 
-                    id="age" 
-                    required 
-                    min="3" 
-                    max="100" 
-                    placeholder="Years" 
-                    value={formData.age}
-                    onChange={e => setFormData({...formData, age: e.target.value})}
-                  />
-                </div>
-              </div>
-            </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="region">Region</label>
-                <div className="input-wrapper">
-                  <MapPin className="input-icon" size={18} />
-                  <select 
-                    id="region" 
-                    required
-                    value={formData.region}
-                    onChange={e => setFormData({...formData, region: e.target.value})}
-                  >
-                    <option value="">Select region...</option>
-                    <option value="mangalore-north">Mangalore North</option>
-                    <option value="mangalore-south">Mangalore South</option>
-                    <option value="udupi">Udupi</option>
-                    <option value="puttur">Puttur</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-              </div>
-              <div className="form-group">
-                <label htmlFor="category">Category</label>
-                <div className="input-wrapper">
-                  <Grid className="input-icon" size={18} />
-                  <select 
-                    id="category" 
-                    required
-                    value={formData.category}
-                    onChange={e => setFormData({...formData, category: e.target.value})}
-                  >
-                    <option value="">Select category...</option>
-                    <option value="Men">Men</option>
-                    <option value="Women">Women</option>
-                    <option value="Kids">Kids</option>
-                    <option value="Senior Citizens">Senior Citizens</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* Photo Section */}
-            <div className="form-group photo-upload-section">
-              <label>Participant Photo</label>
-              <div className="photo-controls">
-                {!photo && !isCameraOpen && (
-                  <div className="photo-placeholder-grid">
-                    <button type="button" onClick={startCamera} className="photo-btn">
-                      <Camera size={20} /> Take Photo
-                    </button>
-                    <button type="button" onClick={() => document.getElementById('file-upload')?.click()} className="photo-btn">
-                      <Upload size={20} /> Upload
-                    </button>
-                    <input 
-                      type="file" 
-                      id="file-upload" 
-                      hidden 
-                      accept="image/*" 
-                      onChange={handleFileUpload} 
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="phone">Phone Number</label>
+                  <div className="input-wrapper">
+                    <Phone className="input-icon" size={18} />
+                    <input
+                      type="tel"
+                      id="phone"
+                      required
+                      placeholder="+91 xxxxxxxxxx"
+                      value={formData.phone}
+                      onChange={e => setFormData({ ...formData, phone: e.target.value })}
                     />
                   </div>
-                )}
-
-                {isCameraOpen && (
-                  <div className="camera-view">
-                    <video ref={videoRef} autoPlay playsInline className="video-preview" />
-                    <div className="camera-actions">
-                      <button type="button" onClick={capturePhoto} className="btn-primary">Capture</button>
-                      <button type="button" onClick={stopCamera} className="btn-outline">Cancel</button>
-                    </div>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="age">Age</label>
+                  <div className="input-wrapper">
+                    <Calendar className="input-icon" size={18} />
+                    <input
+                      type="number"
+                      id="age"
+                      required
+                      min="3"
+                      max="100"
+                      placeholder="Years"
+                      value={formData.age}
+                      onChange={e => setFormData({ ...formData, age: e.target.value })}
+                    />
                   </div>
-                )}
+                </div>
+              </div>
 
-                {photo && !isCameraOpen && (
-                  <div className="photo-preview-container">
-                    <img src={photo} alt="Preview" className="photo-preview" />
-                    <button type="button" onClick={() => setPhoto(null)} className="delete-photo">
-                      <Trash2 size={16} />
-                    </button>
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="region">Region</label>
+                  <div className="input-wrapper">
+                    <MapPin className="input-icon" size={18} />
+                    <select
+                      id="region"
+                      required
+                      value={formData.region}
+                      onChange={e => setFormData({ ...formData, region: e.target.value })}
+                    >
+                      <option value="">Select region...</option>
+                      <option value="mangalore-north">Mangalore North</option>
+                      <option value="mangalore-south">Mangalore South</option>
+                      <option value="udupi">Udupi</option>
+                      <option value="puttur">Puttur</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="category">Category</label>
+                  <div className="input-wrapper">
+                    <Grid className="input-icon" size={18} />
+                    <select
+                      id="category"
+                      required
+                      value={formData.category}
+                      onChange={e => setFormData({ ...formData, category: e.target.value })}
+                    >
+                      <option value="">Select category...</option>
+                      <option value="Men">Men</option>
+                      <option value="Women">Women</option>
+                      <option value="Kids">Kids</option>
+                      <option value="Senior Citizens">Senior Citizens</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Photo Section */}
+              <div className="form-group photo-upload-section">
+                <label>Participant Photo</label>
+                <div className="photo-controls">
+                  {!photo && !isCameraOpen && (
+                    <div className="photo-placeholder-grid">
+                      <button type="button" onClick={startCamera} className="photo-btn">
+                        <Camera size={20} /> Take Photo
+                      </button>
+                      <button type="button" onClick={() => document.getElementById('file-upload')?.click()} className="photo-btn">
+                        <Upload size={20} /> Upload
+                      </button>
+                      <input
+                        type="file"
+                        id="file-upload"
+                        hidden
+                        accept="image/*"
+                        onChange={handleFileUpload}
+                      />
+                    </div>
+                  )}
+
+                  {isCameraOpen && (
+                    <div className="camera-view">
+                      <video ref={videoRef} autoPlay playsInline className="video-preview" />
+                      <div className="camera-actions">
+                        <button type="button" onClick={capturePhoto} className="btn-primary">Capture</button>
+                        <button type="button" onClick={stopCamera} className="btn-outline">Cancel</button>
+                      </div>
+                    </div>
+                  )}
+
+                  {photo && !isCameraOpen && (
+                    <div className="photo-preview-container">
+                      <img src={photo} alt="Preview" className="photo-preview" />
+                      <button type="button" onClick={() => setPhoto(null)} className="delete-photo">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <canvas ref={canvasRef} style={{ display: 'none' }} />
+              </div>
+            </div>
+
+            {/* Right Column: Events Selection */}
+            <div className="form-section glass-card animate-slide-up-delayed">
+              <h3 className="section-title"><Trophy size={20} /> Interested Events</h3>
+              <p className="section-desc">Select all the events you'd like to participate in. {formData.category ? `Showing events for ${formData.category}.` : "Please select a category first."}</p>
+
+              <div className="events-selection-grid">
+                {filteredEvents.map((event) => (
+                  <div
+                    key={event.id}
+                    className={`event-card ${selectedEvents.includes(event.id) ? 'selected' : ''}`}
+                    onClick={() => toggleEvent(event.id)}
+                  >
+                    <div className="event-card-header">
+                      <span className="event-type">{event.type}</span>
+                      {selectedEvents.includes(event.id) && <Check size={14} className="check-icon" />}
+                    </div>
+                    <h4 className="event-name">{event.name}</h4>
+                    {event.subCategory && <span className="event-subcategory">{event.subCategory}</span>}
+                  </div>
+                ))}
+                {filteredEvents.length === 0 && (
+                  <div className="no-events">
+                    <Info size={40} />
+                    <p>Choose a category to see available events</p>
                   </div>
                 )}
               </div>
-              <canvas ref={canvasRef} style={{display: 'none'}} />
-            </div>
-          </div>
 
-          {/* Right Column: Events Selection */}
-          <div className="form-section glass-card animate-slide-up-delayed">
-            <h3 className="section-title"><Trophy size={20} /> Interested Events</h3>
-            <p className="section-desc">Select all the events you'd like to participate in. {formData.category ? `Showing events for ${formData.category}.` : "Please select a category first."}</p>
-            
-            <div className="events-selection-grid">
-              {filteredEvents.map((event) => (
-                <div 
-                  key={event.id}
-                  className={`event-card ${selectedEvents.includes(event.id) ? 'selected' : ''}`}
-                  onClick={() => toggleEvent(event.id)}
+              <div className="selection-summary">
+                {error && <p className="error-message">{error}</p>}
+                <span>{selectedEvents.length} events selected</span>
+                <button
+                  type="submit"
+                  className="btn-primary submit-btn"
+                  disabled={selectedEvents.length === 0 || loading}
                 >
-                  <div className="event-card-header">
-                    <span className="event-type">{event.type}</span>
-                    {selectedEvents.includes(event.id) && <Check size={14} className="check-icon" />}
-                  </div>
-                  <h4 className="event-name">{event.name}</h4>
-                  {event.subCategory && <span className="event-subcategory">{event.subCategory}</span>}
-                </div>
-              ))}
-              {filteredEvents.length === 0 && (
-                <div className="no-events">
-                  <Info size={40} />
-                  <p>Choose a category to see available events</p>
-                </div>
-              )}
-            </div>
-
-            <div className="selection-summary">
-              {error && <p className="error-message">{error}</p>}
-              <span>{selectedEvents.length} events selected</span>
-              <button 
-                type="submit" 
-                className="btn-primary submit-btn"
-                disabled={selectedEvents.length === 0 || loading}
-              >
-                {loading ? <Loader2 className="animate-spin" size={20} /> : 'Submit Registration'}
-              </button>
+                  {loading ? <Loader2 className="animate-spin" size={20} /> : 'Submit Registration'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      </form>
+        </form>
+      </AnimatedSection>
 
       <style>{`
         .registration-page {
@@ -1294,6 +1296,37 @@ export default function Registration() {
         @media (max-width: 600px) {
           .form-row { grid-template-columns: 1fr; }
           .success-card { padding: 3rem 1.5rem; }
+          .ticket-card { border-radius: 12px; }
+          .success-actions { flex-direction: column; width: 100%; }
+          .success-view { padding: 4rem 1rem; }
+          .ticket-main-info {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 1.5rem;
+          }
+          .ticket-info {
+            align-items: center;
+            width: 100%;
+          }
+          .info-row {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            width: 100%;
+          }
+          .ticket-header {
+            flex-direction: column;
+            gap: 0.5rem;
+            text-align: center;
+            padding: 1rem;
+          }
+          .ticket-body {
+            padding: 1.5rem;
+          }
+          .ticket-footer {
+            flex-direction: column;
+            text-align: center;
+          }
         }
       `}</style>
     </div>

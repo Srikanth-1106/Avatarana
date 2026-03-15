@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Trophy, Menu, X, Sparkles, PartyPopper } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { motion, useScroll, useTransform } from 'framer-motion';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -9,6 +10,13 @@ export default function Navbar() {
   const [showEasterEgg, setShowEasterEgg] = useState(false);
   const [messageIndex, setMessageIndex] = useState(0);
   const location = useLocation();
+
+  const { scrollY } = useScroll();
+  const navBackground = useTransform(
+    scrollY,
+    [0, 50],
+    ['rgba(9, 9, 8, 0)', 'rgba(9, 9, 8, 0.9)']
+  );
 
   const messages = [
     "You discovered the Avatarana Spirit!",
@@ -96,7 +104,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="navbar">
+      <motion.nav className="navbar" style={{ background: navBackground }}>
         <div className="nav-container">
           <Link to="/" className="nav-logo" onClick={handleLogoClick}>
             <Trophy className="icon-primary" size={28} />
@@ -148,7 +156,7 @@ export default function Navbar() {
             </Link>
           </div>
         )}
-      </nav>
+      </motion.nav>
 
       {showEasterEgg && (
         <div className="modal-overlay" onClick={() => setShowEasterEgg(false)}>

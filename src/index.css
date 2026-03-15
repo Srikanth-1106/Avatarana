@@ -1,13 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+
 :root {
-  --bg-main: #0F0F0E;
-  --text-main: #E4E1DE;
+  --bg-main: #090908;
+  --text-main: #F4F1EE;
   --primary: #DA5D65;
-  --accent-dark: #D6242F;
-  --muted: #5D574F;
+  --accent-dark: #B91A24;
+  --muted: #827C75;
   --secondary: #5C9E9C;
   --tertiary: #387490;
   
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-heading: 'Outfit', var(--font-sans);
 }
 
 body {
@@ -20,6 +23,11 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+h1, h2, h3, h4, .title {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
 }
 
 * {
