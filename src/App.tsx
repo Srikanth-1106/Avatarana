@@ -7,6 +7,7 @@ import PointsSystem from './pages/Points';
 import Registration from './pages/Registration';
 import Leaderboard from './pages/Leaderboard';
 import Schedule from './pages/Schedule';
+import Gallery from './pages/Gallery';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import { AuthProvider } from './context/AuthContext';
@@ -38,7 +39,7 @@ function App() {
             <Route path="signup" element={<Signup />} />
             
             <Route path="about" element={<About />} />
-            <Route path="gallery" element={<Placeholder title="Event Gallery" />} />
+            <Route path="gallery" element={<Gallery />} />
             <Route path="contact" element={<Placeholder title="Contact Organizers" />} />
           </Route>
         </Routes>

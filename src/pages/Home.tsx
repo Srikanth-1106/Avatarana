@@ -166,8 +166,6 @@ export default function Home() {
             Join the biggest community sports festival. Compete, celebrate, and create unforgettable memories.
           </p>
 
-          <RegistrationCounter />
-
           <div className="hero-actions">
             <Link to="/register" className="btn-primary">
               Register Now <ArrowRight size={20} />
@@ -176,6 +174,8 @@ export default function Home() {
               View Events
             </Link>
           </div>
+
+          <RegistrationCounter />
         </div>
       </AnimatedSection>
 
