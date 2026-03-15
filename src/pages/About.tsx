@@ -27,7 +27,7 @@ export default function About() {
         <div className="hero-content-inner">
           <div className="badge animate-slide-down">ESTABLISHED 2024</div>
           <h1 className="title">The Heart of<br/><span className="highlight">Avatarana</span></h1>
-          <p className="subtitle" style={{maxWidth: '800px'}}>
+          <p className="subtitle">
             Avatarana isn't just a sports festival. It's a grand celebration of heritage, unity, and the indomitable spirit of our community.
           </p>
         </div>
@@ -105,6 +105,12 @@ export default function About() {
         .about-hero {
           min-height: 50vh;
           padding: 6rem 0;
+          overflow: visible;
+        }
+
+        .about-hero .subtitle {
+          max-width: 100%;
+          padding: 0 1rem;
         }
 
         .story-section {
@@ -113,7 +119,7 @@ export default function About() {
 
         .values-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          grid-template-columns: repeat(3, 1fr);
           gap: 2rem;
           margin: 4rem 0;
         }
@@ -127,11 +133,23 @@ export default function About() {
           gap: 1.5rem;
         }
 
+        .value-card h3 {
+          font-size: 1.2rem;
+          margin: 0;
+        }
+
+        .value-card p {
+          color: var(--muted);
+          line-height: 1.6;
+          margin: 0;
+          font-size: 0.95rem;
+        }
+
         .value-icon-wrapper {
-          width: 80px;
-          height: 80px;
+          width: 72px;
+          height: 72px;
           background: rgba(255, 255, 255, 0.05);
-          border-radius: 24px;
+          border-radius: 20px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -140,7 +158,7 @@ export default function About() {
 
         .sustainability-section {
           margin: 6rem 0;
-          padding: 5rem 3rem;
+          padding: 4rem 3rem;
           background: linear-gradient(135deg, rgba(92, 158, 156, 0.1) 0%, rgba(15, 15, 14, 0.95) 100%);
           border: 1px solid rgba(92, 158, 156, 0.2);
           text-align: center;
@@ -152,7 +170,8 @@ export default function About() {
         }
 
         .brand-mission {
-          font-size: 1.25rem;
+          font-family: var(--font-heading);
+          font-size: 1.2rem;
           font-style: italic;
           color: var(--text-main);
           opacity: 0.9;
@@ -163,13 +182,13 @@ export default function About() {
         .environmental-tags {
           display: flex;
           justify-content: center;
-          gap: 1.5rem;
-          margin-bottom: 3rem;
+          gap: 1rem;
+          margin-bottom: 2.5rem;
           flex-wrap: wrap;
         }
 
         .tag {
-          font-size: 0.875rem;
+          font-size: 0.85rem;
           font-weight: 600;
           color: var(--secondary);
           display: flex;
@@ -182,7 +201,7 @@ export default function About() {
 
         .about-cta {
           text-align: center;
-          padding: 8rem 0;
+          padding: 6rem 0;
           background: radial-gradient(circle at center, rgba(218, 93, 101, 0.05) 0%, transparent 70%);
         }
 
@@ -195,10 +214,112 @@ export default function About() {
           50% { transform: scale(1.02); }
         }
 
+        /* ── MOBILE RESPONSIVE ── */
         @media (max-width: 768px) {
+          .about-hero {
+            min-height: auto;
+            padding: 3rem 0 2rem;
+          }
+
+          .about-hero .title {
+            font-size: 2rem;
+          }
+
+          .about-hero .subtitle {
+            font-size: 0.95rem;
+            padding: 0 0.5rem;
+          }
+
+          .story-section {
+            padding: 3rem 0;
+          }
+
+          .story-section .section-header h2 {
+            font-size: 1.6rem;
+          }
+
           .intro-grid {
             grid-template-columns: 1fr;
-            gap: 2rem;
+            gap: 1.5rem;
+          }
+
+          .intro-text p {
+            font-size: 1rem;
+            line-height: 1.7;
+          }
+
+          .intro-visual {
+            padding: 1.5rem;
+          }
+
+          .intro-visual h3 {
+            font-size: 1.25rem;
+          }
+
+          .values-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin: 2rem 0;
+          }
+
+          .value-card {
+            padding: 1.5rem;
+            flex-direction: row;
+            text-align: left;
+            gap: 1rem;
+          }
+
+          .value-card h3 {
+            font-size: 1.05rem;
+          }
+
+          .value-card p {
+            font-size: 0.85rem;
+          }
+
+          .value-icon-wrapper {
+            width: 56px;
+            height: 56px;
+            min-width: 56px;
+            border-radius: 16px;
+          }
+
+          .value-icon-wrapper svg {
+            width: 24px;
+            height: 24px;
+          }
+
+          .sustainability-section {
+            margin: 3rem 0;
+            padding: 2rem 1.25rem;
+          }
+
+          .brand-name {
+            font-size: 1.25rem !important;
+          }
+
+          .brand-mission {
+            font-size: 0.95rem;
+            margin: 1rem 0;
+            line-height: 1.6;
+          }
+
+          .environmental-tags {
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+          }
+
+          .tag {
+            font-size: 0.75rem;
+            padding: 0.4rem 0.75rem;
+          }
+
+          .about-cta {
+            padding: 3rem 0 4rem;
+          }
+
+          .about-cta .title {
+            font-size: 1.6rem !important;
           }
         }
       `}</style>

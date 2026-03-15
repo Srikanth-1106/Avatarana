@@ -780,6 +780,16 @@ export default function Registration() {
               <h3 className="section-title"><Trophy size={20} /> Interested Events</h3>
               <p className="section-desc">Select all the events you'd like to participate in. {formData.category ? `Showing events for ${formData.category}.` : "Please select a category first."}</p>
 
+              <div className="captain-notice" style={{
+                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                padding: '0.6rem 1rem', borderRadius: '10px', fontSize: '0.82rem',
+                background: 'rgba(92, 158, 156, 0.1)', border: '1px solid rgba(92, 158, 156, 0.2)',
+                color: 'var(--secondary)', fontWeight: 600, marginBottom: '0.5rem'
+              }}>
+                <Info size={16} />
+                For team events, only the <strong style={{ color: 'var(--primary)' }}>team captain</strong> should register.
+              </div>
+
               <div className="events-selection-grid">
                 {filteredEvents.map((event) => (
                   <div
@@ -789,6 +799,14 @@ export default function Registration() {
                   >
                     <div className="event-card-header">
                       <span className="event-type">{event.type}</span>
+                      {event.type === 'Group' && (
+                        <span style={{
+                          fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase',
+                          letterSpacing: '0.05em', padding: '2px 6px', borderRadius: '4px',
+                          background: 'rgba(218, 93, 101, 0.15)', color: 'var(--primary)',
+                          border: '1px solid rgba(218, 93, 101, 0.2)'
+                        }}>Captain Only</span>
+                      )}
                       {selectedEvents.includes(event.id) && <Check size={14} className="check-icon" />}
                     </div>
                     <h4 className="event-name">{event.name}</h4>

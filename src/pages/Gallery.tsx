@@ -9,18 +9,41 @@ interface GalleryImage {
 }
 
 const galleryImages: GalleryImage[] = [
+  // Men's Events
   { src: '/gallery/cricket.png', title: 'Cricket', category: 'Men' },
   { src: '/gallery/volleyball.png', title: 'Volleyball', category: 'Men' },
   { src: '/gallery/tugofwar.png', title: 'Tug of War', category: 'Men' },
-  { src: '/gallery/lagori.png', title: 'Lagori', category: 'Women' },
-  { src: '/gallery/rangoli.png', title: 'Rangoli', category: 'Women' },
+  { src: '/gallery/lagori.png', title: 'Lagori', category: 'Men' },
+
+  // Women's Events
   { src: '/gallery/throwball.png', title: 'Throwball', category: 'Women' },
+  { src: '/gallery/dodgeball.png', title: 'Dodgeball', category: 'Women' },
+  { src: '/gallery/rangoli.png', title: 'Rangoli', category: 'Women' },
+  { src: '/gallery/lemonspoon.png', title: 'Lemon & Spoon', category: 'Women' },
+  { src: '/gallery/lagori.png', title: 'Lagori', category: 'Women' },
+
+  // Kids' Events
   { src: '/gallery/race.png', title: '100m Sprint', category: 'Kids' },
+  { src: '/gallery/drawing.png', title: 'Drawing Competition', category: 'Kids' },
+  { src: '/gallery/coloring.png', title: 'Colouring', category: 'Kids' },
+  { src: '/gallery/lemonspoon.png', title: 'Lemon & Spoon', category: 'Kids' },
+
+  // Senior Citizens
+  { src: '/gallery/fastwalking.png', title: 'Fast Walking', category: 'Senior Citizens' },
+
+  // General Events
   { src: '/gallery/cooking.png', title: 'Cooking Without Fire', category: 'General' },
   { src: '/gallery/treasurehunt.png', title: 'Treasure Hunt', category: 'General' },
+  { src: '/gallery/housie.png', title: 'Housie (Tambola)', category: 'General' },
+
+  // Highlights
+  { src: '/gallery/ceremony.png', title: 'Opening Ceremony', category: 'Highlights' },
+  { src: '/gallery/tugofwar.png', title: 'Team Spirit', category: 'Highlights' },
+  { src: '/gallery/cricket.png', title: 'Championship Match', category: 'Highlights' },
+  { src: '/gallery/rangoli.png', title: 'Cultural Showcase', category: 'Highlights' },
 ];
 
-const categories = ['All', 'Men', 'Women', 'Kids', 'General'];
+const categories = ['All', 'Men', 'Women', 'Kids', 'Senior Citizens', 'General', 'Highlights'];
 
 export default function Gallery() {
   const [activeCategory, setActiveCategory] = useState('All');

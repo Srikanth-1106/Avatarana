@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Trophy, Menu, X, Sparkles, PartyPopper, Sun, Moon } from 'lucide-react';
+import { Trophy, Menu, X, Sparkles, PartyPopper } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { useTheme } from '../context/ThemeContext';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,15 +10,12 @@ export default function Navbar() {
   const [showEasterEgg, setShowEasterEgg] = useState(false);
   const [messageIndex, setMessageIndex] = useState(0);
   const location = useLocation();
-  const { theme, toggleTheme } = useTheme();
 
   const { scrollY } = useScroll();
   const navBackground = useTransform(
     scrollY,
     [0, 50],
-    theme === 'dark'
-      ? ['rgba(9, 9, 8, 0)', 'rgba(9, 9, 8, 0.9)']
-      : ['rgba(245, 243, 240, 0)', 'rgba(245, 243, 240, 0.92)']
+    ['rgba(9, 9, 8, 0)', 'rgba(9, 9, 8, 0.9)']
   );
 
   const messages = [
@@ -127,9 +123,6 @@ export default function Navbar() {
               </Link>
             ))}
             <Link to="/register" className="btn-primary nav-btn">Register</Link>
-            <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
-              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
           </div>
 
           {/* Mobile Toggle */}
@@ -161,10 +154,6 @@ export default function Navbar() {
             >
               Register Now
             </Link>
-            <button className="theme-toggle mobile-theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
-              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-              <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
-            </button>
           </div>
         )}
       </motion.nav>

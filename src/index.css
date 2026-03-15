@@ -13,16 +13,6 @@
   --font-heading: 'Outfit', var(--font-sans);
 }
 
-[data-theme="light"] {
-  --bg-main: #F5F3F0;
-  --text-main: #1A1A1A;
-  --muted: #6B6560;
-  --primary: #C94850;
-  --accent-dark: #A01520;
-  --secondary: #3D8A88;
-  --tertiary: #2A6278;
-}
-
 body {
   margin: 0;
   font-family: var(--font-sans);
