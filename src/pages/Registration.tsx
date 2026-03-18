@@ -1397,6 +1397,7 @@ export default function Registration() {
         select {
           padding-right: 3rem;
           appearance: auto;
+          font-size: 0.88rem;
         }
 
         input:focus, select:focus {
