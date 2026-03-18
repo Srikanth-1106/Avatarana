@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Trophy, Medal, CalendarHeart, ArrowRight, Sparkles, MessageCircle, Heart } from 'lucide-react';
+import { Users, Trophy, Medal, CalendarHeart, ArrowRight, Sparkles, Heart } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { motion } from 'framer-motion';
 import { AnimatedSection } from '../components/AnimatedSection';
+import confetti from 'canvas-confetti';
 
 // SVG Ring Component
 const CountdownRing = ({ value, label, total }: { value: number; label: string; total: number }) => {
@@ -103,7 +104,7 @@ const RegistrationCounter = () => {
 
 export default function Home() {
   const [count, setCount] = useState(0);
-  const [selectedShoutout, setSelectedShoutout] = useState<string | null>(null);
+  const [selectedSponsor, setSelectedSponsor] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -114,27 +115,37 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [count]);
 
-  const shoutouts = [
-    "Padil zone ready for Tug of War!",
-    "Udupi champions incoming! 🏆",
-    "Mangalore South is the powerhouse!",
-    "Karada Spirit at its best!",
-    "Can't wait for April 18th!",
-    "Training hard for the 100m sprint!",
-    "Avatarana 2026 will be legendary!",
-    "Good luck to all participants! 🤝",
-    "Puttur zone is bringing the heat!",
-    "Team bonding at its finest."
+  const sponsors = [
+    "/sponsor-1.png",
+    "/sponsor-2.png",
+    "/sponsor-3.png"
   ];
+
+  const handleSponsorClick = (src: string) => {
+    setSelectedSponsor(src);
+    
+    // Trigger celebration effect
+    const colors = ['#dc5d65', '#5c9e9c', '#e4e1de'];
+    
+    // Initial burst from center
+    confetti({
+      particleCount: 150,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: colors,
+      zIndex: 10000
+    });
+  };
 
   return (
     <div className="page-container home-page">
-      {/* Shoutout Modal Overlay — tap again to dismiss */}
-      {selectedShoutout && (
-        <div className="shoutout-modal-overlay" onClick={() => setSelectedShoutout(null)}>
-          <div className="shoutout-modal-card glass-card">
-            <MessageCircle size={36} className="icon-primary" />
-            <p className="modal-text">{selectedShoutout}</p>
+      {/* Sponsor Modal Overlay — tap again to dismiss */}
+      {selectedSponsor && (
+        <div className="shoutout-modal-overlay" onClick={() => setSelectedSponsor(null)}>
+          <div className="shoutout-modal-card glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div className="brand-logo-wrapper" style={{ margin: '0 auto 1.5rem', width: 'fit-content', background: '#ffffff', borderRadius: '16px', padding: '1.5rem 2rem' }}>
+              <img src={selectedSponsor} alt="Sponsor Logo" style={{ maxWidth: '300px', width: '100%', height: 'auto', mixBlendMode: 'multiply', filter: 'contrast(1.2)' }} />
+            </div>
             <span className="modal-hint">Tap anywhere to close</span>
           </div>
         </div>
@@ -203,15 +214,20 @@ export default function Home() {
         </motion.div>
       </AnimatedSection>
 
-      {/* Community Wall */}
+      {/* Proud Sponsors Marquee */}
       <AnimatedSection className="community-wall" direction="up">
         <div className="section-header center-align">
-          <h2 style={{ fontSize: '1.5rem', opacity: 0.6 }}><MessageCircle size={20} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} /> Community Shoutouts</h2>
+          <h2 style={{ fontSize: '1.6rem', color: 'var(--primary)', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Heart size={24} style={{ marginRight: '0.75rem', fill: 'var(--primary)', opacity: 0.9 }} /> 
+            Proud Sponsors
+          </h2>
         </div>
         <div className="marquee">
-          {[...shoutouts, ...shoutouts].map((text, i) => (
-            <div key={i} className="shoutout-card" onClick={() => setSelectedShoutout(text)}>
-              {text}
+          {[...sponsors, ...sponsors, ...sponsors, ...sponsors].map((src, i) => (
+            <div key={i} className="sponsor-marquee-card" onClick={() => handleSponsorClick(src)}>
+              <div className="brand-logo-wrapper" style={{ margin: 0, height: '100%' }}>
+                <img src={src} alt="Sponsor" className="sponsor-marquee-img" />
+              </div>
             </div>
           ))}
         </div>
@@ -251,8 +267,14 @@ export default function Home() {
         <a href="https://aapaavani.com/" target="_blank" rel="noopener noreferrer" className="brand-link">
           <div className="brand-content">
             <div className="brand-logo-container">
-              {/* Logo will be inserted here once located */}
-              <span className="brand-name">Supported by Aapaavani Environmental Solutions</span>
+              <span className="brand-supported-label">Supported by</span>
+              <div className="brand-logo-wrapper">
+                <img
+                  src="/sponsor-logo-custom.png"
+                  alt="Aapaavani Environmental Solutions"
+                  className="brand-logo-img"
+                />
+              </div>
             </div>
             <p className="brand-text">
               Aapaavani builds innovative solutions — including effluent and sewage treatment plants — for dealing with environmental pollutants that plague our urban spaces.

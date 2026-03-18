@@ -350,14 +350,12 @@ html {
 }
 
 [data-theme="light"] .hero-section::after {
-  background: linear-gradient(
-    to bottom,
-    var(--bg-main) 0%,
-    rgba(245, 243, 240, 0.7) 25%,
-    rgba(245, 243, 240, 0.5) 50%,
-    rgba(245, 243, 240, 0.7) 75%,
-    var(--bg-main) 100%
-  );
+  background: linear-gradient(to bottom,
+      var(--bg-main) 0%,
+      rgba(245, 243, 240, 0.7) 25%,
+      rgba(245, 243, 240, 0.5) 50%,
+      rgba(245, 243, 240, 0.7) 75%,
+      var(--bg-main) 100%);
 }
 
 [data-theme="light"] .countdown-ring-container {
@@ -644,6 +642,10 @@ html {
     padding: 3rem 1rem;
   }
 
+  .brand-logo-img {
+    max-width: 240px;
+  }
+
   .countdown-container {
     gap: 0.5rem;
     flex-wrap: wrap;
@@ -765,27 +767,38 @@ html {
   }
 }
 
-.shoutout-card {
-  background: linear-gradient(145deg, rgba(35, 37, 40, 0.6) 0%, rgba(20, 21, 23, 0.4) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.03);
-  border-top: 1px solid rgba(218, 93, 101, 0.15);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  padding: 1rem 1.5rem;
-  border-radius: 12px;
-  font-style: italic;
-  color: var(--text-main);
-  opacity: 0.9;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+.sponsor-marquee-card {
   cursor: pointer;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.3s ease;
 }
 
-.shoutout-card:hover {
+.sponsor-marquee-card:hover {
   transform: translateY(-4px) scale(1.02);
-  border-color: rgba(218, 93, 101, 0.4);
+}
+
+.sponsor-marquee-card .brand-logo-wrapper {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.sponsor-marquee-card:hover .brand-logo-wrapper {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4), 0 0 12px rgba(218, 93, 101, 0.15);
 }
+
+.sponsor-marquee-img {
+  height: 50px;
+  width: auto;
+  min-width: 120px;
+  max-width: 200px;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+  filter: contrast(1.4) brightness(1.05);
+}
+
 
 /* Brand Mention Refined */
 /* Brand Mention Refined */
@@ -829,22 +842,52 @@ html {
 
 .brand-logo-container {
   display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 1rem;
 }
 
-.brand-name {
-  font-family: 'Outfit', sans-serif;
-  font-weight: 700;
-  font-size: 1.5rem;
-  letter-spacing: 0.1em;
+.brand-logo-wrapper {
+  background: #ffffff;
+  padding: 1rem 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-supported-label {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-main);
+  color: var(--muted);
   transition: color 0.3s ease;
 }
 
-.brand-link:hover .brand-name {
-  color: var(--primary);
+.brand-link:hover .brand-supported-label {
+  color: var(--text-main);
+}
+
+.brand-logo-img {
+  max-width: 220px;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  background: transparent;
+  transition: all 0.3s ease;
+  opacity: 1;
+  mix-blend-mode: multiply;
+  filter: contrast(1.2);
+}
+
+.brand-link:hover .brand-logo-img {
+  transform: scale(1.03);
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 4px 24px rgba(255, 255, 255, 0.1);
 }
 
 .brand-text {
@@ -1246,13 +1289,25 @@ html {
 }
 
 @keyframes modalFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes modalPopIn {
-  from { transform: scale(0.85); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* ═══════════════════════════════════════════════

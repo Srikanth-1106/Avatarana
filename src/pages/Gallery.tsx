@@ -13,37 +13,46 @@ const galleryImages: GalleryImage[] = [
   { src: '/gallery/cricket.png', title: 'Cricket', category: 'Men' },
   { src: '/gallery/volleyball.png', title: 'Volleyball', category: 'Men' },
   { src: '/gallery/tugofwar.png', title: 'Tug of War', category: 'Men' },
-  { src: '/gallery/lagori.png', title: 'Lagori', category: 'Men' },
 
   // Women's Events
   { src: '/gallery/throwball.png', title: 'Throwball', category: 'Women' },
   { src: '/gallery/dodgeball.png', title: 'Dodgeball', category: 'Women' },
   { src: '/gallery/rangoli.png', title: 'Rangoli', category: 'Women' },
-  { src: '/gallery/lemonspoon.png', title: 'Lemon & Spoon', category: 'Women' },
-  { src: '/gallery/lagori.png', title: 'Lagori', category: 'Women' },
 
   // Kids' Events
   { src: '/gallery/race.png', title: '100m Sprint', category: 'Kids' },
   { src: '/gallery/drawing.png', title: 'Drawing Competition', category: 'Kids' },
   { src: '/gallery/coloring.png', title: 'Colouring', category: 'Kids' },
-  { src: '/gallery/lemonspoon.png', title: 'Lemon & Spoon', category: 'Kids' },
 
   // Senior Citizens
   { src: '/gallery/fastwalking.png', title: 'Fast Walking', category: 'Senior Citizens' },
 
   // General Events
+  { src: '/gallery/lagori.png', title: 'Lagori', category: 'General' },
+  { src: '/gallery/lemonspoon.png', title: 'Lemon & Spoon', category: 'General' },
   { src: '/gallery/cooking.png', title: 'Cooking Without Fire', category: 'General' },
   { src: '/gallery/treasurehunt.png', title: 'Treasure Hunt', category: 'General' },
   { src: '/gallery/housie.png', title: 'Housie (Tambola)', category: 'General' },
 
   // Highlights
   { src: '/gallery/ceremony.png', title: 'Opening Ceremony', category: 'Highlights' },
-  { src: '/gallery/tugofwar.png', title: 'Team Spirit', category: 'Highlights' },
-  { src: '/gallery/cricket.png', title: 'Championship Match', category: 'Highlights' },
-  { src: '/gallery/rangoli.png', title: 'Cultural Showcase', category: 'Highlights' },
+
+  // New Moments
+  { src: '/gallery/new_event/DSC_2674.JPG', title: 'Avatarana Moments', category: 'Moments' },
+  { src: '/gallery/new_event/DSC_2811.JPG', title: 'Action Shot', category: 'Moments' },
+  { src: '/gallery/new_event/DSC_2822.JPG', title: 'Event Focus', category: 'Moments' },
+  { src: '/gallery/new_event/DSC_2852.JPG', title: 'Victory Celebration', category: 'Moments' },
+  { src: '/gallery/new_event/DSC_2861.JPG', title: 'Team Unity', category: 'Moments' },
+  { src: '/gallery/new_event/DSC_2877.JPG', title: 'Competition Intensity', category: 'Moments' },
+  { src: '/gallery/new_event/DSC_2953.JPG', title: 'Skill Showcase', category: 'Moments' },
+  { src: '/gallery/new_event/DSC_2971.JPG', title: 'Community Spirit', category: 'Moments' },
+  { src: '/gallery/new_event/DSC_3008.JPG', title: 'Joyful Moments', category: 'Moments' },
+  { src: '/gallery/new_event/DSC_3034.JPG', title: 'Award Ceremony', category: 'Moments' },
+  { src: '/gallery/new_event/DSC_3041.JPG', title: 'Grand Finale', category: 'Moments' },
+  { src: '/gallery/new_event/IMG-20231203-WA0018.jpg', title: 'Behind the Scenes', category: 'Moments' },
 ];
 
-const categories = ['All', 'Men', 'Women', 'Kids', 'Senior Citizens', 'General', 'Highlights'];
+const categories = ['All', 'Men', 'Women', 'Kids', 'Senior Citizens', 'General', 'Highlights', 'Moments'];
 
 export default function Gallery() {
   const [activeCategory, setActiveCategory] = useState('All');

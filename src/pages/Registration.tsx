@@ -27,7 +27,8 @@ export default function Registration() {
     phone: '',
     age: '',
     region: '',
-    category: ''
+    category: '',
+    teams: {} as Record<string, { teamName: string, members: { name: string, phone: string }[] }>
   });
 
   useEffect(() => {
@@ -42,6 +43,66 @@ export default function Registration() {
     }
   }, [searchParams]);
 
+  const checkDuplicateRegistrations = async () => {
+    // 1. Gather all events to check (Individual + Group)
+    const selectedEventsData = selectedEvents.map(id => eventsData.find(e => e.id === id)).filter(Boolean);
+
+    // 2. Validate all Captain/Player combinations
+    for (const event of selectedEventsData) {
+      if (!event) continue;
+      const eventSearchStr = `${event.name} (${event.category})`;
+
+      // Players to check for this specific sport
+      const playersForThisSport = [];
+      
+      // Every sport includes the Captain
+      playersForThisSport.push({ name: formData.name, phone: formData.phone, role: 'Captain' });
+
+      // If it's a group sport, add its specific team members
+      if (event.type === 'Group' && formData.teams[event.id]) {
+        formData.teams[event.id].members.forEach((m, i) => {
+          playersForThisSport.push({ ...m, role: `Player ${i + 2}` });
+        });
+      }
+
+      // Check each player for this sport against DB
+      for (const player of playersForThisSport) {
+        if (!player.phone || player.phone.length < 10) continue;
+
+        // DB Check 1: Primary registrant
+        const { data: regData, error: regError } = await supabase
+          .from('registrations')
+          .select('full_name, events')
+          .eq('phone', player.phone);
+
+        if (regError) throw regError;
+        if (regData && regData.some(reg => reg.events?.includes(eventSearchStr))) {
+          return `${player.role} (${player.name}) is already registered for ${event.name} in another team/entry.`;
+        }
+
+        // DB Check 2: Team member in another entry
+        const { data: teamData, error: teamError } = await supabase
+          .from('registrations')
+          .select('full_name, events')
+          .contains('team_members', [{ phone: player.phone }]);
+
+        if (teamError) throw teamError;
+        if (teamData && teamData.some(reg => reg.events?.includes(eventSearchStr))) {
+          return `${player.role} (${player.name}) is already part of a team for ${event.name}.`;
+        }
+      }
+      
+      // 3. Simple cross-check within the current form (prevent same phone twice in one roster section)
+      const phones = playersForThisSport.map(p => p.phone).filter(p => p && p.length >= 10);
+      const uniquePhones = new Set(phones);
+      if (uniquePhones.size !== phones.length) {
+        return `Duplicate phone numbers detected in the ${event.name} roster. Please ensure each player has a unique number.`;
+      }
+    }
+
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedEvents.length === 0) {
@@ -53,22 +114,55 @@ export default function Registration() {
     setError(null);
 
     try {
+      // 1. Strict Validation Check
+      const duplicationError = await checkDuplicateRegistrations();
+      if (duplicationError) {
+        setError(duplicationError);
+        setLoading(false);
+        return;
+      }
+
+      // 2. Prepare Registration Records
+      const groupEvents = selectedEvents.map(id => eventsData.find(e => e.id === id)).filter(e => e?.type === 'Group');
+      const individualEvents = selectedEvents.map(id => eventsData.find(e => e.id === id)).filter(e => e?.type === 'Individual');
+
+      const registrationRecords = [];
+
+      // Create a separate record for each GROUP sport (different team names/members)
+      for (const event of groupEvents) {
+        if (!event) continue;
+        const teamData = formData.teams[event.id];
+        registrationRecords.push({
+          user_id: user?.id || null,
+          full_name: formData.name,
+          phone: formData.phone,
+          age: parseInt(formData.age),
+          region: formData.region,
+          category: formData.category,
+          team_name: teamData?.teamName || null,
+          team_members: teamData?.members || null,
+          events: [`${event.name} (${event.category})`]
+        });
+      }
+
+      // Group INDIVIDUAL sports into their own entry (optional: one per entry or grouped)
+      // Let's group them by category for cleanliness
+      if (individualEvents.length > 0) {
+        registrationRecords.push({
+          user_id: user?.id || null,
+          full_name: formData.name,
+          phone: formData.phone,
+          age: parseInt(formData.age),
+          region: formData.region,
+          category: formData.category,
+          events: individualEvents.map(e => `${e?.name} (${e?.category})`)
+        });
+      }
+
+      // 3. Batch Submit to Supabase
       const { error: submitError } = await supabase
         .from('registrations')
-        .insert([
-          {
-            user_id: user?.id || null, // Optional if we allow guest registrations
-            full_name: formData.name,
-            phone: formData.phone,
-            age: parseInt(formData.age),
-            region: formData.region,
-            category: formData.category,
-            events: selectedEvents.map(id => {
-              const event = eventsData.find(e => e.id === id);
-              return event ? `${event.name} (${event.category})` : id;
-            })
-          }
-        ]);
+        .insert(registrationRecords);
 
       if (submitError) throw submitError;
       setSubmitted(true);
@@ -234,12 +328,89 @@ export default function Registration() {
   };
 
   const toggleEvent = (eventId: string) => {
-    setSelectedEvents(prev =>
-      prev.includes(eventId)
-        ? prev.filter(id => id !== eventId)
-        : [...prev, eventId]
-    );
+    setSelectedEvents(prev => {
+      const isAdding = !prev.includes(eventId);
+      const next = isAdding ? [...prev, eventId] : prev.filter(id => id !== eventId);
+
+      // Handle dynamic team members for Group events
+      const event = eventsData.find(e => e.id === eventId);
+      if (event?.type === 'Group') {
+        if (isAdding) {
+          // Initialize required number of members (minus captain) for this specific sport
+          const requiredMembersCount = (event.minPlayers || 1) - 1;
+          const newMembers = Array(requiredMembersCount).fill(null).map(() => ({ name: '', phone: '' }));
+          
+          setFormData(f => ({ 
+            ...f, 
+            teams: {
+              ...f.teams,
+              [eventId]: { teamName: '', members: newMembers }
+            }
+          }));
+        } else {
+          // Remove this sport's roster
+          setFormData(f => {
+            const nextTeams = { ...f.teams };
+            delete nextTeams[eventId];
+            return { ...f, teams: nextTeams };
+          });
+        }
+      }
+      return next;
+    });
   };
+
+  const updateTeamName = (eventId: string, name: string) => {
+    setFormData(prev => ({
+      ...prev,
+      teams: {
+        ...prev.teams,
+        [eventId]: { ...prev.teams[eventId], teamName: name }
+      }
+    }));
+  };
+
+  const updateTeamMember = (eventId: string, memberIndex: number, field: 'name' | 'phone', value: string) => {
+    setFormData(prev => {
+      const updatedMembers = [...prev.teams[eventId].members];
+      updatedMembers[memberIndex] = { ...updatedMembers[memberIndex], [field]: value };
+      return {
+        ...prev,
+        teams: {
+          ...prev.teams,
+          [eventId]: { ...prev.teams[eventId], members: updatedMembers }
+        }
+      };
+    });
+  };
+
+  const addTeamMember = (eventId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      teams: {
+        ...prev.teams,
+        [eventId]: {
+          ...prev.teams[eventId],
+          members: [...prev.teams[eventId].members, { name: '', phone: '' }]
+        }
+      }
+    }));
+  };
+
+  const removeTeamMember = (eventId: string, memberIndex: number) => {
+    setFormData(prev => ({
+      ...prev,
+      teams: {
+        ...prev.teams,
+        [eventId]: {
+          ...prev.teams[eventId],
+          members: prev.teams[eventId].members.filter((_, i) => i !== memberIndex)
+        }
+      }
+    }));
+  };
+
+  const hasGroupEvent = selectedEvents.some(id => eventsData.find(e => e.id === id)?.type === 'Group');
 
   const filteredEvents = eventsData.filter(event => {
     if (!formData.category) return true;
@@ -345,7 +516,7 @@ export default function Registration() {
             </button>
             <button onClick={() => {
               setSubmitted(false);
-              setFormData({ name: '', phone: '', age: '', region: '', category: '' });
+              setFormData({ name: '', phone: '', age: '', region: '', category: '', teams: {} });
               setSelectedEvents([]);
               setPhoto(null);
             }} className="btn-secondary">
@@ -773,6 +944,85 @@ export default function Registration() {
                 </div>
                 <canvas ref={canvasRef} style={{ display: 'none' }} />
               </div>
+
+              {/* Dynamic Team Sections */}
+              {Object.keys(formData.teams).map(eventId => {
+                const event = eventsData.find(e => e.id === eventId);
+                if (!event) return null;
+                const teamData = formData.teams[eventId];
+                const requiredExtra = (event.minPlayers || 1) - 1;
+
+                return (
+                  <div key={eventId} className="form-section team-registration-section animate-slide-up">
+                    <div className="divider" style={{ margin: '1rem 0', opacity: 0.1, borderTop: '1px solid var(--text-main)' }}></div>
+                    <h3 className="section-title">
+                      <Trophy size={20} /> Team Registration: {event.name}
+                    </h3>
+                    <p className="section-desc" style={{ color: 'var(--primary)', fontWeight: 600 }}>
+                      Minimum {event.minPlayers} players required for this sport.
+                    </p>
+
+                    <div className="form-group">
+                      <label htmlFor={`teamName-${eventId}`}>Team Name ({event.name})</label>
+                      <div className="input-wrapper">
+                        <Grid className="input-icon" size={18} />
+                        <input
+                          type="text"
+                          id={`teamName-${eventId}`}
+                          required
+                          placeholder={`Enter team name for ${event.name}`}
+                          value={teamData.teamName}
+                          onChange={e => updateTeamName(eventId, e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="team-members-list">
+                      <div className="members-header">
+                        <label>Team Members (Player 1: {formData.name} - Captain)</label>
+                        <p className="section-desc">Add at least {requiredExtra} more players.</p>
+                      </div>
+                      
+                      {teamData.members.map((member, idx) => (
+                        <div key={idx} className="member-row animate-fade-in">
+                          <div className="member-number">{idx + 2}</div>
+                          <div className="member-inputs">
+                            <input
+                              type="text"
+                              placeholder="Player Name"
+                              required
+                              value={member.name}
+                              onChange={e => updateTeamMember(eventId, idx, 'name', e.target.value)}
+                              className="compact-input"
+                            />
+                            <input
+                              type="tel"
+                              placeholder="Phone Number"
+                              required
+                              value={member.phone}
+                              onChange={e => updateTeamMember(eventId, idx, 'phone', e.target.value)}
+                              className="compact-input"
+                            />
+                          </div>
+                          {teamData.members.length > requiredExtra && (
+                            <button 
+                              type="button" 
+                              onClick={() => removeTeamMember(eventId, idx)}
+                              className="remove-member-btn"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      
+                      <button type="button" onClick={() => addTeamMember(eventId)} className="btn-outline add-member-btn">
+                        <Sparkles size={16} /> Add Extra Player for {event.name}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
             {/* Right Column: Events Selection */}
@@ -904,7 +1154,7 @@ export default function Registration() {
         .section-desc {
           font-size: 0.9rem;
           color: var(--muted);
-          margin: -1rem 0 0.5rem;
+          margin: 0.25rem 0 1rem;
         }
 
         .form-row {
@@ -1194,6 +1444,99 @@ export default function Registration() {
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+
+        /* Team Registration Styling */
+        .team-registration-section {
+          margin-top: 1rem;
+        }
+
+        .members-header {
+          margin-bottom: 1.5rem;
+        }
+
+        .team-members-list {
+          display: flex;
+          flex-direction: column;
+          gap: 1.25rem;
+        }
+
+        .member-row {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          background: rgba(228, 225, 222, 0.03);
+          padding: 1rem;
+          border-radius: 16px;
+          border: 1px solid rgba(228, 225, 222, 0.08);
+          transition: all 0.2s ease;
+        }
+
+        .member-row:hover {
+          background: rgba(228, 225, 222, 0.06);
+          border-color: rgba(218, 93, 101, 0.2);
+        }
+
+        .member-number {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: var(--bg-card);
+          color: var(--primary);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 800;
+          font-size: 0.8rem;
+          border: 1px solid rgba(218, 93, 101, 0.2);
+          flex-shrink: 0;
+        }
+
+        .member-inputs {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1rem;
+          flex: 1;
+        }
+
+        .compact-input {
+          padding: 0.75rem 1rem !important;
+          font-size: 0.9rem !important;
+          border-radius: 10px !important;
+        }
+
+        .remove-member-btn {
+          background: rgba(239, 68, 68, 0.1);
+          color: #ef4444;
+          border: 1px solid rgba(239, 68, 68, 0.2);
+          width: 32px;
+          height: 32px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s;
+          flex-shrink: 0;
+        }
+
+        .remove-member-btn:hover {
+          background: #ef4444;
+          color: white;
+          transform: scale(1.1);
+        }
+
+        .add-member-btn {
+          margin-top: 0.5rem;
+          width: 100%;
+          padding: 0.875rem !important;
+          border-style: dashed !important;
+          background: transparent !important;
+        }
+
+        .add-member-btn:hover {
+          background: rgba(218, 93, 101, 0.05) !important;
+          border-style: solid !important;
         }
 
         /* Success View Styling */

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Trophy, Menu, X, Sparkles, PartyPopper } from 'lucide-react';
+import { Menu, X, Sparkles, PartyPopper } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { motion, useScroll, useTransform } from 'framer-motion';
 
@@ -107,7 +107,7 @@ export default function Navbar() {
       <motion.nav className="navbar" style={{ background: navBackground }}>
         <div className="nav-container">
           <Link to="/" className="nav-logo" onClick={handleLogoClick}>
-            <Trophy className="icon-primary" size={28} />
+            <img src="/logo.png" alt="AVATARANA" style={{ height: '40px', width: 'auto', objectFit: 'contain' }} />
             <span className="logo-text">AVATARANA '26</span>
           </Link>
 

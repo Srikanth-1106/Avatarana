@@ -26,7 +26,7 @@ export default function About() {
       <section className="about-hero hero-section">
         <div className="hero-content-inner">
           <div className="badge animate-slide-down">ESTABLISHED 2024</div>
-          <h1 className="title">The Heart of<br/><span className="highlight">Avatarana</span></h1>
+          <h1 className="title">The Heart of<br /><span className="highlight">Avatarana</span></h1>
           <p className="subtitle">
             Avatarana isn't just a sports festival. It's a grand celebration of heritage, unity, and the indomitable spirit of our community.
           </p>
@@ -36,11 +36,11 @@ export default function About() {
       {/* Story Section */}
       <section className="story-section">
         <div className="section-header">
-          <div className="badge" style={{background: 'rgba(92, 158, 156, 0.1)', color: 'var(--secondary)'}}>OUR STORY</div>
+          <div className="badge" style={{ background: 'rgba(92, 158, 156, 0.1)', color: 'var(--secondary)' }}>OUR STORY</div>
           <h2>Where Tradition Meets Action</h2>
           <div className="divider"></div>
         </div>
-        
+
         <div className="intro-grid">
           <div className="intro-text">
             <p>
@@ -74,15 +74,21 @@ export default function About() {
       {/* Sustainability Partner Section */}
       <section className="sustainability-section glass-card">
         <div className="sustainability-content">
-          <div className="badge" style={{background: 'rgba(92, 158, 156, 0.2)', color: 'var(--secondary)', marginBottom: '1.5rem'}}>SUSTAINABILITY PARTNER</div>
-          <h2 className="brand-name">Aapaavani Environmental Solutions</h2>
+          <div className="badge" style={{ background: 'rgba(92, 158, 156, 0.2)', color: 'var(--secondary)', marginBottom: '1.5rem' }}>SUSTAINABILITY PARTNER</div>
+          <div className="brand-logo-wrapper" style={{ margin: '0 auto 1.5rem', width: 'fit-content' }}>
+            <img
+              src="/sponsor-logo-custom.png"
+              alt="Aapaavani Environmental Solutions"
+              className="brand-logo-img"
+            />
+          </div>
           <p className="brand-mission">
             "Aapaavani builds innovative solutions — including effluent and sewage treatment plants — for dealing with environmental pollutants that plague our urban spaces."
           </p>
           <div className="environmental-tags">
-            <span className="tag"><Zap size={14}/> Clean Energy</span>
-            <span className="tag"><Heart size={14}/> Sustainable Future</span>
-            <span className="tag"><ShieldCheck size={14}/> Eco-Conscious</span>
+            <span className="tag"><Zap size={14} /> Clean Energy</span>
+            <span className="tag"><Heart size={14} /> Sustainable Future</span>
+            <span className="tag"><ShieldCheck size={14} /> Eco-Conscious</span>
           </div>
           <a href="https://aapaavani.com/" target="_blank" rel="noopener noreferrer" className="btn-outline">Visit Partner Site</a>
         </div>
@@ -90,7 +96,7 @@ export default function About() {
 
       {/* Call to Action */}
       <section className="about-cta">
-        <h2 className="title" style={{fontSize: '2.5rem'}}>Ready to make history?</h2>
+        <h2 className="title" style={{ fontSize: '2.5rem' }}>Ready to make history?</h2>
         <div className="hero-actions">
           <Link to="/register" className="btn-primary">Become a Participant</Link>
           <Link to="/events" className="btn-secondary">Explore Events</Link>
