@@ -1095,7 +1095,7 @@ export default function Registration() {
                       <input
                         type="file"
                         id="file-upload"
-                        hidden
+                        style={{ display: 'none' }}
                         accept="image/*"
                         onChange={handleFileUpload}
                       />
@@ -1380,7 +1380,7 @@ export default function Registration() {
 
         input, select {
           width: 100%;
-          padding: 1rem 1.2rem 1rem 3rem;
+          padding: 1rem 2.5rem 1rem 3rem;
           border-radius: 12px;
           border: 1.5px solid rgba(228, 225, 222, 0.12);
           background: rgba(15, 15, 14, 0.4);
@@ -1390,6 +1390,13 @@ export default function Registration() {
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           display: block;
           box-sizing: border-box;
+          text-overflow: ellipsis;
+          min-width: 0;
+        }
+
+        select {
+          padding-right: 3rem;
+          appearance: auto;
         }
 
         input:focus, select:focus {
