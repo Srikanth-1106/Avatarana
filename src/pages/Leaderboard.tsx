@@ -50,10 +50,11 @@ export default function Leaderboard() {
       });
 
       // Process registrations
-      registrations.forEach((reg: any) => {
+      type RegistrationRecord = { zone?: string; events?: string[] };
+      (registrations as RegistrationRecord[]).forEach(reg => {
         if (reg.zone && stats[reg.zone]) {
           stats[reg.zone].registrations += 1;
-          
+
           // Calculate points based on events
           if (reg.events && Array.isArray(reg.events)) {
             // Simple calculation: 5 points per event registered
@@ -62,18 +63,21 @@ export default function Leaderboard() {
         }
       });
 
+      // Determine current maximums so we can ensure Mangalore leads naturally
+      const maxPoints = Math.max(...Object.values(stats).map(s => s.points));
+      const maxRegistrations = Math.max(...Object.values(stats).map(s => s.registrations));
+
       // Create zone stats array
       const statsArray: ZoneStats[] = zonesData.map(zone => {
         let points = stats[zone.id]?.points || 0;
         let registrations = stats[zone.id]?.registrations || 0;
-        
-        // Boost Mangalore as champion zone (strong multiplier + bonus)
+
+        // Boost Mangalore so it leads in both points and registrations
         if (zone.name === 'Mangalore') {
-          // Make Mangalore significantly higher as the champion zone
-          points = Math.floor(points * 5) + 250;  // 5x + 250 bonus for massive points lead
-          registrations = Math.floor(registrations * 3) + 100;  // 3x + 100 bonus
+          points = Math.max(points, maxPoints + 500); // ensure Mangalore has highest points by a large margin
+          registrations = Math.max(registrations, maxRegistrations + 200); // ensure highest registrations by a large margin
         }
-        
+
         return {
           id: zone.id,
           name: zone.name,
@@ -87,10 +91,6 @@ export default function Leaderboard() {
 
       // Set positions based on current view
       statsArray.sort((a, b) => {
-        // Mangalore always on top
-        if (a.name === 'Mangalore') return -1;
-        if (b.name === 'Mangalore') return 1;
-        
         if (view === 'points') {
           return b.points - a.points;
         } else {
@@ -131,7 +131,7 @@ export default function Leaderboard() {
   // Initial fetch
   useEffect(() => {
     fetchZoneStats();
-  }, []);
+  }, [fetchZoneStats]);
 
   // Real-time subscription to registrations table
   useEffect(() => {
@@ -158,19 +158,24 @@ export default function Leaderboard() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [view]);
+  }, [fetchZoneStats]);
 
   const sortedData = [...zoneStats].sort((a, b) => {
-    // Mangalore always on top
-    if (a.name === 'Mangalore') return -1;
-    if (b.name === 'Mangalore') return 1;
-    
     if (view === 'points') {
       return b.points - a.points;
     } else {
       return b.registrations - a.registrations;
     }
-  }).map((item, index) => ({ ...item, rank: index + 1 }));
+  });
+
+  // Ensure Mangalore is always first (in case points tie)
+  if (sortedData.length) {
+    const idx = sortedData.findIndex(z => z.name === 'Mangalore');
+    if (idx > 0) {
+      const [mangalore] = sortedData.splice(idx, 1);
+      sortedData.unshift(mangalore);
+    }
+  }
 
   return (
     <div className="page-container" style={{maxWidth: '1100px'}}>
@@ -239,35 +244,38 @@ export default function Leaderboard() {
             </div>
             
             <div className="table-body">
-              {sortedData.map((zone, index) => (
-                <motion.div 
-                  key={zone.id} 
-                  className={`table-row ${zone.rank === 1 ? 'first' : ''}`}
-                  initial={{opacity: 0, x: -20}}
-                  animate={{opacity: 1, x: 0}}
-                  transition={{delay: index * 0.05}}
-                >
-                  <div className="col rank">
-                    {zone.rank === 1 && <Trophy className="icon-primary" size={24} />}
-                    {zone.rank === 2 && <Medal className="icon-secondary" size={24} />}
-                    {zone.rank === 3 && <Medal className="icon-tertiary" size={24} />}
-                    {zone.rank > 3 && <span className="position-number">{zone.rank}</span>}
-                  </div>
-                  <div className="col region">
-                    <span className="region-name">{zone.displayName}</span>
-                    <span style={{fontSize: '0.7rem', color: 'var(--muted)'}}>{zone.shortCode}</span>
-                    {zone.rank === 1 && <span className="badge-champ"><Star size={11}/> LEADING</span>}
-                  </div>
-                  <div className="col pts">
-                    <span className="points-value">
-                      {view === 'points' ? zone.points : zone.registrations}
-                    </span>
-                    <span className="points-label">
-                      {view === 'points' ? 'pts' : 'reg'}
-                    </span>
-                  </div>
-                </motion.div>
-              ))}
+              {sortedData.map((zone, index) => {
+                const rank = index + 1;
+                return (
+                  <motion.div 
+                    key={zone.id} 
+                    className={`table-row ${rank === 1 ? 'first' : ''}`}
+                    initial={{opacity: 0, x: -20}}
+                    animate={{opacity: 1, x: 0}}
+                    transition={{delay: index * 0.05}}
+                  >
+                    <div className="col rank">
+                      {rank === 1 && <Trophy className="icon-primary" size={24} />}
+                      {rank === 2 && <Medal className="icon-secondary" size={24} />}
+                      {rank === 3 && <Medal className="icon-tertiary" size={24} />}
+                      {rank > 3 && <span className="position-number">{rank}</span>}
+                    </div>
+                    <div className="col region">
+                      <span className="region-name">{zone.displayName}</span>
+                      <span style={{fontSize: '0.7rem', color: 'var(--muted)'}}>{zone.shortCode}</span>
+                      {rank === 1 && <span className="badge-champ"><Star size={11}/> LEADING</span>}
+                    </div>
+                    <div className="col pts">
+                      <span className="points-value">
+                        {view === 'points' ? zone.points : zone.registrations}
+                      </span>
+                      <span className="points-label">
+                        {view === 'points' ? 'pts' : 'reg'}
+                      </span>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
         </>
