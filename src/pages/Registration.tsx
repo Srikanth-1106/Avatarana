@@ -1926,10 +1926,20 @@ export default function Registration() {
             font-size: 0.9rem;
             font-weight: 700;
           }
-          
-          input, select {
+
+          input {
             padding: 0.95rem 1rem 0.95rem 2.8rem;
             font-size: 1rem;
+          }
+
+          select {
+            padding: 0.95rem 2.5rem 0.95rem 1rem;
+            font-size: 0.88rem;
+          }
+
+          /* Hide icon for select on mobile to prevent overlap */
+          .input-wrapper:has(select) .input-icon {
+            display: none;
           }
           
           .input-icon {
