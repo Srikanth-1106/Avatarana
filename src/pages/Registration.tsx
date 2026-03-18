@@ -54,7 +54,7 @@ export default function Registration() {
 
       // Players to check for this specific sport
       const playersForThisSport = [];
-      
+
       // Every sport includes the Captain
       playersForThisSport.push({ name: formData.name, phone: formData.phone, role: 'Captain' });
 
@@ -91,7 +91,7 @@ export default function Registration() {
           return `${player.role} (${player.name}) is already part of a team for ${event.name}.`;
         }
       }
-      
+
       // 3. Simple cross-check within the current form (prevent same phone twice in one roster section)
       const phones = playersForThisSport.map(p => p.phone).filter(p => p && p.length >= 10);
       const uniquePhones = new Set(phones);
@@ -166,9 +166,10 @@ export default function Registration() {
 
       if (submitError) throw submitError;
       setSubmitted(true);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error submitting registration:', err);
-      setError(err.message || 'Failed to submit registration. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to submit registration. Please try again.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -271,9 +272,10 @@ export default function Registration() {
         pdf.save(`Avatarana_Pass_${formData.name.replace(/\s+/g, '_')}.pdf`);
 
         document.body.removeChild(ghostContainer);
-      } catch (err) {
+      } catch (err: unknown) {
         console.error("PDF generation failed:", err);
-        alert("Failed to generate PDF. Please try again.");
+        const errorMessage = err instanceof Error ? err.message : "Failed to generate PDF. Please try again.";
+        alert(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -287,9 +289,10 @@ export default function Registration() {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Camera access denied:", err);
-      alert("Could not access camera. Please check permissions.");
+      const errorMessage = err instanceof Error ? err.message : "Could not access camera. Please check permissions.";
+      alert(errorMessage);
       setIsCameraOpen(false);
     }
   };
@@ -339,9 +342,9 @@ export default function Registration() {
           // Initialize required number of members (minus captain) for this specific sport
           const requiredMembersCount = (event.minPlayers || 1) - 1;
           const newMembers = Array(requiredMembersCount).fill(null).map(() => ({ name: '', phone: '' }));
-          
-          setFormData(f => ({ 
-            ...f, 
+
+          setFormData(f => ({
+            ...f,
             teams: {
               ...f.teams,
               [eventId]: { teamName: '', members: newMembers }
@@ -410,7 +413,6 @@ export default function Registration() {
     }));
   };
 
-  const hasGroupEvent = selectedEvents.some(id => eventsData.find(e => e.id === id)?.type === 'Group');
 
   const filteredEvents = eventsData.filter(event => {
     if (!formData.category) return true;
@@ -982,7 +984,7 @@ export default function Registration() {
                         <label>Team Members (Player 1: {formData.name} - Captain)</label>
                         <p className="section-desc">Add at least {requiredExtra} more players.</p>
                       </div>
-                      
+
                       {teamData.members.map((member, idx) => (
                         <div key={idx} className="member-row animate-fade-in">
                           <div className="member-number">{idx + 2}</div>
@@ -1005,8 +1007,8 @@ export default function Registration() {
                             />
                           </div>
                           {teamData.members.length > requiredExtra && (
-                            <button 
-                              type="button" 
+                            <button
+                              type="button"
                               onClick={() => removeTeamMember(eventId, idx)}
                               className="remove-member-btn"
                             >
@@ -1015,7 +1017,7 @@ export default function Registration() {
                           )}
                         </div>
                       ))}
-                      
+
                       <button type="button" onClick={() => addTeamMember(eventId)} className="btn-outline add-member-btn">
                         <Sparkles size={16} /> Add Extra Player for {event.name}
                       </button>
