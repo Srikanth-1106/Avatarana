@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { eventsData } from '../data/eventsData';
-import { Users, User, Medal } from 'lucide-react';
+import { Medal } from 'lucide-react';
 
 export default function Events() {
   const [activeCategory, setActiveCategory] = useState<string>('All');
@@ -40,11 +40,8 @@ export default function Events() {
           >
             <div className="event-card glass-card">
               <div className="event-header">
-                <span className="event-badge">{event.category} {event.subCategory ? `- ${event.subCategory}` : ''}</span>
-                <span className="event-type">
-                  {event.type === 'Group' ? <Users size={16} /> : <User size={16} />}
-                  {event.type}
-                </span>
+                <span className="event-badge">{event.type === 'Group' ? 'GROUP' : 'INDIVIDUAL'}</span>
+                {event.type === 'Group' && <span className="badge-captain">CAPTAIN ONLY</span>}
               </div>
               <h3 className="event-title">{event.name}</h3>
               <p className="event-desc">{event.description}</p>
@@ -126,20 +123,26 @@ export default function Events() {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          font-size: 0.85rem;
-          font-weight: 600;
+          font-size: 0.75rem;
+          font-weight: 700;
+          gap: 0.5rem;
         }
         .event-badge {
           color: var(--secondary);
-          background: rgba(92, 158, 156, 0.1);
-          padding: 0.25rem 0.75rem;
+          background: rgba(92, 158, 156, 0.12);
+          padding: 0.35rem 0.65rem;
           border-radius: 4px;
+          font-size: 0.7rem;
+          letter-spacing: 0.05em;
         }
-        .event-type {
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-          color: var(--muted);
+        .badge-captain {
+          background: rgba(218, 93, 101, 0.15);
+          color: var(--primary);
+          padding: 0.35rem 0.65rem;
+          border-radius: 4px;
+          font-size: 0.65rem;
+          letter-spacing: 0.03em;
+          white-space: nowrap;
         }
         .event-title {
           font-size: 1.5rem;

@@ -96,6 +96,7 @@ export default function Navbar() {
     { name: 'About', path: '/about' },
     { name: 'Events', path: '/events' },
     { name: 'Points', path: '/points' },
+    { name: '🏏 Cricket', path: '/cricket' },
     { name: 'Schedule', path: '/schedule' },
     { name: 'Leaderboard', path: '/leaderboard' },
     { name: 'Gallery', path: '/gallery' },
