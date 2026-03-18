@@ -10,6 +10,7 @@ import Schedule from './pages/Schedule';
 import Gallery from './pages/Gallery';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import Cricket from './pages/Cricket';
 import { AuthProvider } from './context/AuthContext';
 import './App.css';
 
@@ -32,6 +33,7 @@ function App() {
             <Route index element={<Home />} />
             <Route path="events" element={<Events />} />
             <Route path="points" element={<PointsSystem />} />
+            <Route path="cricket" element={<Cricket />} />
             <Route path="register" element={<Registration />} />
             <Route path="leaderboard" element={<Leaderboard />} />
             <Route path="schedule" element={<Schedule />} />

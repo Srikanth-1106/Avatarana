@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { CheckCircle2, User, Phone, Calendar, MapPin, Grid, Trophy, Sparkles, Check, Info, Loader2, Camera, Upload, Trash2, FileText } from 'lucide-react';
+import { CheckCircle2, User, Phone, Calendar, Grid, Trophy, Sparkles, Check, Info, Loader2, Camera, Upload, Trash2, FileText, Globe } from 'lucide-react';
 import { eventsData } from '../data/eventsData';
+import { zonesData } from '../data/zonesData';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
@@ -26,7 +27,7 @@ export default function Registration() {
     name: '',
     phone: '',
     age: '',
-    region: '',
+    zone: '',
     category: '',
     teams: {} as Record<string, { teamName: string, members: { name: string, phone: string }[] }>
   });
@@ -163,6 +164,26 @@ export default function Registration() {
       return;
     }
 
+    // Check if cricket is selected and zone is required
+    const hasCricket = selectedEvents.some(id => {
+      const event = eventsData.find(e => e.id === id);
+      return event?.name === 'Cricket';
+    });
+
+    if (hasCricket && !formData.zone) {
+      setError('Zone selection is required to participate in Cricket. Please select your zone.');
+      return;
+    }
+
+    // Validate zone for cricket participation
+    if (hasCricket) {
+      const validZones = zonesData.map(z => z.id);
+      if (!validZones.includes(formData.zone)) {
+        setError('Invalid zone selected. Please select from the available zones for cricket.');
+        return;
+      }
+    }
+
     setLoading(true);
     setError(null);
 
@@ -219,7 +240,7 @@ export default function Registration() {
           full_name: formData.name,
           phone: formData.phone,
           age: parsedAge,
-          region: formData.region,
+          zone: formData.zone || null,
           category: formData.category,
           team_name: teamData?.teamName || null,
           team_members: teamData?.members || null,
@@ -234,7 +255,7 @@ export default function Registration() {
           full_name: formData.name,
           phone: formData.phone,
           age: parsedAge,
-          region: formData.region,
+          zone: formData.zone || null,
           category: formData.category,
           team_name: null,
           team_members: [],
@@ -306,8 +327,8 @@ export default function Registration() {
                   <span style="font-size: 18px; font-weight: bold; color: #ffffff;">${formData.name}</span>
                 </div>
                 <div>
-                  <label style="display: block; font-size: 10px; color: #777; margin-bottom: 4px; font-weight: bold;">REGION</label>
-                  <span style="font-size: 16px; font-weight: bold; color: #ffffff;">${formData.region.replace('-', ' ').toUpperCase()}</span>
+                  <label style="display: block; font-size: 10px; color: #777; margin-bottom: 4px; font-weight: bold;">ZONE</label>
+                  <span style="font-size: 16px; font-weight: bold; color: #5c9e9c;">${zonesData.find(z => z.id === formData.zone)?.displayName}</span>
                 </div>
                 <div style="display: flex; gap: 20px;">
                   <div>
@@ -561,8 +582,8 @@ export default function Registration() {
                     <span>{formData.name}</span>
                   </div>
                   <div className="info-node">
-                    <label>REGION</label>
-                    <span>{formData.region.replace('-', ' ').toUpperCase()}</span>
+                    <label>ZONE</label>
+                    <span>{zonesData.find(z => z.id === formData.zone)?.displayName}</span>
                   </div>
                   <div className="info-row">
                     <div className="info-node">
@@ -673,7 +694,7 @@ export default function Registration() {
             </button>
             <button onClick={() => {
               setSubmitted(false);
-              setFormData({ name: '', phone: '', age: '', region: '', category: '', teams: {} });
+              setFormData({ name: '', phone: '', age: '', zone: '', category: '', teams: {} });
               setSelectedEvents([]);
               setPhoto(null);
             }} className="btn-secondary">
@@ -1021,21 +1042,21 @@ export default function Registration() {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="region">Region</label>
+                  <label htmlFor="zone">Zone</label>
                   <div className="input-wrapper">
-                    <MapPin className="input-icon" size={18} />
+                    <Globe className="input-icon" size={18} />
                     <select
-                      id="region"
+                      id="zone"
                       required
-                      value={formData.region}
-                      onChange={e => setFormData({ ...formData, region: e.target.value })}
+                      value={formData.zone}
+                      onChange={e => setFormData({ ...formData, zone: e.target.value })}
                     >
-                      <option value="">Select region...</option>
-                      <option value="mangalore-north">Mangalore North</option>
-                      <option value="mangalore-south">Mangalore South</option>
-                      <option value="udupi">Udupi</option>
-                      <option value="puttur">Puttur</option>
-                      <option value="other">Other</option>
+                      <option value="">Select your zone...</option>
+                      {zonesData.map(zone => (
+                        <option key={zone.id} value={zone.id}>
+                          {zone.displayName}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -1188,17 +1209,18 @@ export default function Registration() {
 
             {/* Right Column: Events Selection */}
             <div className="form-section glass-card animate-slide-up-delayed">
-              <h3 className="section-title"><Trophy size={20} /> Interested Events</h3>
+              <h3 className="section-title"><Trophy size={24} /> Interested Events</h3>
               <p className="section-desc">Select all the events you'd like to participate in. {formData.category ? `Showing events for ${formData.category}.` : "Please select a category first."}</p>
 
               <div className="captain-notice" style={{
-                display: 'flex', alignItems: 'center', gap: '0.5rem',
-                padding: '0.6rem 1rem', borderRadius: '10px', fontSize: '0.82rem',
-                background: 'rgba(92, 158, 156, 0.1)', border: '1px solid rgba(92, 158, 156, 0.2)',
-                color: 'var(--secondary)', fontWeight: 600, marginBottom: '0.5rem'
+                display: 'flex', alignItems: 'center', gap: '0.75rem',
+                padding: '1rem 1.25rem', borderRadius: '12px', fontSize: '0.9rem',
+                background: 'linear-gradient(135deg, rgba(92, 158, 156, 0.12) 0%, rgba(92, 158, 156, 0.06) 100%)',
+                border: '1.5px solid rgba(92, 158, 156, 0.3)', color: 'var(--secondary)', fontWeight: 600,
+                marginBottom: '1.5rem'
               }}>
-                <Info size={16} />
-                For team events, only the <strong style={{ color: 'var(--primary)' }}>team captain</strong> should register.
+                <Info size={18} style={{ flexShrink: 0, opacity: 0.8 }} />
+                <span>For team events, only the <strong style={{ color: 'var(--primary)', fontWeight: 700 }}>team captain</strong> should register.</span>
               </div>
 
               <div className="events-selection-grid">
@@ -1321,46 +1343,53 @@ export default function Registration() {
         .form-row {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 1.5rem;
+          gap: 2rem;
         }
 
         .form-group {
           display: flex;
           flex-direction: column;
-          gap: 0.6rem;
+          gap: 0.75rem;
         }
 
         label {
-          font-weight: 600;
+          font-weight: 700;
           color: var(--text-main);
-          font-size: 0.9rem;
-          opacity: 0.9;
+          font-size: 0.95rem;
+          opacity: 1;
+          letter-spacing: 0.02em;
+          display: block;
+          margin-bottom: 0.25rem;
         }
 
         .input-wrapper {
           position: relative;
           display: flex;
           align-items: center;
+          width: 100%;
         }
 
         .input-icon {
           position: absolute;
-          left: 1rem;
+          left: 1.2rem;
           color: var(--muted);
           pointer-events: none;
           transition: color 0.2s;
+          flex-shrink: 0;
         }
 
         input, select {
           width: 100%;
-          padding: 0.875rem 1rem 0.875rem 2.8rem;
+          padding: 1rem 1.2rem 1rem 3rem;
           border-radius: 12px;
-          border: 1px solid rgba(228, 225, 222, 0.1);
+          border: 1.5px solid rgba(228, 225, 222, 0.12);
           background: rgba(15, 15, 14, 0.4);
           color: var(--text-main);
           font-family: inherit;
           font-size: 1rem;
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          display: block;
+          box-sizing: border-box;
         }
 
         input:focus, select:focus {
@@ -1481,78 +1510,110 @@ export default function Registration() {
         /* Custom Events Grid */
         .events-selection-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-          gap: 1rem;
-          max-height: 400px;
+          grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+          gap: 1.2rem;
+          max-height: 450px;
           overflow-y: auto;
           padding-right: 0.5rem;
           scrollbar-width: thin;
-          scrollbar-color: var(--primary) transparent;
+          scrollbar-color: rgba(218, 93, 101, 0.5) transparent;
         }
 
         .events-selection-grid::-webkit-scrollbar {
-          width: 4px;
+          width: 6px;
         }
 
-        .events-selection-grid::-webkit-scrollbar-thumb {
-          background-color: var(--primary);
+        .events-selection-grid::-webkit-scrollbar-track {
+          background: rgba(228, 225, 222, 0.05);
           border-radius: 10px;
         }
 
+        .events-selection-grid::-webkit-scrollbar-thumb {
+          background-color: rgba(218, 93, 101, 0.4);
+          border-radius: 10px;
+          transition: background-color 0.2s;
+        }
+
+        .events-selection-grid::-webkit-scrollbar-thumb:hover {
+          background-color: var(--primary);
+        }
+
         .event-card {
-          background: rgba(228, 225, 222, 0.05);
-          border: 1px solid rgba(228, 225, 222, 0.1);
-          border-radius: 12px;
-          padding: 1rem;
+          background: rgba(228, 225, 222, 0.03);
+          border: 1.5px solid rgba(228, 225, 222, 0.12);
+          border-radius: 14px;
+          padding: 1.25rem;
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           display: flex;
           flex-direction: column;
-          gap: 0.5rem;
+          gap: 0.7rem;
           position: relative;
           user-select: none;
+          background-clip: padding-box;
         }
 
         .event-card:hover {
-          background: rgba(228, 225, 222, 0.08);
-          border-color: rgba(218, 93, 101, 0.3);
-          transform: translateY(-2px);
+          background: rgba(228, 225, 222, 0.1);
+          border-color: rgba(218, 93, 101, 0.4);
+          transform: translateY(-4px);
+          box-shadow: 0 8px 16px rgba(218, 93, 101, 0.1);
         }
 
         .event-card.selected {
-          background: rgba(218, 93, 101, 0.15);
+          background: linear-gradient(135deg, rgba(218, 93, 101, 0.2) 0%, rgba(218, 93, 101, 0.1) 100%);
           border-color: var(--primary);
-          box-shadow: 0 4px 12px rgba(218, 93, 101, 0.2);
+          box-shadow: 0 6px 20px rgba(218, 93, 101, 0.25);
+          transform: translateY(-2px) scale(1.02);
         }
 
         .event-card-header {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
+          gap: 0.5rem;
         }
 
         .event-type {
-          font-size: 0.7rem;
+          font-size: 0.65rem;
           text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: var(--muted);
+          letter-spacing: 0.06em;
+          color: var(--secondary);
           font-weight: 700;
+          background: rgba(92, 158, 156, 0.15);
+          padding: 0.35rem 0.6rem;
+          border-radius: 5px;
         }
 
         .check-icon {
           color: var(--primary);
+          animation: scaleIn 0.3s ease-out;
+        }
+
+        @keyframes scaleIn {
+          from {
+            transform: scale(0);
+            opacity: 0;
+          }
+          to {
+            transform: scale(1);
+            opacity: 1;
+          }
         }
 
         .event-name {
           margin: 0;
-          font-size: 0.95rem;
-          font-weight: 600;
-          line-height: 1.2;
+          font-size: 1rem;
+          font-weight: 700;
+          line-height: 1.3;
+          color: var(--text-main);
         }
 
         .event-subcategory {
           font-size: 0.75rem;
           color: var(--muted);
+          font-weight: 500;
+          letter-spacing: 0.02em;
         }
 
         .no-events {
@@ -1561,35 +1622,56 @@ export default function Registration() {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          padding: 3rem;
+          padding: 3.5rem 2rem;
           color: var(--muted);
           text-align: center;
           gap: 1rem;
+          background: rgba(228, 225, 222, 0.03);
+          border-radius: 12px;
+          border: 1.5px dashed rgba(228, 225, 222, 0.15);
+        }
+
+        .no-events svg {
+          opacity: 0.5;
         }
 
         .selection-summary {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding-top: 1rem;
-          border-top: 1px solid rgba(228, 225, 222, 0.1);
+          padding-top: 1.5rem;
+          border-top: 1.5px solid rgba(228, 225, 222, 0.12);
           margin-top: auto;
+          gap: 1rem;
         }
 
         .selection-summary span {
-          font-size: 0.9rem;
-          color: var(--muted);
-          font-weight: 500;
+          font-size: 0.95rem;
+          color: var(--text-main);
+          font-weight: 600;
+          background: rgba(218, 93, 101, 0.1);
+          padding: 0.5rem 1rem;
+          border-radius: 8px;
+          border-left: 3px solid var(--primary);
         }
 
         .submit-btn {
-          padding: 0.8rem 2rem;
+          padding: 0.9rem 2.5rem;
+          font-weight: 600;
+          font-size: 0.95rem;
+          transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(218, 93, 101, 0.3);
         }
 
         .submit-btn:disabled {
-          opacity: 0.5;
+          opacity: 0.6;
           cursor: not-allowed;
-          filter: grayscale(1);
+          filter: grayscale(0.8);
+          transform: none;
         }
 
         .error-message {
@@ -1827,7 +1909,30 @@ export default function Registration() {
         }
 
         @media (max-width: 600px) {
-          .form-row { grid-template-columns: 1fr; }
+          .form-row { 
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+          }
+          
+          label {
+            font-size: 0.9rem;
+            font-weight: 700;
+          }
+          
+          input, select {
+            padding: 0.95rem 1rem 0.95rem 2.8rem;
+            font-size: 1rem;
+          }
+          
+          .input-icon {
+            left: 1rem;
+            width: 18px;
+            height: 18px;
+          }
+          
+          .form-group {
+            gap: 0.65rem;
+          }
           .success-card { padding: 3rem 1.5rem; }
           .ticket-card { border-radius: 12px; }
           .success-actions { flex-direction: column; width: 100%; }

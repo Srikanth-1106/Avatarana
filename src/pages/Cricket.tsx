@@ -1,0 +1,501 @@
+import { useState } from 'react';
+import { Trophy, TrendingUp, Users, Flame, Target } from 'lucide-react';
+import { zonesData, cricketTeamsData } from '../data/zonesData';
+import { AnimatedSection } from '../components/AnimatedSection';
+import { motion } from 'framer-motion';
+
+export default function CricketPointsTable() {
+  const [selectedZone, setSelectedZone] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<'points' | 'wins' | 'nrr'>('points');
+
+  // Filter teams based on selected zone
+  const filteredTeams = selectedZone
+    ? cricketTeamsData.filter(team => 
+        zonesData.find(z => z.name === team.zone && z.id === selectedZone)
+      )
+    : cricketTeamsData;
+
+  // Sort teams
+  const sortedTeams = [...filteredTeams].sort((a, b) => {
+    if (sortBy === 'points') {
+      return b.points - a.points;
+    } else if (sortBy === 'wins') {
+      return b.wins - a.wins;
+    } else {
+      return (b.nrr || 0) - (a.nrr || 0);
+    }
+  });
+
+  // Calculate zone-wise points
+  const zonePoints = zonesData.map(zone => {
+    const zoneTeams = cricketTeamsData.filter(team => team.zone === zone.name);
+    const totalPoints = zoneTeams.reduce((sum, team) => sum + team.points, 0);
+    const totalWins = zoneTeams.reduce((sum, team) => sum + team.wins, 0);
+    return { zone, totalPoints, totalWins, teamCount: zoneTeams.length };
+  }).sort((a, b) => b.totalPoints - a.totalPoints);
+
+  return (
+    <div className="page-container">
+      <AnimatedSection>
+        <div className="section-header center-align">
+          <h1 className="title" style={{ fontSize: '3rem' }}>🏏 Cricket Championship</h1>
+          <p className="subtitle" style={{ margin: '1rem auto 2rem' }}>
+            Zone-wise Points Table & Live Standings
+          </p>
+          <div className="divider" style={{ margin: '0 auto' }}></div>
+        </div>
+      </AnimatedSection>
+
+      {/* Zone Overview Cards */}
+      <AnimatedSection delay={0.1}>
+        <div style={{ marginBottom: '3rem' }}>
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', color: 'var(--primary)' }}>
+            <Flame size={24} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />
+            Zone Performance
+          </h2>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: '1.5rem',
+              marginBottom: '2rem'
+            }}
+          >
+            {zonePoints.map((item, index) => (
+              <motion.div
+                key={item.zone.id}
+                className="glass-card"
+                whileHover={{ scale: 1.02 }}
+                onClick={() => setSelectedZone(selectedZone === item.zone.id ? null : item.zone.id)}
+                style={{
+                  cursor: 'pointer',
+                  padding: '1.5rem',
+                  border:
+                    selectedZone === item.zone.id
+                      ? '2px solid var(--primary)'
+                      : '1px solid rgba(228, 225, 222, 0.2)',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
+                  <div>
+                    <h3 style={{ fontSize: '1.125rem', marginBottom: '0.25rem' }}>
+                      {item.zone.displayName}
+                    </h3>
+                    <p style={{ fontSize: '0.875rem', color: 'var(--muted)' }}>
+                      {item.teamCount} {item.teamCount === 1 ? 'team' : 'teams'}
+                    </p>
+                  </div>
+                  {index === 0 && <Trophy size={24} style={{ color: 'var(--primary)' }} />}
+                </div>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '1rem',
+                    marginTop: '1rem'
+                  }}
+                >
+                  <div>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--muted)', textTransform: 'uppercase' }}>
+                      Points
+                    </p>
+                    <p style={{ fontSize: '1.75rem', fontWeight: 'bold', color: 'var(--primary)' }}>
+                      {item.totalPoints}
+                    </p>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--muted)', textTransform: 'uppercase' }}>
+                      Wins
+                    </p>
+                    <p style={{ fontSize: '1.75rem', fontWeight: 'bold', color: 'var(--secondary)' }}>
+                      {item.totalWins}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </AnimatedSection>
+
+      {/* Sort Options */}
+      <AnimatedSection delay={0.2}>
+        <div style={{ marginBottom: '2rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => setSortBy('points')}
+            style={{
+              padding: '0.75rem 1.5rem',
+              borderRadius: '8px',
+              border: 'none',
+              background: sortBy === 'points' ? 'var(--primary)' : 'rgba(228, 225, 222, 0.1)',
+              color: sortBy === 'points' ? '#000' : 'var(--text)',
+              cursor: 'pointer',
+              fontWeight: 600,
+              transition: 'all 0.3s ease'
+            }}
+          >
+            <TrendingUp size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />
+            By Points
+          </button>
+          <button
+            onClick={() => setSortBy('wins')}
+            style={{
+              padding: '0.75rem 1.5rem',
+              borderRadius: '8px',
+              border: 'none',
+              background: sortBy === 'wins' ? 'var(--primary)' : 'rgba(228, 225, 222, 0.1)',
+              color: sortBy === 'wins' ? '#000' : 'var(--text)',
+              cursor: 'pointer',
+              fontWeight: 600,
+              transition: 'all 0.3s ease'
+            }}
+          >
+            <Trophy size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />
+            By Wins
+          </button>
+          <button
+            onClick={() => setSortBy('nrr')}
+            style={{
+              padding: '0.75rem 1.5rem',
+              borderRadius: '8px',
+              border: 'none',
+              background: sortBy === 'nrr' ? 'var(--primary)' : 'rgba(228, 225, 222, 0.1)',
+              color: sortBy === 'nrr' ? '#000' : 'var(--text)',
+              cursor: 'pointer',
+              fontWeight: 600,
+              transition: 'all 0.3s ease'
+            }}
+          >
+            <Target size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />
+            By NRR
+          </button>
+          {selectedZone && (
+            <button
+              onClick={() => setSelectedZone(null)}
+              style={{
+                padding: '0.75rem 1.5rem',
+                borderRadius: '8px',
+                border: '1px solid rgba(255, 100, 100, 0.5)',
+                background: 'rgba(255, 100, 100, 0.1)',
+                color: '#ff6464',
+                cursor: 'pointer',
+                fontWeight: 600,
+                transition: 'all 0.3s ease'
+              }}
+            >
+              Clear Zone Filter
+            </button>
+          )}
+        </div>
+      </AnimatedSection>
+
+      {/* Cricket Points Table */}
+      <AnimatedSection delay={0.3}>
+        <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(228, 225, 222, 0.2)' }}>
+            <h2 style={{ fontSize: '1.25rem', margin: 0 }}>
+              <Users size={20} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />
+              {selectedZone
+                ? zonesData.find(z => z.id === selectedZone)?.displayName + ' Teams'
+                : 'All Teams'}{' '}
+              ({sortedTeams.length})
+            </h2>
+          </div>
+
+          <div style={{ overflowX: 'auto' }}>
+            <table
+              style={{
+                width: '100%',
+                borderCollapse: 'collapse'
+              }}
+            >
+              <thead>
+                <tr
+                  style={{
+                    borderBottom: '2px solid rgba(228, 225, 222, 0.2)',
+                    background: 'rgba(228, 225, 222, 0.05)'
+                  }}
+                >
+                  <th
+                    style={{
+                      padding: '1rem 1.5rem',
+                      textAlign: 'left',
+                      fontWeight: 600,
+                      color: 'var(--muted)',
+                      fontSize: '0.875rem',
+                      textTransform: 'uppercase'
+                    }}
+                  >
+                    Rank
+                  </th>
+                  <th
+                    style={{
+                      padding: '1rem 1.5rem',
+                      textAlign: 'left',
+                      fontWeight: 600,
+                      color: 'var(--muted)',
+                      fontSize: '0.875rem',
+                      textTransform: 'uppercase'
+                    }}
+                  >
+                    Team Name
+                  </th>
+                  <th
+                    style={{
+                      padding: '1rem 1.5rem',
+                      textAlign: 'center',
+                      fontWeight: 600,
+                      color: 'var(--muted)',
+                      fontSize: '0.875rem',
+                      textTransform: 'uppercase'
+                    }}
+                  >
+                    Zone
+                  </th>
+                  <th
+                    style={{
+                      padding: '1rem 1.5rem',
+                      textAlign: 'center',
+                      fontWeight: 600,
+                      color: 'var(--muted)',
+                      fontSize: '0.875rem',
+                      textTransform: 'uppercase'
+                    }}
+                  >
+                    Matches
+                  </th>
+                  <th
+                    style={{
+                      padding: '1rem 1.5rem',
+                      textAlign: 'center',
+                      fontWeight: 600,
+                      color: 'var(--muted)',
+                      fontSize: '0.875rem',
+                      textTransform: 'uppercase'
+                    }}
+                  >
+                    Wins
+                  </th>
+                  <th
+                    style={{
+                      padding: '1rem 1.5rem',
+                      textAlign: 'center',
+                      fontWeight: 600,
+                      color: 'var(--muted)',
+                      fontSize: '0.875rem',
+                      textTransform: 'uppercase'
+                    }}
+                  >
+                    Points
+                  </th>
+                  <th
+                    style={{
+                      padding: '1rem 1.5rem',
+                      textAlign: 'center',
+                      fontWeight: 600,
+                      color: 'var(--muted)',
+                      fontSize: '0.875rem',
+                      textTransform: 'uppercase'
+                    }}
+                  >
+                    NRR
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedTeams.map((team, index) => (
+                  <motion.tr
+                    key={team.name}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    style={{
+                      borderBottom: '1px solid rgba(228, 225, 222, 0.1)',
+                      background:
+                        index === 0
+                          ? 'rgba(200, 120, 40, 0.05)'
+                          : index === 1
+                            ? 'rgba(180, 180, 180, 0.05)'
+                            : 'transparent',
+                      transition: 'background 0.3s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background =
+                        index === 0
+                          ? 'rgba(200, 120, 40, 0.1)'
+                          : index === 1
+                            ? 'rgba(180, 180, 180, 0.1)'
+                            : 'rgba(228, 225, 222, 0.05)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background =
+                        index === 0
+                          ? 'rgba(200, 120, 40, 0.05)'
+                          : index === 1
+                            ? 'rgba(180, 180, 180, 0.05)'
+                            : 'transparent';
+                    }}
+                  >
+                    <td
+                      style={{
+                        padding: '1rem 1.5rem',
+                        fontWeight: 700,
+                        fontSize: '1.125rem',
+                        color:
+                          index === 0
+                            ? '#FFD700'
+                            : index === 1
+                              ? '#C0C0C0'
+                              : index === 2
+                                ? '#CD7F32'
+                                : 'var(--text)'
+                      }}
+                    >
+                      {index === 0 && '🥇'}
+                      {index === 1 && '🥈'}
+                      {index === 2 && '🥉'}
+                      {index > 2 && index + 1}
+                    </td>
+                    <td
+                      style={{
+                        padding: '1rem 1.5rem',
+                        fontWeight: 600,
+                        color: 'var(--text)'
+                      }}
+                    >
+                      {team.name}
+                    </td>
+                    <td
+                      style={{
+                        padding: '1rem 1.5rem',
+                        textAlign: 'center',
+                        fontSize: '0.875rem',
+                        color: 'var(--muted)'
+                      }}
+                    >
+                      <span
+                        style={{
+                          background: 'rgba(100, 150, 200, 0.2)',
+                          padding: '0.25rem 0.75rem',
+                          borderRadius: '4px',
+                          display: 'inline-block'
+                        }}
+                      >
+                        {zonesData.find(z => z.name === team.zone)?.shortCode}
+                      </span>
+                    </td>
+                    <td
+                      style={{
+                        padding: '1rem 1.5rem',
+                        textAlign: 'center',
+                        color: 'var(--text)',
+                        fontWeight: 600
+                      }}
+                    >
+                      {team.wins + team.losses}
+                    </td>
+                    <td
+                      style={{
+                        padding: '1rem 1.5rem',
+                        textAlign: 'center',
+                        color: 'var(--primary)',
+                        fontWeight: 700,
+                        fontSize: '1.125rem'
+                      }}
+                    >
+                      {team.wins}
+                    </td>
+                    <td
+                      style={{
+                        padding: '1rem 1.5rem',
+                        textAlign: 'center',
+                        color: 'var(--primary)',
+                        fontWeight: 700,
+                        fontSize: '1.25rem'
+                      }}
+                    >
+                      {team.points}
+                    </td>
+                    <td
+                      style={{
+                        padding: '1rem 1.5rem',
+                        textAlign: 'center',
+                        color: team.nrr && team.nrr > 0 ? '#4ade80' : '#ff6464',
+                        fontWeight: 600
+                      }}
+                    >
+                      {team.nrr && team.nrr.toFixed(2)}
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </AnimatedSection>
+
+      {/* Cricket Rules */}
+      <AnimatedSection delay={0.4}>
+        <div className="glass-card" style={{ marginTop: '2rem', padding: '1.5rem' }}>
+          <h3 style={{ fontSize: '1.125rem', marginBottom: '1rem', color: 'var(--primary)' }}>
+            🏏 Cricket Championship Rules
+          </h3>
+          <ul
+            style={{
+              listStyle: 'none',
+              padding: 0,
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: '1rem'
+            }}
+          >
+            <li style={{ display: 'flex', gap: '0.75rem' }}>
+              <span style={{ color: 'var(--primary)', fontWeight: 'bold', minWidth: '24px' }}>✓</span>
+              <span>
+                <strong>Zone Eligibility:</strong> Only teams from the 8 specified zones can participate in cricket
+                events.
+              </span>
+            </li>
+            <li style={{ display: 'flex', gap: '0.75rem' }}>
+              <span style={{ color: 'var(--primary)', fontWeight: 'bold', minWidth: '24px' }}>✓</span>
+              <span>
+                <strong>Team Composition:</strong> Each team must have exactly 11 players from their respective zone.
+              </span>
+            </li>
+            <li style={{ display: 'flex', gap: '0.75rem' }}>
+              <span style={{ color: 'var(--primary)', fontWeight: 'bold', minWidth: '24px' }}>✓</span>
+              <span>
+                <strong>Points System:</strong> Win = 4 points, Tie/No Result = 2 points, Loss = 0 points.
+              </span>
+            </li>
+            <li style={{ display: 'flex', gap: '0.75rem' }}>
+              <span style={{ color: 'var(--primary)', fontWeight: 'bold', minWidth: '24px' }}>✓</span>
+              <span>
+                <strong>Tie-Breaking:</strong> Points sorted by wins, then by Net Run Rate (NRR).
+              </span>
+            </li>
+            <li style={{ display: 'flex', gap: '0.75rem' }}>
+              <span style={{ color: 'var(--primary)', fontWeight: 'bold', minWidth: '24px' }}>✓</span>
+              <span>
+                <strong>Zone Standing:</strong> Total zone points calculated from all team performances.
+              </span>
+            </li>
+            <li style={{ display: 'flex', gap: '0.75rem' }}>
+              <span style={{ color: 'var(--primary)', fontWeight: 'bold', minWidth: '24px' }}>✓</span>
+              <span>
+                <strong>Championship Winner:</strong> Zone with highest aggregate points wins the cricket championship.
+              </span>
+            </li>
+          </ul>
+        </div>
+      </AnimatedSection>
+
+      <style>{`
+        .center-align {
+          text-align: center;
+        }
+      `}</style>
+    </div>
+  );
+}
