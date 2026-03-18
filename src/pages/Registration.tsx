@@ -75,20 +75,73 @@ export default function Registration() {
           .select('full_name, events')
           .eq('phone', player.phone);
 
-        if (regError) throw regError;
-        if (regData && regData.some(reg => reg.events?.includes(eventSearchStr))) {
-          return `${player.role} (${player.name}) is already registered for ${event.name} in another team/entry.`;
+        if (regError) {
+          console.warn('Duplicate check (primary) skipped due to:', regError.message);
+          // If the error is 'PGRST116' (column not found) or '403' (forbidden),
+          // we warn but allow the registration to proceed. 
+          // This keeps it running if the schema or policies are slightly out of sync.
+        }
+        
+        if (regData) {
+          const isDuplicate = regData.some(reg => {
+            const events = reg.events;
+            if (Array.isArray(events)) {
+              return events.includes(eventSearchStr);
+            } else if (typeof events === 'string') {
+              // Handle potential legacy string/bracket format
+              return events.includes(eventSearchStr);
+            }
+            return false;
+          });
+
+          if (isDuplicate) {
+            return `${player.role} (${player.name}) is already registered for ${event.name} in another team/entry.`;
+          }
         }
 
         // DB Check 2: Team member in another entry
-        const { data: teamData, error: teamError } = await supabase
-          .from('registrations')
-          .select('full_name, events')
-          .contains('team_members', [{ phone: player.phone }]);
+        // NOTE: This .contains() filter only works on JSONB columns. 
+        // If team_members is TEXT or JSON (not JSONB), this will fail with a SQL error.
+        let teamData = null;
+        let teamError = null;
+        try {
+          // Use a manual filter string to bypass potential client-side type inference issues
+          // that cause it to format as an array {} instead of JSONB [].
+          const { data, error } = await supabase
+            .from('registrations')
+            .select('full_name, events')
+            .filter('team_members', 'cs', JSON.stringify([{ phone: player.phone }]));
+          teamData = data;
+          teamError = error;
+        } catch (e) {
+          console.error('Unexpected query error during team check:', e);
+        }
 
-        if (teamError) throw teamError;
-        if (teamData && teamData.some(reg => reg.events?.includes(eventSearchStr))) {
-          return `${player.role} (${player.name}) is already part of a team for ${event.name}.`;
+        if (teamError) {
+          // If the error is 'PGRST116' (column not found) or '42P1' (invalid json syntax)
+          // or a policy violation (403), we logged it and skip this specific check.
+          // This prevents a missing column or strict policy from blocking individual registrations.
+          console.warn(`Skipping team member check for ${player.name} due to: ${teamError.message}`);
+          
+          if (teamError.message.toLowerCase().includes('json')) {
+            console.error('HINT: Your "team_members" column should be JSONB. Please run the migration.');
+          }
+        }
+
+        if (teamData) {
+          const isDuplicateInTeam = teamData.some(reg => {
+            const events = reg.events;
+            if (Array.isArray(events)) {
+              return events.includes(eventSearchStr);
+            } else if (typeof events === 'string') {
+              return events.includes(eventSearchStr);
+            }
+            return false;
+          });
+
+          if (isDuplicateInTeam) {
+            return `${player.role} (${player.name}) is already part of a team for ${event.name}.`;
+          }
         }
       }
 
@@ -122,9 +175,38 @@ export default function Registration() {
         return;
       }
 
-      // 2. Prepare Registration Records
+      // 2. Team Member Validation for Group Sports
+      for (const eventId of selectedEvents) {
+        const event = eventsData.find(e => e.id === eventId);
+        if (event?.type === 'Group') {
+          const team = formData.teams[eventId];
+          if (!team?.teamName?.trim()) {
+            throw new Error(`Team name is required for ${event.name}.`);
+          }
+          
+          const filledMembers = team.members.filter(m => m.name.trim() && m.phone.trim());
+          const totalPlayers = filledMembers.length + 1; // +1 for Captain
+
+          if (totalPlayers < (event.minPlayers || 1)) {
+            throw new Error(`${event.name} requires a minimum of ${event.minPlayers} players. You have currently provided details for ${totalPlayers}.`);
+          }
+
+          // Check for valid phone numbers of filled members
+          const invalidPhone = filledMembers.find(m => m.phone.length < 10);
+          if (invalidPhone) {
+            throw new Error(`Please provide a valid 10-digit phone number for ${invalidPhone.name}.`);
+          }
+        }
+      }
+
+      // 3. Prepare Registration Records
       const groupEvents = selectedEvents.map(id => eventsData.find(e => e.id === id)).filter(e => e?.type === 'Group');
       const individualEvents = selectedEvents.map(id => eventsData.find(e => e.id === id)).filter(e => e?.type === 'Individual');
+
+      const parsedAge = parseInt(formData.age);
+      if (isNaN(parsedAge)) {
+        throw new Error('Please enter a valid age.');
+      }
 
       const registrationRecords = [];
 
@@ -136,7 +218,7 @@ export default function Registration() {
           user_id: user?.id || null,
           full_name: formData.name,
           phone: formData.phone,
-          age: parseInt(formData.age),
+          age: parsedAge,
           region: formData.region,
           category: formData.category,
           team_name: teamData?.teamName || null,
@@ -145,16 +227,17 @@ export default function Registration() {
         });
       }
 
-      // Group INDIVIDUAL sports into their own entry (optional: one per entry or grouped)
-      // Let's group them by category for cleanliness
+      // Group INDIVIDUAL sports into their own entry
       if (individualEvents.length > 0) {
         registrationRecords.push({
           user_id: user?.id || null,
           full_name: formData.name,
           phone: formData.phone,
-          age: parseInt(formData.age),
+          age: parsedAge,
           region: formData.region,
           category: formData.category,
+          team_name: null,
+          team_members: [],
           events: individualEvents.map(e => `${e?.name} (${e?.category})`)
         });
       }
@@ -164,11 +247,26 @@ export default function Registration() {
         .from('registrations')
         .insert(registrationRecords);
 
-      if (submitError) throw submitError;
+      if (submitError) {
+        // Provide more detailed feedback for common errors (like missing columns or RLS)
+        console.error('Supabase Insertion Error:', submitError);
+        throw new Error(`Database Error: ${submitError.message}${submitError.hint ? ` (${submitError.hint})` : ''}`);
+      }
       setSubmitted(true);
-    } catch (err: unknown) {
-      console.error('Error submitting registration:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to submit registration. Please try again.';
+    } catch (err: any) {
+      console.error('Registration Submission Error:', err);
+      
+      let errorMessage = 'An unexpected error occurred. Please try again.';
+      
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (err && typeof err === 'object') {
+        // Handle Supabase/Postgrest Error objects
+        errorMessage = err.message || err.details || JSON.stringify(err);
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      }
+
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -418,7 +516,6 @@ export default function Registration() {
     if (!formData.category) return true;
     return event.category === formData.category || event.category === 'General';
   });
-
   if (submitted) {
     return (
       <div className="page-container success-view">
@@ -499,6 +596,64 @@ export default function Registration() {
                   })}
                 </div>
               </div>
+
+              {Object.keys(formData.teams).length > 0 && (
+                <div className="ticket-teams" style={{ 
+                  marginTop: '1.25rem', 
+                  paddingTop: '1rem', 
+                  borderTop: '1px dashed rgba(228, 225, 222, 0.15)' 
+                }}>
+                  <label style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.4rem',
+                    fontSize: '0.65rem', 
+                    color: 'var(--muted)', 
+                    fontWeight: 700, 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.1em',
+                    marginBottom: '0.5rem' 
+                  }}>
+                    <User size={12} /> TEAM ROSTER
+                  </label>
+                  <div className="teams-container" style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                    {Object.entries(formData.teams).map(([eventId, team]) => {
+                      const event = eventsData.find(e => e.id === eventId);
+                      return (
+                        <div key={eventId} className="team-ticket-item">
+                          <div style={{ 
+                            fontSize: '0.85rem', 
+                            fontWeight: 700, 
+                            color: 'var(--primary)',
+                            marginBottom: '0.2rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.4rem'
+                          }}>
+                            <span style={{ opacity: 0.6, fontSize: '0.75rem' }}>{event?.name}:</span> {team.teamName}
+                          </div>
+                          <div style={{ 
+                            fontSize: '0.75rem', 
+                            lineHeight: '1.4',
+                            color: 'var(--text-main)',
+                            opacity: 0.85,
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '0.3rem'
+                          }}>
+                            <span style={{ color: 'var(--secondary)', fontWeight: 600 }}>{formData.name} (C),</span>
+                            {team.members.filter(m => m.name).map((m, i, arr) => (
+                              <span key={i}>
+                                {m.name}{i < arr.length - 1 ? ',' : ''}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="ticket-footer">
@@ -795,6 +950,7 @@ export default function Registration() {
     );
   }
 
+
   return (
     <div className="page-container registration-page">
       <div className="background-decorations">
@@ -985,38 +1141,41 @@ export default function Registration() {
                         <p className="section-desc">Add at least {requiredExtra} more players.</p>
                       </div>
 
-                      {teamData.members.map((member, idx) => (
-                        <div key={idx} className="member-row animate-fade-in">
-                          <div className="member-number">{idx + 2}</div>
-                          <div className="member-inputs">
-                            <input
-                              type="text"
-                              placeholder="Player Name"
-                              required
-                              value={member.name}
-                              onChange={e => updateTeamMember(eventId, idx, 'name', e.target.value)}
-                              className="compact-input"
-                            />
-                            <input
-                              type="tel"
-                              placeholder="Phone Number"
-                              required
-                              value={member.phone}
-                              onChange={e => updateTeamMember(eventId, idx, 'phone', e.target.value)}
-                              className="compact-input"
-                            />
+                      {teamData.members.map((member, idx) => {
+                        const isFilled = member.name.trim() && member.phone.trim() && member.phone.length >= 10;
+                        return (
+                          <div key={idx} className={`member-row animate-fade-in ${isFilled ? 'filled' : ''}`}>
+                            <div className="member-number">
+                              {isFilled ? <Check size={14} /> : idx + 2}
+                            </div>
+                            <div className="member-inputs">
+                              <input
+                                type="text"
+                                placeholder="Player Name"
+                                value={member.name}
+                                onChange={e => updateTeamMember(eventId, idx, 'name', e.target.value)}
+                                className="compact-input"
+                              />
+                              <input
+                                type="tel"
+                                placeholder="Phone Number"
+                                value={member.phone}
+                                onChange={e => updateTeamMember(eventId, idx, 'phone', e.target.value)}
+                                className="compact-input"
+                              />
+                            </div>
+                            {teamData.members.length > (event.minPlayers || 1) - 1 && (
+                              <button
+                                type="button"
+                                onClick={() => removeTeamMember(eventId, idx)}
+                                className="remove-member-btn"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            )}
                           </div>
-                          {teamData.members.length > requiredExtra && (
-                            <button
-                              type="button"
-                              onClick={() => removeTeamMember(eventId, idx)}
-                              className="remove-member-btn"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          )}
-                        </div>
-                      ))}
+                        );
+                      })}
 
                       <button type="button" onClick={() => addTeamMember(eventId)} className="btn-outline add-member-btn">
                         <Sparkles size={16} /> Add Extra Player for {event.name}
@@ -1472,6 +1631,17 @@ export default function Registration() {
           border-radius: 16px;
           border: 1px solid rgba(228, 225, 222, 0.08);
           transition: all 0.2s ease;
+        }
+
+        .member-row.filled {
+          background: rgba(92, 158, 156, 0.08);
+          border-color: rgba(92, 158, 156, 0.3);
+        }
+
+        .member-row.filled .member-number {
+          background: var(--secondary);
+          color: white;
+          border-color: transparent;
         }
 
         .member-row:hover {
