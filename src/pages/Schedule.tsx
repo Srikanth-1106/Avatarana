@@ -1,9 +1,67 @@
 import { useState } from 'react';
-import { Clock, MapPin, ChevronDown, ChevronUp, Calendar } from 'lucide-react';
+import { Clock, MapPin, ChevronDown, ChevronUp, Calendar, Lock } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function Schedule() {
   const [activeDay, setActiveDay] = useState(1);
   const [expandedItem, setExpandedItem] = useState<number | null>(null);
+
+  // Check if page should be locked (before April 15, 2026)
+  const unlockDate = new Date('2026-04-15');
+  const currentDate = new Date();
+  const isLocked = currentDate < unlockDate;
+
+  if (isLocked) {
+    return (
+      <div className="page-container">
+        <motion.div
+          className="glass-card"
+          style={{
+            maxWidth: '600px',
+            margin: '5rem auto',
+            padding: '3rem',
+            textAlign: 'center',
+            background: 'linear-gradient(135deg, rgba(218, 93, 101, 0.1), rgba(245, 194, 144, 0.1))',
+            border: '2px solid var(--primary)',
+            borderRadius: '15px',
+          }}
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Lock size={64} style={{ margin: '0 auto 1.5rem', color: 'var(--primary)' }} />
+          <h2 style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary)', marginBottom: '1rem' }}>
+            📅 Schedule Unlocking Soon!
+          </h2>
+          <p style={{
+            fontSize: '1.1rem',
+            color: 'var(--text-secondary)',
+            marginBottom: '1.5rem',
+            lineHeight: '1.8',
+          }}>
+            This section will be opened once the registration closes — stay tuned! 🚀
+          </p>
+          <p style={{
+            fontSize: '0.95rem',
+            color: 'var(--muted)',
+            marginBottom: '1rem',
+          }}>
+            Get ready for an action-packed schedule! Check back after April 15th to see the complete timeline of events.
+          </p>
+          <div style={{
+            marginTop: '2rem',
+            padding: '1rem',
+            background: 'rgba(218, 93, 101, 0.2)',
+            borderRadius: '8px',
+            color: 'var(--primary)',
+            fontWeight: '600',
+          }}>
+            🗓️ Unlock Date: April 15, 2026
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   const day1Data = [
     { time: '08:00 AM', event: 'Opening Ceremony & Torch Relay', location: 'Main Stadium', category: 'General', details: 'A grand kick-off featuring traditional lamp lighting and our symbolic community torch relay through the arena.' },

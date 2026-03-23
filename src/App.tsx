@@ -11,6 +11,7 @@ import Gallery from './pages/Gallery';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Cricket from './pages/Cricket';
+import Contact from './pages/Contact';
 import { AuthProvider } from './context/AuthContext';
 import './App.css';
 
@@ -42,7 +43,7 @@ function App() {
             
             <Route path="about" element={<About />} />
             <Route path="gallery" element={<Gallery />} />
-            <Route path="contact" element={<Placeholder title="Contact Organizers" />} />
+            <Route path="contact" element={<Contact />} />
           </Route>
         </Routes>
       </Router>

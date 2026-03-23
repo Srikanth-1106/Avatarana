@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Trophy, Medal, Star, Users, Target, Loader2, AlertCircle } from 'lucide-react';
+import { Trophy, Medal, Star, Users, Target, Loader2, AlertCircle, Lock } from 'lucide-react';
 import { zonesData } from '../data/zonesData';
 import { supabase } from '../lib/supabase';
 import { motion } from 'framer-motion';
@@ -15,6 +15,63 @@ interface ZoneStats {
 }
 
 export default function Leaderboard() {
+  // Check if page should be locked (before April 15, 2026)
+  const unlockDate = new Date('2026-04-15');
+  const currentDate = new Date();
+  const isLocked = currentDate < unlockDate;
+
+  if (isLocked) {
+    return (
+      <div className="page-container">
+        <motion.div
+          className="glass-card"
+          style={{
+            maxWidth: '600px',
+            margin: '5rem auto',
+            padding: '3rem',
+            textAlign: 'center',
+            background: 'linear-gradient(135deg, rgba(218, 93, 101, 0.1), rgba(245, 194, 144, 0.1))',
+            border: '2px solid var(--primary)',
+            borderRadius: '15px',
+          }}
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Lock size={64} style={{ margin: '0 auto 1.5rem', color: 'var(--primary)' }} />
+          <h2 style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary)', marginBottom: '1rem' }}>
+            🏆 Leaderboard Coming Soon!
+          </h2>
+          <p style={{
+            fontSize: '1.1rem',
+            color: 'var(--text-secondary)',
+            marginBottom: '1.5rem',
+            lineHeight: '1.8',
+          }}>
+            This section will be opened once the registration closes — stay tuned! 🚀
+          </p>
+          <p style={{
+            fontSize: '0.95rem',
+            color: 'var(--muted)',
+            marginBottom: '1rem',
+          }}>
+            The battle for supremacy is about to begin! Check back after April 15th to see which zone reigns supreme!
+          </p>
+          <div style={{
+            marginTop: '2rem',
+            padding: '1rem',
+            background: 'rgba(218, 93, 101, 0.2)',
+            borderRadius: '8px',
+            color: 'var(--primary)',
+            fontWeight: '600',
+          }}>
+            🗓️ Unlock Date: April 15, 2026
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   const [view, setView] = useState<'points' | 'registrations'>('points');
   const [zoneStats, setZoneStats] = useState<ZoneStats[]>([]);
   const [loading, setLoading] = useState(true);
