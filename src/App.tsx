@@ -15,16 +15,6 @@ import Contact from './pages/Contact';
 import { AuthProvider } from './context/AuthContext';
 import './App.css';
 
-// Placeholder empty components to prevent routing errors initially
-const Placeholder = ({ title }: { title: string }) => (
-  <div className="page-container glass-card" style={{margin: '4rem auto', maxWidth: 800, textAlign: 'center'}}>
-    <h1 style={{color: 'var(--primary)'}}>{title}</h1>
-    <p style={{color: 'var(--muted)', marginTop: '1rem'}}>
-      This page is currently under offline construction. All requirements implemented as specified.
-    </p>
-  </div>
-);
-
 function App() {
   return (
     <AuthProvider>
