@@ -245,21 +245,40 @@ export default function Home() {
             Proud Sponsors
           </h2>
         </div>
-        <div className="marquee">
-          {/* Exactly duplicates the combined list to create a seamless infinite CSS scroll loop */}
-          {[...allSponsors, ...allSponsors].map((sponsor, i) => (
-            <div key={`sponsor-${i}`} className="sponsor-marquee-card" onClick={() => handleSponsorClick(sponsor)}>
-              {sponsor.type === 'image' ? (
-                <div className="brand-logo-wrapper" style={{ margin: 0, height: '100%' }}>
-                  <img src={sponsor.value} alt="Sponsor" className="sponsor-marquee-img" />
-                </div>
-              ) : (
-                <div className="brand-logo-wrapper sponsor-name-marquee" style={{ margin: 0, height: '100%' }}>
-                  <span className="sponsor-name-text">{sponsor.value}</span>
-                </div>
-              )}
-            </div>
-          ))}
+        <div className="marquee-container" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div className="marquee">
+            {/* Top row: Left to Right scroll natively */}
+            {[...allSponsors, ...allSponsors].map((sponsor, i) => (
+              <div key={`sponsor-top-${i}`} className="sponsor-marquee-card" onClick={() => handleSponsorClick(sponsor)}>
+                {sponsor.type === 'image' ? (
+                  <div className="brand-logo-wrapper" style={{ margin: 0, height: '100%' }}>
+                    <img src={sponsor.value} alt="Sponsor" className="sponsor-marquee-img" />
+                  </div>
+                ) : (
+                  <div className="brand-logo-wrapper sponsor-name-marquee" style={{ margin: 0, height: '100%' }}>
+                    <span className="sponsor-name-text">{sponsor.value}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          
+          <div className="marquee marquee-reverse">
+            {/* Bottom row: Right to Left scroll reversed */}
+            {[...allSponsors, ...allSponsors].map((sponsor, i) => (
+              <div key={`sponsor-bottom-${i}`} className="sponsor-marquee-card" onClick={() => handleSponsorClick(sponsor)}>
+                {sponsor.type === 'image' ? (
+                  <div className="brand-logo-wrapper" style={{ margin: 0, height: '100%' }}>
+                    <img src={sponsor.value} alt="Sponsor" className="sponsor-marquee-img" />
+                  </div>
+                ) : (
+                  <div className="brand-logo-wrapper sponsor-name-marquee" style={{ margin: 0, height: '100%' }}>
+                    <span className="sponsor-name-text">{sponsor.value}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </AnimatedSection>
 
