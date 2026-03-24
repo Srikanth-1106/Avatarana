@@ -1237,16 +1237,19 @@ export default function Registration() {
                     onClick={() => toggleEvent(event.id)}
                   >
                     <div className="event-card-header">
-                      <span className="event-type">{event.type}</span>
-                      {event.type === 'Group' && (
-                        <span style={{
-                          fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase',
-                          letterSpacing: '0.05em', padding: '2px 6px', borderRadius: '4px',
-                          background: 'rgba(218, 93, 101, 0.15)', color: 'var(--primary)',
-                          border: '1px solid rgba(218, 93, 101, 0.2)'
-                        }}>Captain Only</span>
-                      )}
-                      {selectedEvents.includes(event.id) && <Check size={14} className="check-icon" />}
+                      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                        <span className="event-type">{event.type}</span>
+                        {event.type === 'Group' && (
+                          <span style={{
+                            fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase',
+                            letterSpacing: '0.05em', padding: '2px 6px', borderRadius: '4px',
+                            background: 'rgba(218, 93, 101, 0.15)', color: 'var(--primary)',
+                            border: '1px solid rgba(218, 93, 101, 0.2)',
+                            whiteSpace: 'nowrap'
+                          }}>Captain Only</span>
+                        )}
+                      </div>
+                      {selectedEvents.includes(event.id) && <Check size={14} className="check-icon" style={{ flexShrink: 0 }} />}
                     </div>
                     <h4 className="event-name">{event.name}</h4>
                     {event.subCategory && <span className="event-subcategory">{event.subCategory}</span>}
