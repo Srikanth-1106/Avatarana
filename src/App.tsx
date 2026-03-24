@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import Home from './pages/Home';
@@ -12,12 +13,16 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Cricket from './pages/Cricket';
 import Contact from './pages/Contact';
+import CurtainReveal from './components/CurtainReveal';
 import { AuthProvider } from './context/AuthContext';
 import './App.css';
 
 function App() {
+  const [showIntro, setShowIntro] = useState(true);
+
   return (
     <AuthProvider>
+      {showIntro && <CurtainReveal onComplete={() => setShowIntro(false)} />}
       <Router>
         <Routes>
           <Route path="/" element={<Layout />}>

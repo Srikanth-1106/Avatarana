@@ -1,0 +1,551 @@
+/* ===== CURTAIN REVEAL INTRO ===== */
+
+.curtain-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.curtain-overlay.fading {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Solid backdrop — blocks the home page from showing */
+.curtain-backdrop {
+  position: absolute;
+  inset: 0;
+  background: #090908;
+  z-index: 0;
+}
+
+/* ===== TOP VALANCE BAR ===== */
+.curtain-valance {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 32px;
+  z-index: 20;
+  background: linear-gradient(180deg,
+    #3a1012 0%,
+    #5a1a1e 40%,
+    #4a1518 70%,
+    #2a0a0c 100%
+  );
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.6),
+    0 2px 6px rgba(0, 0, 0, 0.4);
+  border-bottom: 2px solid rgba(255, 200, 150, 0.08);
+}
+
+/* Gold trim on valance */
+.curtain-valance::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(218, 170, 100, 0.15) 20%,
+    rgba(218, 170, 100, 0.3) 50%,
+    rgba(218, 170, 100, 0.15) 80%,
+    transparent 100%
+  );
+}
+
+/* ===== CURTAIN PANELS ===== */
+.curtain-panel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 52%;
+  z-index: 10;
+  transition: transform 2.2s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+  overflow: hidden;
+}
+
+.curtain-left {
+  left: 0;
+  transform: translateX(0);
+}
+
+.curtain-right {
+  right: 0;
+  transform: translateX(0);
+}
+
+/* Opening: slide off */
+.curtain-overlay.opening .curtain-left,
+.curtain-overlay.welcome .curtain-left,
+.curtain-overlay.fading .curtain-left {
+  transform: translateX(-110%);
+}
+
+.curtain-overlay.opening .curtain-right,
+.curtain-overlay.welcome .curtain-right,
+.curtain-overlay.fading .curtain-right {
+  transform: translateX(110%);
+}
+
+/* ===== REALISTIC FABRIC ===== */
+.curtain-fabric {
+  position: absolute;
+  inset: 0;
+  /* Deep velvet red base */
+  background: linear-gradient(
+    180deg,
+    #7a1418 0%,
+    #9a1c22 8%,
+    #B91A24 20%,
+    #a51e26 40%,
+    #8B1A1A 60%,
+    #7a1418 80%,
+    #5c0f12 100%
+  );
+  overflow: hidden;
+}
+
+/* ===== DRAPED FOLD LINES ===== */
+.curtain-fold {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+/* Each fold is a vertical highlight + shadow pair, like real drapery waves */
+.curtain-left .fold-1 {
+  left: 10%;
+  width: 14%;
+  background: linear-gradient(90deg,
+    rgba(0, 0, 0, 0.18) 0%,
+    rgba(255, 180, 180, 0.07) 35%,
+    rgba(255, 220, 220, 0.1) 50%,
+    rgba(255, 180, 180, 0.05) 65%,
+    rgba(0, 0, 0, 0.15) 100%
+  );
+}
+.curtain-left .fold-2 {
+  left: 28%;
+  width: 16%;
+  background: linear-gradient(90deg,
+    rgba(0, 0, 0, 0.2) 0%,
+    rgba(255, 200, 200, 0.08) 30%,
+    rgba(255, 240, 240, 0.12) 50%,
+    rgba(255, 200, 200, 0.06) 70%,
+    rgba(0, 0, 0, 0.18) 100%
+  );
+}
+.curtain-left .fold-3 {
+  left: 48%;
+  width: 12%;
+  background: linear-gradient(90deg,
+    rgba(0, 0, 0, 0.15) 0%,
+    rgba(255, 190, 190, 0.06) 40%,
+    rgba(255, 230, 230, 0.09) 55%,
+    rgba(0, 0, 0, 0.12) 100%
+  );
+}
+.curtain-left .fold-4 {
+  left: 65%;
+  width: 18%;
+  background: linear-gradient(90deg,
+    rgba(0, 0, 0, 0.22) 0%,
+    rgba(255, 200, 200, 0.09) 25%,
+    rgba(255, 240, 240, 0.14) 48%,
+    rgba(255, 200, 200, 0.07) 72%,
+    rgba(0, 0, 0, 0.2) 100%
+  );
+}
+.curtain-left .fold-5 {
+  left: 86%;
+  width: 14%;
+  background: linear-gradient(90deg,
+    rgba(0, 0, 0, 0.25) 0%,
+    rgba(255, 180, 180, 0.06) 40%,
+    rgba(255, 220, 220, 0.1) 60%,
+    rgba(0, 0, 0, 0.3) 100%
+  );
+}
+
+/* Mirror folds for the right panel */
+.curtain-right .fold-1 {
+  right: 10%;
+  width: 14%;
+  background: linear-gradient(270deg,
+    rgba(0, 0, 0, 0.18) 0%,
+    rgba(255, 180, 180, 0.07) 35%,
+    rgba(255, 220, 220, 0.1) 50%,
+    rgba(255, 180, 180, 0.05) 65%,
+    rgba(0, 0, 0, 0.15) 100%
+  );
+}
+.curtain-right .fold-2 {
+  right: 28%;
+  width: 16%;
+  background: linear-gradient(270deg,
+    rgba(0, 0, 0, 0.2) 0%,
+    rgba(255, 200, 200, 0.08) 30%,
+    rgba(255, 240, 240, 0.12) 50%,
+    rgba(255, 200, 200, 0.06) 70%,
+    rgba(0, 0, 0, 0.18) 100%
+  );
+}
+.curtain-right .fold-3 {
+  right: 48%;
+  width: 12%;
+  background: linear-gradient(270deg,
+    rgba(0, 0, 0, 0.15) 0%,
+    rgba(255, 190, 190, 0.06) 40%,
+    rgba(255, 230, 230, 0.09) 55%,
+    rgba(0, 0, 0, 0.12) 100%
+  );
+}
+.curtain-right .fold-4 {
+  right: 65%;
+  width: 18%;
+  background: linear-gradient(270deg,
+    rgba(0, 0, 0, 0.22) 0%,
+    rgba(255, 200, 200, 0.09) 25%,
+    rgba(255, 240, 240, 0.14) 48%,
+    rgba(255, 200, 200, 0.07) 72%,
+    rgba(0, 0, 0, 0.2) 100%
+  );
+}
+.curtain-right .fold-5 {
+  right: 86%;
+  width: 14%;
+  background: linear-gradient(270deg,
+    rgba(0, 0, 0, 0.25) 0%,
+    rgba(255, 180, 180, 0.06) 40%,
+    rgba(255, 220, 220, 0.1) 60%,
+    rgba(0, 0, 0, 0.3) 100%
+  );
+}
+
+/* Overall fabric sheen — simulates light from above */
+.curtain-fabric::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    transparent 15%,
+    transparent 80%,
+    rgba(0, 0, 0, 0.2) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Inner shadow along the center seam edge */
+.curtain-left .curtain-fabric::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 50px;
+  height: 100%;
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.5), transparent);
+  z-index: 2;
+}
+
+.curtain-right .curtain-fabric::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50px;
+  height: 100%;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.5), transparent);
+  z-index: 2;
+}
+
+/* ===== BOTTOM FRINGE / TASSEL ===== */
+.curtain-fringe {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 12px;
+  z-index: 3;
+  background: repeating-linear-gradient(
+    90deg,
+    #5c0f12 0px,
+    #5c0f12 3px,
+    #3a0a0c 3px,
+    #3a0a0c 4px,
+    #7a1418 4px,
+    #7a1418 7px,
+    #3a0a0c 7px,
+    #3a0a0c 8px
+  );
+  border-top: 2px solid rgba(218, 170, 100, 0.1);
+}
+
+/* ===== TOP ROD (per panel) ===== */
+.curtain-rod {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 30px;
+  z-index: 3;
+  background: linear-gradient(180deg,
+    rgba(0, 0, 0, 0.3) 0%,
+    transparent 100%
+  );
+}
+
+/* ===== CENTER CONTENT — ABOVE CURTAINS ===== */
+.curtain-center {
+  position: relative;
+  z-index: 15;   /* Above curtain panels (z:10), below valance (z:20) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== LAUNCH BUTTON ===== */
+.curtain-launch-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 220, 200, 0.4);
+  background: radial-gradient(
+    circle at center,
+    rgba(185, 26, 36, 0.35) 0%,
+    rgba(90, 15, 18, 0.8) 50%,
+    rgba(40, 8, 10, 0.95) 100%
+  );
+  cursor: pointer;
+  color: #F4F1EE;
+  font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+  animation: btn-breathe 3s ease-in-out infinite;
+  transition: all 0.3s ease;
+  box-shadow:
+    0 0 50px rgba(185, 26, 36, 0.4),
+    0 0 100px rgba(185, 26, 36, 0.15),
+    inset 0 0 30px rgba(185, 26, 36, 0.1),
+    0 8px 32px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+}
+
+.curtain-launch-btn:hover {
+  border-color: rgba(255, 220, 200, 0.7);
+  transform: scale(1.1);
+  box-shadow:
+    0 0 70px rgba(185, 26, 36, 0.55),
+    0 0 140px rgba(185, 26, 36, 0.2),
+    inset 0 0 40px rgba(185, 26, 36, 0.15),
+    0 12px 40px rgba(0, 0, 0, 0.6);
+}
+
+.curtain-launch-btn:active {
+  transform: scale(0.95);
+}
+
+.launch-icon {
+  font-size: 2.2rem;
+  color: #ffd4d4;
+  filter: drop-shadow(0 0 12px rgba(255, 180, 180, 0.7));
+  transition: transform 0.2s ease;
+}
+
+.curtain-launch-btn:hover .launch-icon {
+  transform: scale(1.2);
+}
+
+.launch-text {
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  color: #ffd4d4;
+  text-shadow: 0 0 10px rgba(255, 180, 180, 0.5);
+}
+
+/* Pulsing rings */
+.launch-ring {
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 200, 200, 0.25);
+  animation: ring-pulse 3s ease-out infinite;
+  pointer-events: none;
+}
+
+.launch-ring-2 {
+  inset: -28px;
+  animation-delay: 1.5s;
+  border-color: rgba(218, 170, 100, 0.15);
+}
+
+@keyframes ring-pulse {
+  0%   { transform: scale(1);   opacity: 1; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+@keyframes btn-breathe {
+  0%, 100% {
+    box-shadow:
+      0 0 50px rgba(185, 26, 36, 0.4),
+      0 0 100px rgba(185, 26, 36, 0.15),
+      inset 0 0 30px rgba(185, 26, 36, 0.1),
+      0 8px 32px rgba(0, 0, 0, 0.5);
+  }
+  50% {
+    box-shadow:
+      0 0 65px rgba(185, 26, 36, 0.55),
+      0 0 120px rgba(185, 26, 36, 0.2),
+      inset 0 0 40px rgba(185, 26, 36, 0.15),
+      0 10px 36px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* ===== WELCOME TEXT ===== */
+.welcome-text {
+  text-align: center;
+  opacity: 0;
+  transform: scale(0.85);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+  pointer-events: none;
+}
+
+.welcome-text.show {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.welcome-line {
+  font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+  color: #F4F1EE;
+}
+
+.welcome-line-1 {
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  margin-bottom: 0.5rem;
+}
+
+.welcome-line-2 {
+  font-size: clamp(2.5rem, 8vw, 5.5rem);
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 1rem;
+}
+
+.welcome-highlight {
+  background: linear-gradient(135deg, #DA5D65 0%, #B91A24 50%, #DA5D65 100%);
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 2s linear infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+.welcome-year {
+  color: #5C9E9C;
+  font-weight: 300;
+}
+
+.welcome-tagline {
+  font-size: clamp(0.85rem, 2vw, 1.15rem);
+  font-weight: 400;
+  color: #827C75;
+  letter-spacing: 0.08em;
+  margin-top: 0.5rem;
+}
+
+/* ===== PARTICLES ===== */
+.curtain-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 16;
+  opacity: 0;
+  transition: opacity 0.5s ease 1s;
+}
+
+.curtain-overlay.opening .curtain-particles,
+.curtain-overlay.welcome .curtain-particles {
+  opacity: 1;
+}
+
+.curtain-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #DA5D65;
+  opacity: 0;
+  animation: particle-float 4s ease-in-out infinite;
+}
+
+.curtain-particle:nth-child(even) {
+  background: #5C9E9C;
+  width: 3px;
+  height: 3px;
+}
+
+.curtain-particle:nth-child(3n) {
+  background: #F4F1EE;
+  width: 2px;
+  height: 2px;
+}
+
+@keyframes particle-float {
+  0%   { opacity: 0;   transform: translateY(0) scale(0); }
+  20%  { opacity: 0.8; transform: translateY(-20px) scale(1); }
+  80%  { opacity: 0.4; transform: translateY(-80px) scale(0.6); }
+  100% { opacity: 0;   transform: translateY(-120px) scale(0); }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .curtain-launch-btn {
+    width: 130px;
+    height: 130px;
+    gap: 0.5rem;
+  }
+  .launch-icon  { font-size: 1.5rem; }
+  .launch-text  { font-size: 0.85rem; }
+  .launch-ring  { inset: -8px; }
+  .launch-ring-2 { inset: -16px; }
+  .curtain-valance { height: 24px; }
+}
+
+@media (max-width: 480px) {
+  .curtain-launch-btn {
+    width: 110px;
+    height: 110px;
+    gap: 0.35rem;
+  }
+  .launch-icon { font-size: 1.25rem; }
+  .launch-text { font-size: 0.75rem; letter-spacing: 0.15em; }
+  .curtain-valance { height: 20px; }
+}
