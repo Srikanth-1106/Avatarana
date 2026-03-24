@@ -129,6 +129,8 @@ export default function Navbar() {
           {/* Mobile Toggle */}
           <button 
             className="mobile-toggle mobile-only"
+            aria-label="Toggle navigation menu"
+            aria-expanded={isOpen}
             onClick={() => setIsOpen(!isOpen)}
           >
             {isOpen ? <X size={28} /> : <Menu size={28} />}

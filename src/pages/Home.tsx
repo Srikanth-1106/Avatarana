@@ -104,7 +104,7 @@ const RegistrationCounter = () => {
 
 export default function Home() {
   const [count, setCount] = useState(0);
-  const [selectedSponsor, setSelectedSponsor] = useState<string | null>(null);
+  const [selectedSponsor, setSelectedSponsor] = useState<{ type: 'image' | 'name', value: string } | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -115,18 +115,35 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [count]);
 
-  const sponsors = [
+  const imageSponsors = [
     "/sponsor-1.png",
     "/sponsor-2.png",
     "/sponsor-3.png"
   ];
 
-  const handleSponsorClick = (src: string) => {
-    setSelectedSponsor(src);
-    
+  const namedSponsors = [
+    'Bayar Valaya',
+    'Kashisadana',
+    'Mediglobe Chandrashekar',
+    'Venkateshanna',
+    'Seethakanthanna Darbe',
+    'Nandakishore Bajithotti',
+    'Vishwakumar Kayargadde',
+    'Raveesh Majakkar',
+    'Khadyas',
+  ];
+
+  const allSponsors = [
+    ...imageSponsors.map(src => ({ type: 'image' as const, value: src })),
+    ...namedSponsors.map(name => ({ type: 'name' as const, value: name }))
+  ];
+
+  const handleSponsorClick = (sponsor: { type: 'image' | 'name', value: string }) => {
+    setSelectedSponsor(sponsor);
+
     // Trigger celebration effect
     const colors = ['#dc5d65', '#5c9e9c', '#e4e1de'];
-    
+
     // Initial burst from center
     confetti({
       particleCount: 150,
@@ -143,9 +160,15 @@ export default function Home() {
       {selectedSponsor && (
         <div className="shoutout-modal-overlay" onClick={() => setSelectedSponsor(null)}>
           <div className="shoutout-modal-card glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div className="brand-logo-wrapper" style={{ margin: '0 auto 1.5rem', width: 'fit-content', background: '#ffffff', borderRadius: '16px', padding: '1.5rem 2rem' }}>
-              <img src={selectedSponsor} alt="Sponsor Logo" style={{ maxWidth: '300px', width: '100%', height: 'auto', mixBlendMode: 'multiply', filter: 'contrast(1.2)' }} />
-            </div>
+            {selectedSponsor.type === 'image' ? (
+              <div className="brand-logo-wrapper" style={{ margin: '0 auto 1.5rem', width: 'fit-content', background: '#ffffff', borderRadius: '16px', padding: '1.5rem 2rem' }}>
+                <img src={selectedSponsor.value} alt="Sponsor Logo" style={{ maxWidth: '300px', width: '100%', height: 'auto', mixBlendMode: 'multiply', filter: 'contrast(1.2)' }} />
+              </div>
+            ) : (
+              <div className="brand-logo-wrapper sponsor-name-marquee" style={{ margin: '0 auto 1.5rem', width: 'fit-content', background: '#ffffff', borderRadius: '16px', padding: '1.5rem 2.5rem' }}>
+                <span className="sponsor-name-text" style={{ fontSize: '1.4rem' }}>{selectedSponsor.value}</span>
+              </div>
+            )}
             <span className="modal-hint">Tap anywhere to close</span>
           </div>
         </div>
@@ -218,16 +241,23 @@ export default function Home() {
       <AnimatedSection className="community-wall" direction="up">
         <div className="section-header center-align">
           <h2 style={{ fontSize: '1.6rem', color: 'var(--primary)', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Heart size={24} style={{ marginRight: '0.75rem', fill: 'var(--primary)', opacity: 0.9 }} /> 
+            <Heart size={24} style={{ marginRight: '0.75rem', fill: 'var(--primary)', opacity: 0.9 }} />
             Proud Sponsors
           </h2>
         </div>
         <div className="marquee">
-          {[...sponsors, ...sponsors, ...sponsors, ...sponsors].map((src, i) => (
-            <div key={i} className="sponsor-marquee-card" onClick={() => handleSponsorClick(src)}>
-              <div className="brand-logo-wrapper" style={{ margin: 0, height: '100%' }}>
-                <img src={src} alt="Sponsor" className="sponsor-marquee-img" />
-              </div>
+          {/* Exactly duplicates the combined list to create a seamless infinite CSS scroll loop */}
+          {[...allSponsors, ...allSponsors].map((sponsor, i) => (
+            <div key={`sponsor-${i}`} className="sponsor-marquee-card" onClick={() => handleSponsorClick(sponsor)}>
+              {sponsor.type === 'image' ? (
+                <div className="brand-logo-wrapper" style={{ margin: 0, height: '100%' }}>
+                  <img src={sponsor.value} alt="Sponsor" className="sponsor-marquee-img" />
+                </div>
+              ) : (
+                <div className="brand-logo-wrapper sponsor-name-marquee" style={{ margin: 0, height: '100%' }}>
+                  <span className="sponsor-name-text">{sponsor.value}</span>
+                </div>
+              )}
             </div>
           ))}
         </div>

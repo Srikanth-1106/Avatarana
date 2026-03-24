@@ -804,6 +804,7 @@ export default function Registration() {
             flex-direction: column;
             gap: 1.5rem;
             flex: 1;
+            min-width: 0;
           }
 
           .ticket-main-info {
@@ -841,6 +842,7 @@ export default function Registration() {
             font-size: 1.25rem;
             font-weight: 700;
             color: var(--text-main);
+            word-break: break-word;
           }
 
           .info-row {
@@ -999,6 +1001,8 @@ export default function Registration() {
                   <input
                     type="text"
                     id="name"
+                    name="name"
+                    autoComplete="name"
                     required
                     placeholder="Enter full name"
                     value={formData.name}
@@ -1015,6 +1019,8 @@ export default function Registration() {
                     <input
                       type="tel"
                       id="phone"
+                      name="phone"
+                      autoComplete="tel"
                       required
                       placeholder="+91 xxxxxxxxxx"
                       value={formData.phone}
@@ -1115,7 +1121,7 @@ export default function Registration() {
                   {photo && !isCameraOpen && (
                     <div className="photo-preview-container">
                       <img src={photo} alt="Preview" className="photo-preview" />
-                      <button type="button" onClick={() => setPhoto(null)} className="delete-photo">
+                      <button type="button" onClick={() => setPhoto(null)} className="delete-photo" aria-label="Delete Photo">
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -1651,6 +1657,7 @@ export default function Registration() {
           border-top: 1.5px solid rgba(228, 225, 222, 0.12);
           margin-top: auto;
           gap: 1rem;
+          flex-wrap: wrap;
         }
 
         .selection-summary span {
@@ -1685,7 +1692,9 @@ export default function Registration() {
         .error-message {
           color: #ef4444;
           font-size: 0.85rem;
-          margin-right: 1rem;
+          width: 100%;
+          margin: 0;
+          line-height: 1.4;
         }
 
         .animate-spin {
@@ -1950,6 +1959,15 @@ export default function Registration() {
           
           .form-group {
             gap: 0.65rem;
+          }
+          .member-inputs {
+            grid-template-columns: 1fr;
+          }
+          .member-row {
+            align-items: flex-start;
+          }
+          .events-selection-grid {
+             grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
           }
           .success-card { padding: 3rem 1.5rem; }
           .ticket-card { border-radius: 12px; }
