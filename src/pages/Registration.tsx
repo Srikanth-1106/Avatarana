@@ -274,6 +274,7 @@ export default function Registration() {
         throw new Error(`Database Error: ${submitError.message}${submitError.hint ? ` (${submitError.hint})` : ''}`);
       }
       setSubmitted(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err: any) {
       console.error('Registration Submission Error:', err);
       
