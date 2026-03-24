@@ -262,7 +262,7 @@ export default function Home() {
               </div>
             ))}
           </div>
-          
+
           <div className="marquee marquee-reverse">
             {/* Bottom row: Right to Left scroll reversed */}
             {[...allSponsors, ...allSponsors].map((sponsor, i) => (

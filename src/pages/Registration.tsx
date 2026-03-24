@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { CheckCircle2, User, Phone, Calendar, Grid, Trophy, Sparkles, Check, Info, Loader2, Camera, Upload, Trash2, FileText, Globe } from 'lucide-react';
+import { CheckCircle2, User, Phone, Calendar, Grid, Trophy, Sparkles, Check, Info, Loader2, Camera, Upload, Trash2, FileText, Globe, Download, ArrowDown } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { eventsData } from '../data/eventsData';
 import { zonesData } from '../data/zonesData';
 import { supabase } from '../lib/supabase';
@@ -22,6 +22,8 @@ export default function Registration() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ticketRef = useRef<HTMLDivElement>(null);
+  const [downloadPhase, setDownloadPhase] = useState<'idle' | 'preparing' | 'downloading' | 'done'>('idle');
+  const autoDownloadTriggered = useRef(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -48,7 +50,9 @@ export default function Registration() {
     // 1. Gather all events to check (Individual + Group)
     const selectedEventsData = selectedEvents.map(id => eventsData.find(e => e.id === id)).filter(Boolean);
 
-    // 2. Validate all Captain/Player combinations
+
+
+    // 3. Validate all Captain/Player combinations
     for (const event of selectedEventsData) {
       if (!event) continue;
       const eventSearchStr = `${event.name} (${event.category})`;
@@ -70,83 +74,51 @@ export default function Registration() {
       for (const player of playersForThisSport) {
         if (!player.phone || player.phone.length < 10) continue;
 
-        // DB Check 1: Primary registrant
-        const { data: regData, error: regError } = await supabase
+        // DB Check 1: Check for DIFFERENT ZONE (Consistency)
+        // Check both as primary and as member
+        const { data: globalZoneCheck } = await supabase
           .from('registrations')
-          .select('full_name, events')
-          .eq('phone', player.phone);
+          .select('region, full_name')
+          .or(`phone.eq.${player.phone},team_members.cs.[{"phone":"${player.phone}"}]`);
 
-        if (regError) {
-          console.warn('Duplicate check (primary) skipped due to:', regError.message);
-          // If the error is 'PGRST116' (column not found) or '403' (forbidden),
-          // we warn but allow the registration to proceed. 
-          // This keeps it running if the schema or policies are slightly out of sync.
+        if (globalZoneCheck && globalZoneCheck.length > 0) {
+          const firstExisting = globalZoneCheck[0];
+          if (firstExisting.region && firstExisting.region !== formData.zone) {
+            const existingZoneName = zonesData.find(z => z.id === firstExisting.region)?.displayName || firstExisting.region;
+            const currentZoneName = zonesData.find(z => z.id === formData.zone)?.displayName || formData.zone;
+            return `${player.role} (${player.name}) is already associated with zone "${existingZoneName}". They cannot register under a different zone ("${currentZoneName}"). A player can only represent one zone across all events.`;
+          }
         }
-        
-        if (regData) {
-          const isDuplicate = regData.some(reg => {
-            const events = reg.events;
-            if (Array.isArray(events)) {
-              return events.includes(eventSearchStr);
-            } else if (typeof events === 'string') {
-              // Handle potential legacy string/bracket format
-              return events.includes(eventSearchStr);
+
+        // DB Check 2: Same Event check
+        const { data: sameEventCheck } = await supabase
+          .from('registrations')
+          .select('full_name, events, team_name')
+          .or(`phone.eq.${player.phone},team_members.cs.[{"phone":"${player.phone}"}]`);
+
+        if (sameEventCheck) {
+          for (const reg of sameEventCheck) {
+            const eventsArr = reg.events;
+            let isMatchedEvent = false;
+            if (Array.isArray(eventsArr)) {
+              isMatchedEvent = eventsArr.includes(eventSearchStr);
+            } else if (typeof eventsArr === 'string') {
+              isMatchedEvent = eventsArr.includes(eventSearchStr);
             }
-            return false;
-          });
 
-          if (isDuplicate) {
-            return `${player.role} (${player.name}) is already registered for ${event.name} in another team/entry.`;
-          }
-        }
-
-        // DB Check 2: Team member in another entry
-        // NOTE: This .contains() filter only works on JSONB columns. 
-        // If team_members is TEXT or JSON (not JSONB), this will fail with a SQL error.
-        let teamData = null;
-        let teamError = null;
-        try {
-          // Use a manual filter string to bypass potential client-side type inference issues
-          // that cause it to format as an array {} instead of JSONB [].
-          const { data, error } = await supabase
-            .from('registrations')
-            .select('full_name, events')
-            .filter('team_members', 'cs', JSON.stringify([{ phone: player.phone }]));
-          teamData = data;
-          teamError = error;
-        } catch (e) {
-          console.error('Unexpected query error during team check:', e);
-        }
-
-        if (teamError) {
-          // If the error is 'PGRST116' (column not found) or '42P1' (invalid json syntax)
-          // or a policy violation (403), we logged it and skip this specific check.
-          // This prevents a missing column or strict policy from blocking individual registrations.
-          console.warn(`Skipping team member check for ${player.name} due to: ${teamError.message}`);
-          
-          if (teamError.message.toLowerCase().includes('json')) {
-            console.error('HINT: Your "team_members" column should be JSONB. Please run the migration.');
-          }
-        }
-
-        if (teamData) {
-          const isDuplicateInTeam = teamData.some(reg => {
-            const events = reg.events;
-            if (Array.isArray(events)) {
-              return events.includes(eventSearchStr);
-            } else if (typeof events === 'string') {
-              return events.includes(eventSearchStr);
+            if (isMatchedEvent) {
+              if (event.type === 'Group' && reg.team_name) {
+                return `${player.role} (${player.name}) is already registered for ${event.name} in team "${reg.team_name}". A player cannot be on multiple teams for the same sport.`;
+              }
+              return `${player.role} (${player.name}) is already registered for ${event.name}.`;
             }
-            return false;
-          });
-
-          if (isDuplicateInTeam) {
-            return `${player.role} (${player.name}) is already part of a team for ${event.name}.`;
           }
         }
+
+
       }
 
-      // 3. Simple cross-check within the current form (prevent same phone twice in one roster section)
+      // 4. Simple cross-check within the current form (prevent same phone twice in one roster section)
       const phones = playersForThisSport.map(p => p.phone).filter(p => p && p.length >= 10);
       const uniquePhones = new Set(phones);
       if (uniquePhones.size !== phones.length) {
@@ -204,7 +176,7 @@ export default function Registration() {
           if (!team?.teamName?.trim()) {
             throw new Error(`Team name is required for ${event.name}.`);
           }
-          
+
           const filledMembers = team.members.filter(m => m.name.trim() && m.phone.trim());
           const totalPlayers = filledMembers.length + 1; // +1 for Captain
 
@@ -277,9 +249,9 @@ export default function Registration() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err: any) {
       console.error('Registration Submission Error:', err);
-      
+
       let errorMessage = 'An unexpected error occurred. Please try again.';
-      
+
       if (err instanceof Error) {
         errorMessage = err.message;
       } else if (err && typeof err === 'object') {
@@ -296,109 +268,197 @@ export default function Registration() {
   };
 
   const handleDownload = async () => {
-    if (ticketRef.current) {
-      try {
-        setLoading(true);
+    try {
+      setLoading(true);
 
-        // Create a simplified ghost ticket for reliable capture
-        const ghostContainer = document.createElement('div');
-        ghostContainer.style.position = 'absolute';
-        ghostContainer.style.left = '-9999px';
-        ghostContainer.style.top = '0';
-        ghostContainer.style.width = '450px';
-        ghostContainer.style.background = '#0f0f0e';
-        ghostContainer.style.padding = '40px';
-        document.body.appendChild(ghostContainer);
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: [100, 160]
+      });
 
-        const ticketMarkup = `
-          <div style="background: #161614; border: 1px solid #333; border-radius: 16px; overflow: hidden; font-family: sans-serif; color: #e4e1de; width: 100%;">
-            <div style="background: #da5d65; color: #ffffff; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; letter-spacing: 0.1em;">
-              <span style="font-size: 12px;">PARTICIPANT PASS</span>
-              <span style="font-size: 12px; opacity: 0.8;">#${Math.random().toString(36).substring(2, 8).toUpperCase()}</span>
-            </div>
-            
-            <div style="padding: 30px; display: flex; gap: 20px; align-items: flex-start;">
-              ${photo ? `<div style="width: 120px; height: 140px; border-radius: 8px; overflow: hidden; border: 1px solid #444; background: #000; flex-shrink: 0;">
-                <img src="${photo}" style="width: 100%; height: 100%; object-fit: cover;" />
-              </div>` : ''}
-              
-              <div style="flex: 1; display: flex; flex-direction: column; gap: 15px;">
-                <div>
-                  <label style="display: block; font-size: 10px; color: #777; margin-bottom: 4px; font-weight: bold;">NAME</label>
-                  <span style="font-size: 18px; font-weight: bold; color: #ffffff;">${formData.name}</span>
-                </div>
-                <div>
-                  <label style="display: block; font-size: 10px; color: #777; margin-bottom: 4px; font-weight: bold;">ZONE</label>
-                  <span style="font-size: 16px; font-weight: bold; color: #5c9e9c;">${zonesData.find(z => z.id === formData.zone)?.displayName}</span>
-                </div>
-                <div style="display: flex; gap: 20px;">
-                  <div>
-                    <label style="display: block; font-size: 10px; color: #777; margin-bottom: 4px; font-weight: bold;">CATEGORY</label>
-                    <span style="font-size: 14px; color: #ffffff;">${formData.category}</span>
-                  </div>
-                  <div>
-                    <label style="display: block; font-size: 10px; color: #777; margin-bottom: 4px; font-weight: bold;">AGE</label>
-                    <span style="font-size: 14px; color: #ffffff;">${formData.age} Yrs</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+      const pageWidth = 100;
+      const passId = `#${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+      const zoneName = zonesData.find(z => z.id === formData.zone)?.displayName || formData.zone || 'N/A';
 
-            <div style="padding: 20px; border-top: 1px dashed #333; background: #1a1a18;">
-              <label style="display: block; font-size: 10px; color: #da5d65; margin-bottom: 10px; font-weight: bold;">REGISTERED EVENTS</label>
-              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                ${selectedEvents.map(id => {
-          const event = eventsData.find(e => e.id === id);
-          return `<span style="background: rgba(228,225,222,0.1); border: 1px solid #333; padding: 4px 10px; border-radius: 6px; font-size: 12px; color: #e4e1de;">${event?.name || id}</span>`;
-        }).join('')}
-              </div>
-            </div>
+      // ─── Header Bar ───
+      pdf.setFillColor(218, 93, 101); // --primary
+      pdf.rect(0, 0, pageWidth, 14, 'F');
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(7);
+      pdf.setTextColor(255, 255, 255);
+      pdf.text('PARTICIPANT PASS', 6, 9);
+      pdf.setFontSize(6);
+      pdf.setTextColor(255, 255, 255);
+      pdf.text(passId, pageWidth - 6, 9, { align: 'right' });
 
-            <div style="padding: 20px; background: rgba(0,0,0,0.2); display: flex; align-items: center; gap: 15px; border-top: 1px solid #222;">
-              <div style="width: 40px; height: 40px; background: #ffffff; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #000;">✓</div>
-              <div style="flex: 1;">
-                <p style="margin: 0; font-size: 13px; font-weight: bold; color: #ffffff;">Present this at registration desk</p>
-                <p style="margin: 0; font-size: 11px; color: #777;">Avatarana 2026 - Official Participant ID</p>
-              </div>
-            </div>
-          </div>
-        `;
+      // ─── Body Background ───
+      pdf.setFillColor(22, 22, 20);
+      pdf.rect(0, 14, pageWidth, 146, 'F');
 
-        ghostContainer.innerHTML = ticketMarkup;
+      let yPos = 24;
 
-        // Ensure images in ghost are loaded
-        const ghostImages = ghostContainer.querySelectorAll('img');
-        await Promise.all(Array.from(ghostImages).map(img => {
-          if (img.complete) return Promise.resolve();
-          return new Promise(resolve => { img.onload = resolve; img.onerror = resolve; });
-        }));
-
-        const canvas = await html2canvas(ghostContainer, {
-          backgroundColor: '#0f0f0e',
-          scale: 2,
-          logging: false,
-          useCORS: true,
-          allowTaint: true
-        });
-
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF({
-          orientation: 'portrait',
-          unit: 'px',
-          format: [canvas.width / 2, canvas.height / 2]
-        });
-
-        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 2, canvas.height / 2);
-        pdf.save(`Avatarana_Pass_${formData.name.replace(/\s+/g, '_')}.pdf`);
-
-        document.body.removeChild(ghostContainer);
-      } catch (err: unknown) {
-        console.error("PDF generation failed:", err);
-        const errorMessage = err instanceof Error ? err.message : "Failed to generate PDF. Please try again.";
-        alert(errorMessage);
-      } finally {
-        setLoading(false);
+      // ─── Photo ───
+      if (photo) {
+        try {
+          pdf.addImage(photo, 'JPEG', 6, yPos, 22, 28);
+          // Draw border around photo
+          pdf.setDrawColor(80, 80, 80);
+          pdf.setLineWidth(0.3);
+          pdf.rect(6, yPos, 22, 28);
+        } catch (imgErr) {
+          console.warn('Photo could not be added to PDF:', imgErr);
+        }
       }
+
+      const textStartX = photo ? 34 : 6;
+
+      // ─── Name ───
+      pdf.setFontSize(5);
+      pdf.setTextColor(120, 120, 120);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('NAME', textStartX, yPos + 3);
+      pdf.setFontSize(11);
+      pdf.setTextColor(255, 255, 255);
+      pdf.text(formData.name, textStartX, yPos + 9, { maxWidth: pageWidth - textStartX - 6 });
+
+      // ─── Zone ───
+      pdf.setFontSize(5);
+      pdf.setTextColor(120, 120, 120);
+      pdf.text('ZONE', textStartX, yPos + 16);
+      pdf.setFontSize(9);
+      pdf.setTextColor(92, 158, 156); // --secondary
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(zoneName, textStartX, yPos + 21);
+
+      // ─── Category & Age ───
+      pdf.setFontSize(5);
+      pdf.setTextColor(120, 120, 120);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('CATEGORY', textStartX, yPos + 27);
+      pdf.setFontSize(8);
+      pdf.setTextColor(228, 225, 222);
+      pdf.text(formData.category || 'N/A', textStartX, yPos + 32);
+
+      pdf.setFontSize(5);
+      pdf.setTextColor(120, 120, 120);
+      pdf.text('AGE', textStartX + 30, yPos + 27);
+      pdf.setFontSize(8);
+      pdf.setTextColor(228, 225, 222);
+      pdf.text(`${formData.age} Yrs`, textStartX + 30, yPos + 32);
+
+      yPos += (photo ? 36 : 36);
+
+      // ─── Dashed Divider ───
+      pdf.setDrawColor(60, 60, 60);
+      pdf.setLineDashPattern([1, 1], 0);
+      pdf.setLineWidth(0.2);
+      pdf.line(6, yPos, pageWidth - 6, yPos);
+      pdf.setLineDashPattern([], 0);
+      yPos += 6;
+
+      // ─── Registered Events ───
+      pdf.setFontSize(5);
+      pdf.setTextColor(218, 93, 101);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('REGISTERED EVENTS', 6, yPos);
+      yPos += 5;
+
+      pdf.setFontSize(7);
+      pdf.setTextColor(228, 225, 222);
+      pdf.setFont('helvetica', 'normal');
+      selectedEvents.forEach(id => {
+        const event = eventsData.find(e => e.id === id);
+        const eventName = event?.name || id;
+        // Draw pill background
+        const textWidth = pdf.getTextWidth(eventName) + 4;
+        pdf.setFillColor(40, 40, 38);
+        pdf.roundedRect(6, yPos - 3, textWidth, 5, 1.5, 1.5, 'F');
+        pdf.text(eventName, 8, yPos);
+        yPos += 7;
+      });
+
+      // ─── Team Info (if any) ───
+      if (Object.keys(formData.teams).length > 0) {
+        yPos += 2;
+        pdf.setDrawColor(60, 60, 60);
+        pdf.setLineDashPattern([1, 1], 0);
+        pdf.line(6, yPos, pageWidth - 6, yPos);
+        pdf.setLineDashPattern([], 0);
+        yPos += 5;
+
+        pdf.setFontSize(5);
+        pdf.setTextColor(120, 120, 120);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('TEAM ROSTER', 6, yPos);
+        yPos += 5;
+
+        Object.entries(formData.teams).forEach(([eventId, team]) => {
+          const event = eventsData.find(e => e.id === eventId);
+          pdf.setFontSize(6);
+          pdf.setTextColor(218, 93, 101);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text(`${event?.name}: ${team.teamName}`, 6, yPos);
+          yPos += 4;
+
+          pdf.setFontSize(6);
+          pdf.setTextColor(200, 200, 200);
+          pdf.setFont('helvetica', 'normal');
+          const memberNames = [`${formData.name} (C)`, ...team.members.filter(m => m.name).map(m => m.name)].join(', ');
+          const lines = pdf.splitTextToSize(memberNames, pageWidth - 12);
+          pdf.text(lines, 6, yPos);
+          yPos += lines.length * 4 + 2;
+        });
+      }
+
+      // ─── Footer ───
+      const footerY = 145;
+      pdf.setFillColor(15, 15, 14);
+      pdf.rect(0, footerY, pageWidth, 15, 'F');
+      pdf.setDrawColor(40, 40, 38);
+      pdf.line(0, footerY, pageWidth, footerY);
+
+      // Checkmark circle
+      pdf.setFillColor(255, 255, 255);
+      pdf.circle(14, footerY + 7.5, 4, 'F');
+      pdf.setFontSize(8);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('✓', 12.5, footerY + 9.5);
+
+      pdf.setFontSize(7);
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Present this at registration desk', 22, footerY + 6);
+      pdf.setFontSize(5.5);
+      pdf.setTextColor(120, 120, 120);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Avatarana 2026 - Official Participant ID', 22, footerY + 10.5);
+
+      // Create a very safe filename (no special chars that might break extension detection)
+      const safeName = formData.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_\-]/g, '') || 'Guest';
+      const fileName = `Avatarana_Pass_${safeName}.pdf`;
+
+      // Use a pure Base64 Data URI. This format is synchronous, doesn't expire, and prevents 
+      // the browser download manager from throwing 'Network Error' or 'Check Internet Connection'
+      // which happens when Blob URLs are revoked too quickly by cleanup scripts.
+      const pdfDataUri = pdf.output('datauristring');
+      
+      const downloadLink = document.createElement('a');
+      downloadLink.href = pdfDataUri;
+      downloadLink.download = fileName;
+      downloadLink.style.display = 'none';
+      
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      
+      // Cleanup DOM (no need to revoke URL since it's a data URI)
+      document.body.removeChild(downloadLink);
+    } catch (err: unknown) {
+      console.error('PDF generation failed:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to generate PDF. Please try again.';
+      alert(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -551,6 +611,30 @@ export default function Registration() {
           initial={{ scale: 0.8, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           transition={{ type: "spring", bounce: 0.4, duration: 0.8 }}
+          onAnimationComplete={() => {
+            // Auto-download the pass after the success animation completes
+            if (!autoDownloadTriggered.current) {
+              autoDownloadTriggered.current = true;
+              setTimeout(() => {
+                setDownloadPhase('preparing');
+                setTimeout(() => {
+                  setDownloadPhase('downloading');
+                  // Trigger actual download
+                  handleDownload().then(() => {
+                    setDownloadPhase('done');
+                    // Fire celebration confetti
+                    confetti({
+                      particleCount: 80,
+                      spread: 70,
+                      origin: { y: 0.7 },
+                      colors: ['#da5d65', '#5c9e9c', '#FFD700', '#e4e1de'],
+                      zIndex: 10000,
+                    });
+                  });
+                }, 1500);
+              }, 1200);
+            }
+          }}
         >
           <div className="celebration-header">
             <div className="trophy-wrapper">
@@ -620,21 +704,21 @@ export default function Registration() {
               </div>
 
               {Object.keys(formData.teams).length > 0 && (
-                <div className="ticket-teams" style={{ 
-                  marginTop: '1.25rem', 
-                  paddingTop: '1rem', 
-                  borderTop: '1px dashed rgba(228, 225, 222, 0.15)' 
+                <div className="ticket-teams" style={{
+                  marginTop: '1.25rem',
+                  paddingTop: '1rem',
+                  borderTop: '1px dashed rgba(228, 225, 222, 0.15)'
                 }}>
-                  <label style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'center',
                     gap: '0.4rem',
-                    fontSize: '0.65rem', 
-                    color: 'var(--muted)', 
-                    fontWeight: 700, 
-                    textTransform: 'uppercase', 
+                    fontSize: '0.65rem',
+                    color: 'var(--muted)',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
                     letterSpacing: '0.1em',
-                    marginBottom: '0.5rem' 
+                    marginBottom: '0.5rem'
                   }}>
                     <User size={12} /> TEAM ROSTER
                   </label>
@@ -643,9 +727,9 @@ export default function Registration() {
                       const event = eventsData.find(e => e.id === eventId);
                       return (
                         <div key={eventId} className="team-ticket-item">
-                          <div style={{ 
-                            fontSize: '0.85rem', 
-                            fontWeight: 700, 
+                          <div style={{
+                            fontSize: '0.85rem',
+                            fontWeight: 700,
                             color: 'var(--primary)',
                             marginBottom: '0.2rem',
                             display: 'flex',
@@ -654,8 +738,8 @@ export default function Registration() {
                           }}>
                             <span style={{ opacity: 0.6, fontSize: '0.75rem' }}>{event?.name}:</span> {team.teamName}
                           </div>
-                          <div style={{ 
-                            fontSize: '0.75rem', 
+                          <div style={{
+                            fontSize: '0.75rem',
                             lineHeight: '1.4',
                             color: 'var(--text-main)',
                             opacity: 0.85,
@@ -689,15 +773,60 @@ export default function Registration() {
             </div>
           </div>
 
+          {/* Auto-Download Progress Animation */}
+          <div className="auto-download-section">
+            <div className={`download-progress-card glass-card ${downloadPhase}`}>
+              <div className="download-progress-track">
+                <div className={`download-progress-fill ${downloadPhase}`} />
+              </div>
+              <div className="download-status-row">
+                {downloadPhase === 'idle' && (
+                  <>
+                    <div className="download-icon-wrapper waiting">
+                      <Loader2 size={22} className="spin-icon" />
+                    </div>
+                    <span>Preparing your pass...</span>
+                  </>
+                )}
+                {downloadPhase === 'preparing' && (
+                  <>
+                    <div className="download-icon-wrapper preparing">
+                      <FileText size={22} />
+                    </div>
+                    <span>Generating PDF pass...</span>
+                  </>
+                )}
+                {downloadPhase === 'downloading' && (
+                  <>
+                    <div className="download-icon-wrapper downloading">
+                      <ArrowDown size={22} className="bounce-icon" />
+                    </div>
+                    <span>Downloading your pass...</span>
+                  </>
+                )}
+                {downloadPhase === 'done' && (
+                  <>
+                    <div className="download-icon-wrapper done">
+                      <CheckCircle2 size={22} />
+                    </div>
+                    <span>Pass downloaded successfully!</span>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
           <div className="success-actions">
-            <button onClick={handleDownload} className="btn-primary">
-              <FileText size={18} /> Download PDF Pass
+            <button onClick={() => { setDownloadPhase('downloading'); handleDownload().then(() => { setDownloadPhase('done'); }); }} className="btn-primary">
+              <Download size={18} /> Download Again
             </button>
             <button onClick={() => {
               setSubmitted(false);
               setFormData({ name: '', phone: '', age: '', zone: '', category: '', teams: {} });
               setSelectedEvents([]);
               setPhoto(null);
+              setDownloadPhase('idle');
+              autoDownloadTriggered.current = false;
             }} className="btn-secondary">
               Register Another
             </button>
@@ -941,7 +1070,144 @@ export default function Registration() {
             animation: fadeIn 1s ease-out 0.8s both;
           }
 
-          /* New Animations */
+          /* Auto-Download Animation */
+          .auto-download-section {
+            width: 100%;
+            animation: fadeIn 0.6s ease-out 0.5s both;
+          }
+
+          .download-progress-card {
+            padding: 1.25rem 1.5rem;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            background: rgba(22, 22, 20, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+          }
+
+          .download-progress-card.done {
+            border-color: rgba(92, 158, 156, 0.4);
+            box-shadow: 0 0 30px rgba(92, 158, 156, 0.1);
+          }
+
+          .download-progress-track {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.05);
+          }
+
+          .download-progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1), background 0.5s;
+            width: 0%;
+          }
+
+          .download-progress-fill.idle {
+            width: 10%;
+            background: linear-gradient(90deg, var(--primary), var(--primary));
+            animation: progress-pulse 1.5s ease-in-out infinite;
+          }
+
+          .download-progress-fill.preparing {
+            width: 45%;
+            background: linear-gradient(90deg, var(--primary), #FFD700);
+          }
+
+          .download-progress-fill.downloading {
+            width: 80%;
+            background: linear-gradient(90deg, #FFD700, var(--secondary));
+          }
+
+          .download-progress-fill.done {
+            width: 100%;
+            background: linear-gradient(90deg, var(--secondary), #25D366);
+          }
+
+          .download-status-row {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+          }
+
+          .download-status-row span {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-main);
+          }
+
+          .download-icon-wrapper {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.4s ease;
+          }
+
+          .download-icon-wrapper.waiting {
+            background: rgba(218, 93, 101, 0.15);
+            color: var(--primary);
+          }
+
+          .download-icon-wrapper.preparing {
+            background: rgba(255, 215, 0, 0.15);
+            color: #FFD700;
+            animation: icon-scale-in 0.4s ease-out;
+          }
+
+          .download-icon-wrapper.downloading {
+            background: rgba(92, 158, 156, 0.15);
+            color: var(--secondary);
+            animation: icon-scale-in 0.4s ease-out;
+          }
+
+          .download-icon-wrapper.done {
+            background: rgba(37, 211, 102, 0.15);
+            color: #25D366;
+            animation: icon-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          }
+
+          .spin-icon {
+            animation: spin 1s linear infinite;
+          }
+
+          .bounce-icon {
+            animation: bounce-down 0.8s ease-in-out infinite;
+          }
+
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+
+          @keyframes bounce-down {
+            0%, 100% { transform: translateY(-3px); }
+            50% { transform: translateY(3px); }
+          }
+
+          @keyframes icon-scale-in {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+          }
+
+          @keyframes icon-pop {
+            0% { transform: scale(0.5); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+          }
+
+          @keyframes progress-pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+          }
+
+          /* Existing Animations */
           @keyframes pulse-ring {
             0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
             50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.2; }
@@ -1023,11 +1289,21 @@ export default function Registration() {
                       name="phone"
                       autoComplete="tel"
                       required
-                      placeholder="+91 xxxxxxxxxx"
+                      maxLength={10}
+                      pattern="[0-9]{10}"
+                      placeholder="10-digit number"
                       value={formData.phone}
-                      onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                      onChange={e => {
+                        const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                        setFormData({ ...formData, phone: digits });
+                      }}
                     />
                   </div>
+                  {formData.phone.length > 0 && formData.phone.length < 10 && (
+                    <span className="field-hint" style={{ fontSize: '0.7rem', color: 'var(--primary)', opacity: 0.8, marginTop: '0.25rem', display: 'block' }}>
+                      {10 - formData.phone.length} more digit{10 - formData.phone.length !== 1 ? 's' : ''} needed
+                    </span>
+                  )}
                 </div>
                 <div className="form-group">
                   <label htmlFor="age">Age</label>
@@ -1186,9 +1462,14 @@ export default function Registration() {
                               />
                               <input
                                 type="tel"
-                                placeholder="Phone Number"
+                                placeholder="10-digit number"
+                                maxLength={10}
+                                pattern="[0-9]{10}"
                                 value={member.phone}
-                                onChange={e => updateTeamMember(eventId, idx, 'phone', e.target.value)}
+                                onChange={e => {
+                                  const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                                  updateTeamMember(eventId, idx, 'phone', digits);
+                                }}
                                 className="compact-input"
                               />
                             </div>
