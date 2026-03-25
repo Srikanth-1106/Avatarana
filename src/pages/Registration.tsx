@@ -284,17 +284,7 @@ export default function Registration() {
       const passId = `#${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
       const zoneName = zonesData.find(z => z.id === formData.zone)?.displayName || formData.zone || 'N/A';
 
-      // ─── Preload Sponsor Logos ───
-      const loadImage = (src: string): Promise<HTMLImageElement | null> => new Promise((resolve) => {
-        const img = new Image();
-        img.onload = () => resolve(img);
-        img.onerror = () => resolve(null);
-        img.src = src;
-      });
-      
-      const s1 = await loadImage('/sponsor-1.png');
-      const s2 = await loadImage('/sponsor-2.png');
-      const s3 = await loadImage('/sponsor-3.png');
+
 
       // ─── Header Bar (Red & Black Theme) ───
       pdf.setFillColor(218, 93, 101); // Primary Red
@@ -401,74 +391,7 @@ export default function Registration() {
         yPos += 8;
       });
 
-      // ─── Sponsor Section (Concise & Clean) ───
-      const sponsorY = 120;
-      pdf.setFillColor(15, 15, 15);
-      pdf.rect(0, sponsorY, pageWidth, 30, 'F');
-      
-      pdf.setDrawColor(218, 93, 101); // Red top border
-      pdf.setLineWidth(0.5);
-      pdf.line(0, sponsorY, pageWidth, sponsorY);
 
-      pdf.setFontSize(5);
-      pdf.setTextColor(150, 150, 150);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('PROUD SPONSORS', pageWidth / 2, sponsorY + 5, { align: 'center' });
-
-      // Render Sponsor Logos Centered & Aspect-Ratio Correct
-      const maxLogoW = 20;
-      const maxLogoH = 9;
-      const gap = 6; 
-      const numLogos = 3; // s1, s2, s3 (sAp skipped to avoid duplicate)
-      let startX = (pageWidth - (numLogos * maxLogoW + (numLogos - 1) * gap)) / 2;
-      
-      const renderLogo = (img: HTMLImageElement | null, boxX: number) => {
-        if (img) {
-          try {
-            const aspect = img.width / img.height;
-            let w = maxLogoW;
-            let h = w / aspect;
-            if (h > maxLogoH) {
-              h = maxLogoH;
-              w = h * aspect;
-            }
-            const finalX = boxX + (maxLogoW - w) / 2;
-            const finalY = sponsorY + 7 + (maxLogoH - h) / 2;
-
-            // Compress image using offscreen canvas: scale by 15 for high resolution, but small MB footprint
-            const canvas = document.createElement('canvas');
-            const pixelW = w * 15;
-            const pixelH = h * 15;
-            canvas.width = pixelW;
-            canvas.height = pixelH;
-            const ctx = canvas.getContext('2d');
-            if (ctx) {
-              // Fill with white to ensure logos (if transparent) are visible and contrast perfectly
-              ctx.fillStyle = '#ffffff';
-              ctx.fillRect(0, 0, pixelW, pixelH);
-              ctx.drawImage(img, 0, 0, pixelW, pixelH);
-              
-              // Export as JPEG which compresses far better than PNG to minimize MB size
-              const compressedData = canvas.toDataURL('image/jpeg', 0.85);
-              pdf.addImage(compressedData, 'JPEG', finalX, finalY, w, h);
-            } else {
-              pdf.addImage(img, 'PNG', finalX, finalY, w, h); // Fallback
-            }
-          } catch (e) { console.warn('PDF Sponsor img err'); }
-        }
-      };
-      
-      renderLogo(s1, startX);
-      renderLogo(s2, startX + maxLogoW + gap);
-      renderLogo(s3, startX + 2 * (maxLogoW + gap));
-
-      // Render Named Sponsors Concisely
-      pdf.setFontSize(4);
-      pdf.setTextColor(190, 190, 190);
-      pdf.setFont('helvetica', 'normal');
-      const namedSponsorsStr = "Bayar Valaya • Kashisadana • Mediglobe Chandrashekar • Venkateshanna • Seethakanthanna Darbe • Nandakishore Bajithotti • Vishwakumar Kayargadde • Raveesh Majakkar • Khadyas";
-      const wrapText = pdf.splitTextToSize(namedSponsorsStr, pageWidth - 10);
-      pdf.text(wrapText, pageWidth / 2, sponsorY + 21, { align: 'center', lineHeightFactor: 1.3 });
 
       // ─── Footer (Crisp & Concise) ───
       const footerY = 150;
