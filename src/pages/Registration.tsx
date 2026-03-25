@@ -50,7 +50,31 @@ export default function Registration() {
     // 1. Gather all events to check (Individual + Group)
     const selectedEventsData = selectedEvents.map(id => eventsData.find(e => e.id === id)).filter(Boolean);
 
+    // 2. Form-level name consistency check (global across all selected events)
+    const allFormPlayers = [];
+    allFormPlayers.push({ name: formData.name, phone: formData.phone, role: 'Captain' });
+    for (const event of selectedEventsData) {
+      if (event?.type === 'Group' && formData.teams[event.id]) {
+        formData.teams[event.id].members.forEach((m, i) => {
+          if (m.phone && m.phone.length >= 10) {
+            allFormPlayers.push({ ...m, role: `Player ${i + 2} in ${event.name}` });
+          }
+        });
+      }
+    }
 
+    const phoneToNameMap = new Map();
+    for (const player of allFormPlayers) {
+      if (!player.phone || player.phone.length < 10) continue;
+      const normalizedName = player.name.toLowerCase().trim();
+      if (phoneToNameMap.has(player.phone)) {
+        if (phoneToNameMap.get(player.phone) !== normalizedName) {
+          return `Phone number ${player.phone} is entered for multiple different names in this form. Each person must have their own unique phone number.`;
+        }
+      } else {
+        phoneToNameMap.set(player.phone, normalizedName);
+      }
+    }
 
     // 3. Validate all Captain/Player combinations
     for (const event of selectedEventsData) {
@@ -74,14 +98,34 @@ export default function Registration() {
       for (const player of playersForThisSport) {
         if (!player.phone || player.phone.length < 10) continue;
 
-        // DB Check 1: Check for DIFFERENT ZONE (Consistency)
+        // DB Check 1: Check for DIFFERENT ZONE (Consistency) and NAME MISMATCH
         // Check both as primary and as member
         const { data: globalZoneCheck } = await supabase
           .from('registrations')
-          .select('region, full_name')
+          .select('region, full_name, phone, team_members')
           .or(`phone.eq.${player.phone},team_members.cs.[{"phone":"${player.phone}"}]`);
 
         if (globalZoneCheck && globalZoneCheck.length > 0) {
+          // --- Name consistency check ---
+          let existingName = null;
+          for (const record of globalZoneCheck) {
+            if (record.phone === player.phone) {
+              existingName = record.full_name;
+              break;
+            } else if (record.team_members) {
+              const matchedMember = record.team_members.find((m: any) => m.phone === player.phone);
+              if (matchedMember) {
+                existingName = matchedMember.name;
+                break;
+              }
+            }
+          }
+          
+          if (existingName && existingName.toLowerCase().trim() !== player.name.toLowerCase().trim()) {
+            return `Phone number ${player.phone} is already registered under the name "${existingName}". Each person must use their own unique phone number.`;
+          }
+
+          // --- Zone consistency check ---
           const firstExisting = globalZoneCheck[0];
           const currentZoneName = zonesData.find(z => z.id === formData.zone)?.displayName || formData.zone;
           
