@@ -13,11 +13,9 @@ export const eventsData: EventItem[] = [
   // Men's Events
   { id: 'm1', name: 'Cricket', category: 'Men', type: 'Group', minPlayers: 11, description: 'Regional teams compete in league format using standard cricket rules', points: { first: 10, second: 5 } },
   { id: 'm2', name: 'Volleyball', category: 'Men', type: 'Group', minPlayers: 6, description: '6 players per team, best of 3 sets', points: { first: 10, second: 5 } },
-  { id: 'm3', name: 'Lagori', category: 'Men', type: 'Group', minPlayers: 7, description: 'Traditional game where teams knock down and rebuild a stone pile', points: { first: 10, second: 5 } },
   { id: 'm4', name: 'Tug of War', category: 'Men', type: 'Group', minPlayers: 8, description: 'Teams pull opponent across center line', points: { first: 10, second: 5 } },
   
   // Women's Events
-  { id: 'w1', name: 'Lagori', category: 'Women', type: 'Group', minPlayers: 7, description: 'Traditional stone pile team game', points: { first: 10, second: 5 } },
   { id: 'w2', name: 'Rangoli', category: 'Women', type: 'Individual', description: 'Judged on design, creativity and colour', points: { first: 5, second: 3, third: 2 } },
   { id: 'w3', name: 'Dodgeball', category: 'Women', type: 'Group', minPlayers: 6, description: 'Team elimination game', points: { first: 10, second: 5 } },
   { id: 'w4', name: 'Lemon & Spoon', category: 'Women', type: 'Individual', description: 'Balance race carrying lemon on spoon', points: { first: 5, second: 3, third: 2 } },
@@ -35,7 +33,6 @@ export const eventsData: EventItem[] = [
 
   // Kids Events (6th - 10th)
   { id: 'k7', name: 'Drawing', category: 'Kids', subCategory: '6th - 10th Std', type: 'Individual', description: 'Advanced drawing competition', points: { first: 5, second: 3, third: 2 } },
-  { id: 'k8', name: 'Lagori', category: 'Kids', subCategory: '6th - 10th Std', type: 'Group', minPlayers: 7, description: 'Traditional stone pile game', points: { first: 10, second: 5 } },
   { id: 'k9', name: 'Maida Coin Game', category: 'Kids', subCategory: '6th - 10th Std', type: 'Individual', description: 'Retrieve coin from flour using only your face', points: { first: 5, second: 3, third: 2 } },
 
   // Senior Citizens Events
@@ -46,4 +43,5 @@ export const eventsData: EventItem[] = [
   { id: 'g1', name: 'Cooking Without Fire', category: 'General', type: 'Group', minPlayers: 2, description: 'Prepare dish without using gas or flame', points: { first: 10, second: 5 } },
   { id: 'g2', name: 'Housie Housie (Tambola)', category: 'General', type: 'Individual', description: 'Bingo style number game', points: { first: 5, second: 3, third: 2 } },
   { id: 'g3', name: 'Treasure Hunt', category: 'General', type: 'Group', minPlayers: 3, description: 'Teams follow clues to find treasure', points: { first: 10, second: 5 } },
+  { id: 'g4', name: 'Lagori', category: 'General', type: 'Group', minPlayers: 7, description: 'Traditional game where teams knock down and rebuild a stone pile', points: { first: 10, second: 5 } },
 ];

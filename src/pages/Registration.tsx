@@ -83,9 +83,10 @@ export default function Registration() {
 
         if (globalZoneCheck && globalZoneCheck.length > 0) {
           const firstExisting = globalZoneCheck[0];
-          if (firstExisting.region && firstExisting.region !== formData.zone) {
+          const currentZoneName = zonesData.find(z => z.id === formData.zone)?.displayName || formData.zone;
+          
+          if (firstExisting.region && firstExisting.region !== formData.zone && firstExisting.region !== currentZoneName) {
             const existingZoneName = zonesData.find(z => z.id === firstExisting.region)?.displayName || firstExisting.region;
-            const currentZoneName = zonesData.find(z => z.id === formData.zone)?.displayName || formData.zone;
             return `${player.role} (${player.name}) is already associated with zone "${existingZoneName}". They cannot register under a different zone ("${currentZoneName}"). A player can only represent one zone across all events.`;
           }
         }
@@ -201,6 +202,8 @@ export default function Registration() {
         throw new Error('Please enter a valid age.');
       }
 
+      const zoneNameForDb = zonesData.find(z => z.id === formData.zone)?.displayName || formData.zone || null;
+
       const registrationRecords = [];
 
       // Create a separate record for each GROUP sport (different team names/members)
@@ -212,7 +215,7 @@ export default function Registration() {
           full_name: formData.name,
           phone: formData.phone,
           age: parsedAge,
-          region: formData.zone || null,
+          region: zoneNameForDb,
           category: formData.category,
           team_name: teamData?.teamName || null,
           team_members: teamData?.members || null,
@@ -227,7 +230,7 @@ export default function Registration() {
           full_name: formData.name,
           phone: formData.phone,
           age: parsedAge,
-          region: formData.zone || null,
+          region: zoneNameForDb,
           category: formData.category,
           team_name: null,
           team_members: [],
@@ -281,30 +284,49 @@ export default function Registration() {
       const passId = `#${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
       const zoneName = zonesData.find(z => z.id === formData.zone)?.displayName || formData.zone || 'N/A';
 
-      // ─── Header Bar ───
-      pdf.setFillColor(218, 93, 101); // --primary
-      pdf.rect(0, 0, pageWidth, 14, 'F');
+      // ─── Preload Sponsor Logos ───
+      const loadImage = (src: string): Promise<HTMLImageElement | null> => new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = src;
+      });
+      
+      const s1 = await loadImage('/sponsor-1.png');
+      const s2 = await loadImage('/sponsor-2.png');
+      const s3 = await loadImage('/sponsor-3.png');
+
+      // ─── Header Bar (Red & Black Theme) ───
+      pdf.setFillColor(218, 93, 101); // Primary Red
+      pdf.rect(0, 0, pageWidth, 16, 'F');
+
+      // Avatarana string
       pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9);
+      pdf.setTextColor(255, 255, 255);
+      pdf.text('AVATARANA 2026', 6, 8.5);
+
+      pdf.setFontSize(5.5);
+      pdf.setTextColor(240, 240, 240);
+      pdf.text('PARTICIPANT PASS', 6, 12);
+      
       pdf.setFontSize(7);
       pdf.setTextColor(255, 255, 255);
-      pdf.text('PARTICIPANT PASS', 6, 9);
-      pdf.setFontSize(6);
-      pdf.setTextColor(255, 255, 255);
-      pdf.text(passId, pageWidth - 6, 9, { align: 'right' });
+      pdf.text(passId, pageWidth - 6, 9.5, { align: 'right' });
 
-      // ─── Body Background ───
-      pdf.setFillColor(22, 22, 20);
-      pdf.rect(0, 14, pageWidth, 146, 'F');
+      // ─── Body Background (Dark Black/Grey) ───
+      pdf.setFillColor(22, 22, 22);
+      pdf.rect(0, 16, pageWidth, 144, 'F');
 
-      let yPos = 24;
+      let yPos = 26;
 
       // ─── Photo ───
       if (photo) {
         try {
           pdf.addImage(photo, 'JPEG', 6, yPos, 22, 28);
           // Draw border around photo
-          pdf.setDrawColor(80, 80, 80);
-          pdf.setLineWidth(0.3);
+          pdf.setDrawColor(218, 93, 101);
+          pdf.setLineWidth(0.4);
           pdf.rect(6, yPos, 22, 28);
         } catch (imgErr) {
           console.warn('Photo could not be added to PDF:', imgErr);
@@ -315,124 +337,157 @@ export default function Registration() {
 
       // ─── Name ───
       pdf.setFontSize(5);
-      pdf.setTextColor(120, 120, 120);
+      pdf.setTextColor(150, 150, 150);
       pdf.setFont('helvetica', 'bold');
       pdf.text('NAME', textStartX, yPos + 3);
       pdf.setFontSize(11);
       pdf.setTextColor(255, 255, 255);
-      pdf.text(formData.name, textStartX, yPos + 9, { maxWidth: pageWidth - textStartX - 6 });
+      pdf.text(formData.name.toUpperCase(), textStartX, yPos + 9, { maxWidth: pageWidth - textStartX - 6 });
 
       // ─── Zone ───
       pdf.setFontSize(5);
-      pdf.setTextColor(120, 120, 120);
+      pdf.setTextColor(150, 150, 150);
       pdf.text('ZONE', textStartX, yPos + 16);
       pdf.setFontSize(9);
-      pdf.setTextColor(92, 158, 156); // --secondary
+      pdf.setTextColor(218, 93, 101); // Red accent
       pdf.setFont('helvetica', 'bold');
-      pdf.text(zoneName, textStartX, yPos + 21);
+      pdf.text(zoneName.toUpperCase(), textStartX, yPos + 21);
 
       // ─── Category & Age ───
       pdf.setFontSize(5);
-      pdf.setTextColor(120, 120, 120);
+      pdf.setTextColor(150, 150, 150);
       pdf.setFont('helvetica', 'bold');
       pdf.text('CATEGORY', textStartX, yPos + 27);
       pdf.setFontSize(8);
-      pdf.setTextColor(228, 225, 222);
-      pdf.text(formData.category || 'N/A', textStartX, yPos + 32);
+      pdf.setTextColor(240, 240, 240);
+      pdf.text((formData.category || 'N/A').toUpperCase(), textStartX, yPos + 32);
 
       pdf.setFontSize(5);
-      pdf.setTextColor(120, 120, 120);
+      pdf.setTextColor(150, 150, 150);
       pdf.text('AGE', textStartX + 30, yPos + 27);
       pdf.setFontSize(8);
-      pdf.setTextColor(228, 225, 222);
-      pdf.text(`${formData.age} Yrs`, textStartX + 30, yPos + 32);
+      pdf.setTextColor(240, 240, 240);
+      pdf.text(`${formData.age} YRS`, textStartX + 30, yPos + 32);
 
       yPos += (photo ? 36 : 36);
 
       // ─── Dashed Divider ───
-      pdf.setDrawColor(60, 60, 60);
-      pdf.setLineDashPattern([1, 1], 0);
-      pdf.setLineWidth(0.2);
+      pdf.setDrawColor(100, 100, 100);
+      pdf.setLineDashPattern([1.5, 1.5], 0);
+      pdf.setLineWidth(0.3);
       pdf.line(6, yPos, pageWidth - 6, yPos);
       pdf.setLineDashPattern([], 0);
-      yPos += 6;
+      yPos += 7;
 
       // ─── Registered Events ───
-      pdf.setFontSize(5);
-      pdf.setTextColor(218, 93, 101);
+      pdf.setFontSize(5.5);
+      pdf.setTextColor(218, 93, 101); // Red Header
       pdf.setFont('helvetica', 'bold');
       pdf.text('REGISTERED EVENTS', 6, yPos);
-      yPos += 5;
+      yPos += 6;
 
       pdf.setFontSize(7);
-      pdf.setTextColor(228, 225, 222);
+      pdf.setTextColor(255, 255, 255);
       pdf.setFont('helvetica', 'normal');
       selectedEvents.forEach(id => {
         const event = eventsData.find(e => e.id === id);
         const eventName = event?.name || id;
-        // Draw pill background
         const textWidth = pdf.getTextWidth(eventName) + 4;
-        pdf.setFillColor(40, 40, 38);
-        pdf.roundedRect(6, yPos - 3, textWidth, 5, 1.5, 1.5, 'F');
-        pdf.text(eventName, 8, yPos);
-        yPos += 7;
+        pdf.setFillColor(35, 35, 35);
+        pdf.setDrawColor(60, 60, 60);
+        pdf.setLineWidth(0.2);
+        pdf.roundedRect(6, yPos - 3.5, textWidth, 6, 1.5, 1.5, 'FD');
+        pdf.text(eventName, 8, yPos + 0.5);
+        yPos += 8;
       });
 
-      // ─── Team Info (if any) ───
-      if (Object.keys(formData.teams).length > 0) {
-        yPos += 2;
-        pdf.setDrawColor(60, 60, 60);
-        pdf.setLineDashPattern([1, 1], 0);
-        pdf.line(6, yPos, pageWidth - 6, yPos);
-        pdf.setLineDashPattern([], 0);
-        yPos += 5;
+      // ─── Sponsor Section (Concise & Clean) ───
+      const sponsorY = 120;
+      pdf.setFillColor(15, 15, 15);
+      pdf.rect(0, sponsorY, pageWidth, 30, 'F');
+      
+      pdf.setDrawColor(218, 93, 101); // Red top border
+      pdf.setLineWidth(0.5);
+      pdf.line(0, sponsorY, pageWidth, sponsorY);
 
-        pdf.setFontSize(5);
-        pdf.setTextColor(120, 120, 120);
-        pdf.setFont('helvetica', 'bold');
-        pdf.text('TEAM ROSTER', 6, yPos);
-        yPos += 5;
+      pdf.setFontSize(5);
+      pdf.setTextColor(150, 150, 150);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('PROUD SPONSORS', pageWidth / 2, sponsorY + 5, { align: 'center' });
 
-        Object.entries(formData.teams).forEach(([eventId, team]) => {
-          const event = eventsData.find(e => e.id === eventId);
-          pdf.setFontSize(6);
-          pdf.setTextColor(218, 93, 101);
-          pdf.setFont('helvetica', 'bold');
-          pdf.text(`${event?.name}: ${team.teamName}`, 6, yPos);
-          yPos += 4;
+      // Render Sponsor Logos Centered & Aspect-Ratio Correct
+      const maxLogoW = 20;
+      const maxLogoH = 9;
+      const gap = 6; 
+      const numLogos = 3; // s1, s2, s3 (sAp skipped to avoid duplicate)
+      let startX = (pageWidth - (numLogos * maxLogoW + (numLogos - 1) * gap)) / 2;
+      
+      const renderLogo = (img: HTMLImageElement | null, boxX: number) => {
+        if (img) {
+          try {
+            const aspect = img.width / img.height;
+            let w = maxLogoW;
+            let h = w / aspect;
+            if (h > maxLogoH) {
+              h = maxLogoH;
+              w = h * aspect;
+            }
+            const finalX = boxX + (maxLogoW - w) / 2;
+            const finalY = sponsorY + 7 + (maxLogoH - h) / 2;
 
-          pdf.setFontSize(6);
-          pdf.setTextColor(200, 200, 200);
-          pdf.setFont('helvetica', 'normal');
-          const memberNames = [`${formData.name} (C)`, ...team.members.filter(m => m.name).map(m => m.name)].join(', ');
-          const lines = pdf.splitTextToSize(memberNames, pageWidth - 12);
-          pdf.text(lines, 6, yPos);
-          yPos += lines.length * 4 + 2;
-        });
-      }
+            // Compress image using offscreen canvas: scale by 15 for high resolution, but small MB footprint
+            const canvas = document.createElement('canvas');
+            const pixelW = w * 15;
+            const pixelH = h * 15;
+            canvas.width = pixelW;
+            canvas.height = pixelH;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              // Fill with white to ensure logos (if transparent) are visible and contrast perfectly
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(0, 0, pixelW, pixelH);
+              ctx.drawImage(img, 0, 0, pixelW, pixelH);
+              
+              // Export as JPEG which compresses far better than PNG to minimize MB size
+              const compressedData = canvas.toDataURL('image/jpeg', 0.85);
+              pdf.addImage(compressedData, 'JPEG', finalX, finalY, w, h);
+            } else {
+              pdf.addImage(img, 'PNG', finalX, finalY, w, h); // Fallback
+            }
+          } catch (e) { console.warn('PDF Sponsor img err'); }
+        }
+      };
+      
+      renderLogo(s1, startX);
+      renderLogo(s2, startX + maxLogoW + gap);
+      renderLogo(s3, startX + 2 * (maxLogoW + gap));
 
-      // ─── Footer ───
-      const footerY = 145;
-      pdf.setFillColor(15, 15, 14);
-      pdf.rect(0, footerY, pageWidth, 15, 'F');
-      pdf.setDrawColor(40, 40, 38);
+      // Render Named Sponsors Concisely
+      pdf.setFontSize(4);
+      pdf.setTextColor(190, 190, 190);
+      pdf.setFont('helvetica', 'normal');
+      const namedSponsorsStr = "Bayar Valaya • Kashisadana • Mediglobe Chandrashekar • Venkateshanna • Seethakanthanna Darbe • Nandakishore Bajithotti • Vishwakumar Kayargadde • Raveesh Majakkar • Khadyas";
+      const wrapText = pdf.splitTextToSize(namedSponsorsStr, pageWidth - 10);
+      pdf.text(wrapText, pageWidth / 2, sponsorY + 21, { align: 'center', lineHeightFactor: 1.3 });
+
+      // ─── Footer (Crisp & Concise) ───
+      const footerY = 150;
+      pdf.setFillColor(10, 10, 10);
+      pdf.rect(0, footerY, pageWidth, 10, 'F');
+      
+      pdf.setDrawColor(218, 93, 101); // Red accent line
+      pdf.setLineWidth(0.5);
       pdf.line(0, footerY, pageWidth, footerY);
 
-      // Checkmark circle
-      pdf.setFillColor(255, 255, 255);
-      pdf.circle(14, footerY + 7.5, 4, 'F');
-      pdf.setFontSize(8);
-      pdf.setTextColor(0, 0, 0);
-      pdf.text('✓', 12.5, footerY + 9.5);
-
-      pdf.setFontSize(7);
+      pdf.setFontSize(6);
       pdf.setTextColor(255, 255, 255);
       pdf.setFont('helvetica', 'bold');
-      pdf.text('Present this at registration desk', 22, footerY + 6);
-      pdf.setFontSize(5.5);
-      pdf.setTextColor(120, 120, 120);
+      pdf.text('PRESENT THIS AT REGISTRATION DESK', pageWidth / 2, footerY + 4.5, { align: 'center' });
+
+      pdf.setFontSize(4.5);
+      pdf.setTextColor(140, 140, 140);
       pdf.setFont('helvetica', 'normal');
-      pdf.text('Avatarana 2026 - Official Participant ID', 22, footerY + 10.5);
+      pdf.text('Avatarana 2026 - Official Participant ID', pageWidth / 2, footerY + 7.5, { align: 'center' });
 
       // Create a very safe filename (no special chars that might break extension detection)
       const safeName = formData.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_\-]/g, '') || 'Guest';
