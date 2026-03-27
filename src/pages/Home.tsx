@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Trophy, Medal, CalendarHeart, ArrowRight, Sparkles, Heart } from 'lucide-react';
+import { Users, Trophy, Medal, CalendarHeart, ArrowRight, Sparkles, Heart, Phone, Handshake, ChevronRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { motion } from 'framer-motion';
 import { AnimatedSection } from '../components/AnimatedSection';
@@ -115,27 +115,11 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [count]);
 
-  const imageSponsors = [
-    "/sponsor-1.png",
-    "/sponsor-2.png",
-    "/sponsor-3.png"
-  ];
-
-  const namedSponsors = [
-    'Bayar Valaya',
-    'Kashisadana',
-    'Mediglobe Chandrashekar',
-    'Venkateshanna',
-    'Seethakanthanna Darbe',
-    'Nandakishore Bajithotti',
-    'Vishwakumar Kayargadde',
-    'Raveesh Majakkar',
-    'Khadyas',
-  ];
-
-  const allSponsors = [
-    ...imageSponsors.map(src => ({ type: 'image' as const, value: src })),
-    ...namedSponsors.map(name => ({ type: 'name' as const, value: name }))
+  type SponsorItem = { name: string; type: 'image' | 'name'; value: string; height?: string };
+  const allSponsors: SponsorItem[] = [
+    { name: 'Aapaavani', type: 'image', value: '/sponsor-logo-custom.png', height: '65px' },
+    { name: 'Kashi Sadana', type: 'name', value: 'Kashi Sadana' },
+    { name: 'Mangalore Karada', type: 'image', value: '/logo.png', height: '80px' }
   ];
 
   const handleSponsorClick = (sponsor: { type: 'image' | 'name', value: string }) => {
@@ -245,39 +229,188 @@ export default function Home() {
             Proud Sponsors
           </h2>
         </div>
-        <div className="marquee-container" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <div className="marquee">
-            {/* Top row: Left to Right scroll natively */}
-            {[...allSponsors, ...allSponsors].map((sponsor, i) => (
-              <div key={`sponsor-top-${i}`} className="sponsor-marquee-card" onClick={() => handleSponsorClick(sponsor)}>
-                {sponsor.type === 'image' ? (
-                  <div className="brand-logo-wrapper" style={{ margin: 0, height: '100%' }}>
-                    <img src={sponsor.value} alt="Sponsor" className="sponsor-marquee-img" />
-                  </div>
-                ) : (
-                  <div className="brand-logo-wrapper sponsor-name-marquee" style={{ margin: 0, height: '100%' }}>
-                    <span className="sponsor-name-text">{sponsor.value}</span>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+        <div className="static-sponsors-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'stretch', flexWrap: 'wrap', gap: '2.5rem', margin: '3.5rem 0' }}>
+          {allSponsors.map((sponsor, i) => (
+            <div 
+              key={`sponsor-static-${i}`} 
+              className="premium-sponsor-card" 
+              onClick={() => handleSponsorClick({ type: sponsor.type, value: sponsor.value })}
+              style={{ 
+                margin: 0, 
+                transition: 'all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: sponsor.type === 'name' ? '2rem 3rem' : '1.5rem 2.5rem',
+                minWidth: '240px',
+                minHeight: '130px',
+                borderRadius: '24px',
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)'
+              }}
+              onMouseOver={e => {
+                e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
+                e.currentTarget.style.borderColor = 'rgba(218, 93, 101, 0.4)';
+                e.currentTarget.style.boxShadow = '0 15px 45px rgba(218, 93, 101, 0.15), inset 0 0 0 1px rgba(255,255,255,0.1)';
+              }}
+              onMouseOut={e => {
+                e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.15)';
+              }}
+            >
+              {sponsor.type === 'image' ? (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <img 
+                    src={sponsor.value} 
+                    alt={sponsor.name} 
+                    style={{ 
+                      maxHeight: sponsor.height || '75px', 
+                      width: 'auto', 
+                      maxWidth: '180px', 
+                      objectFit: 'contain',
+                      filter: 'drop-shadow(0px 4px 8px rgba(0,0,0,0.4))'
+                    }} 
+                  />
+                </div>
+              ) : (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+                  <span style={{ 
+                    fontSize: '1.45rem', 
+                    fontWeight: 800, 
+                    color: 'var(--text-main)', 
+                    letterSpacing: '1px', 
+                    lineHeight: '1.2',
+                    textTransform: 'uppercase', 
+                    background: 'linear-gradient(90deg, #ffffff, #ebd3d5)', 
+                    WebkitBackgroundClip: 'text', 
+                    WebkitTextFillColor: 'transparent',
+                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))'
+                  }}>
+                    {sponsor.value}
+                  </span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
 
-          <div className="marquee marquee-reverse">
-            {/* Bottom row: Right to Left scroll reversed */}
-            {[...allSponsors, ...allSponsors].map((sponsor, i) => (
-              <div key={`sponsor-bottom-${i}`} className="sponsor-marquee-card" onClick={() => handleSponsorClick(sponsor)}>
-                {sponsor.type === 'image' ? (
-                  <div className="brand-logo-wrapper" style={{ margin: 0, height: '100%' }}>
-                    <img src={sponsor.value} alt="Sponsor" className="sponsor-marquee-img" />
-                  </div>
-                ) : (
-                  <div className="brand-logo-wrapper sponsor-name-marquee" style={{ margin: 0, height: '100%' }}>
-                    <span className="sponsor-name-text">{sponsor.value}</span>
-                  </div>
-                )}
+        {/* Revamped Premium Sponsor CTA Area */}
+        <div style={{
+          position: 'relative',
+          marginTop: '5rem',
+          padding: '4rem 2rem',
+          borderRadius: '32px',
+          background: 'radial-gradient(120% 120% at 50% 0%, rgba(218, 93, 101, 0.07) 0%, rgba(10, 10, 10, 0.6) 100%)',
+          border: '1px solid rgba(218, 93, 101, 0.15)',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          overflow: 'hidden',
+          zIndex: 10
+        }}>
+          {/* Ambient Background Glows */}
+          <div style={{
+            position: 'absolute', top: '-50%', left: '-10%', width: '120%', height: '100%',
+            background: 'radial-gradient(ellipse at top, rgba(218, 93, 101, 0.15), transparent 70%)',
+            pointerEvents: 'none', zIndex: -1
+          }}></div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div style={{ padding: '0.8rem', background: 'rgba(218, 93, 101, 0.15)', borderRadius: '16px', color: 'var(--primary)', border: '1px solid rgba(218, 93, 101, 0.2)' }}>
+              <Handshake size={28} />
+            </div>
+          </div>
+          <h3 style={{ fontSize: '2.4rem', marginBottom: '1rem', color: '#ffffff', fontWeight: 800, textAlign: 'center', letterSpacing: '-0.5px' }}>
+            Partner with Avatarana 2026?
+          </h3>
+          <p style={{ color: 'rgba(255, 255, 255, 0.65)', marginBottom: '3.5rem', fontSize: '1.15rem', textAlign: 'center', maxWidth: '540px', lineHeight: '1.6' }}>
+            Join our monumental sports festival. Connect with thousands of passionate participants and amplify your brand's reach.
+          </p>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', width: '100%', maxWidth: '480px', margin: '0 auto', position: 'relative', zIndex: 2 }}>
+            <div style={{ marginBottom: '0.5rem', textAlign: 'center', textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '2px', color: 'var(--primary)', fontWeight: 700 }}>
+              Official Coordinators
+            </div>
+            
+            <a href="tel:+919482974619" style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: '1.25rem 1.5rem',
+              borderRadius: '20px',
+              backgroundColor: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.06)',
+              textDecoration: 'none',
+              transition: 'all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
+              position: 'relative',
+              overflow: 'hidden',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)'
+            }} onMouseOver={e => {
+              e.currentTarget.style.transform = 'translateY(-5px) scale(1.01)';
+              e.currentTarget.style.backgroundColor = 'rgba(218, 93, 101, 0.08)';
+              e.currentTarget.style.borderColor = 'rgba(218, 93, 101, 0.3)';
+              e.currentTarget.style.boxShadow = '0 15px 35px rgba(218, 93, 101, 0.15)';
+            }} onMouseOut={e => {
+              e.currentTarget.style.transform = 'translateY(0) scale(1)';
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.03)';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.06)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                <div style={{ width: '50px', height: '50px', borderRadius: '14px', backgroundColor: 'rgba(218, 93, 101, 0.15)', color: 'var(--primary)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(218, 93, 101, 0.2)' }}>
+                  <Phone size={22} fill="currentColor" opacity={0.6} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', textAlign: 'left' }}>
+                  <span style={{ color: '#ffffff', fontSize: '1.15rem', fontWeight: 600 }}>Shrivathsa Gumpe</span>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.55)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontFamily: 'monospace', letterSpacing: '0.5px' }}>
+                    +91 94829 74619
+                  </span>
+                </div>
               </div>
-            ))}
+              <ChevronRight size={22} color="var(--primary)" opacity={0.8} />
+            </a>
+
+            <a href="tel:+919686199746" style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: '1.25rem 1.5rem',
+              borderRadius: '20px',
+              backgroundColor: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.06)',
+              textDecoration: 'none',
+              transition: 'all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
+              position: 'relative',
+              overflow: 'hidden',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)'
+            }} onMouseOver={e => {
+              e.currentTarget.style.transform = 'translateY(-5px) scale(1.01)';
+              e.currentTarget.style.backgroundColor = 'rgba(218, 93, 101, 0.08)';
+              e.currentTarget.style.borderColor = 'rgba(218, 93, 101, 0.3)';
+              e.currentTarget.style.boxShadow = '0 15px 35px rgba(218, 93, 101, 0.15)';
+            }} onMouseOut={e => {
+              e.currentTarget.style.transform = 'translateY(0) scale(1)';
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.03)';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.06)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                <div style={{ width: '50px', height: '50px', borderRadius: '14px', backgroundColor: 'rgba(218, 93, 101, 0.15)', color: 'var(--primary)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(218, 93, 101, 0.2)' }}>
+                  <Phone size={22} fill="currentColor" opacity={0.6} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', textAlign: 'left' }}>
+                  <span style={{ color: '#ffffff', fontSize: '1.15rem', fontWeight: 600 }}>Kiran Sajangadde</span>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.55)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontFamily: 'monospace', letterSpacing: '0.5px' }}>
+                    +91 96861 99746
+                  </span>
+                </div>
+              </div>
+              <ChevronRight size={22} color="var(--primary)" opacity={0.8} />
+            </a>
           </div>
         </div>
       </AnimatedSection>
