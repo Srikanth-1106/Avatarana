@@ -117,7 +117,7 @@ export default function Home() {
 
   type SponsorItem = { name: string; type: 'image' | 'name'; value: string; height?: string };
   const allSponsors: SponsorItem[] = [
-    { name: 'Aapaavani', type: 'image', value: '/sponsor-logo-custom.png', height: '65px' },
+    { name: 'Aapaavani', type: 'image', value: '/sponsor-logo-custom-removebg-preview.png', height: '90px' },
     { name: 'Kashi Sadana', type: 'name', value: 'Kashi Sadana' },
     { name: 'Brindavan Samaj', type: 'image', value: '/brindavan-samaj-logo.png', height: '90px' }
   ];
@@ -145,11 +145,11 @@ export default function Home() {
         <div className="shoutout-modal-overlay" onClick={() => setSelectedSponsor(null)}>
           <div className="shoutout-modal-card glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             {selectedSponsor.type === 'image' ? (
-              <div className="brand-logo-wrapper" style={{ margin: '0 auto 1.5rem', width: 'fit-content', background: '#ffffff', borderRadius: '16px', padding: '1.5rem 2rem' }}>
+              <div className="brand-logo-wrapper" style={{ margin: '0 auto 1.5rem', width: 'fit-content', background: 'var(--white)', borderRadius: '16px', padding: '1.5rem 2rem' }}>
                 <img src={selectedSponsor.value} alt="Sponsor Logo" style={{ maxWidth: '300px', width: '100%', height: 'auto', mixBlendMode: 'multiply', filter: 'contrast(1.2)' }} />
               </div>
             ) : (
-              <div className="brand-logo-wrapper sponsor-name-marquee" style={{ margin: '0 auto 1.5rem', width: 'fit-content', background: '#ffffff', borderRadius: '16px', padding: '1.5rem 2.5rem' }}>
+              <div className="brand-logo-wrapper sponsor-name-marquee" style={{ margin: '0 auto 1.5rem', width: 'fit-content', background: 'var(--white)', borderRadius: '16px', padding: '1.5rem 2.5rem' }}>
                 <span className="sponsor-name-text" style={{ fontSize: '1.4rem' }}>{selectedSponsor.value}</span>
               </div>
             )}
@@ -246,7 +246,7 @@ export default function Home() {
                 minWidth: '240px',
                 minHeight: '130px',
                 borderRadius: '24px',
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
+                background: '#ffffff',
                 border: '1px solid rgba(255, 255, 255, 0.12)',
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
                 backdropFilter: 'blur(10px)',
@@ -271,7 +271,7 @@ export default function Home() {
                     style={{ 
                       maxHeight: sponsor.height || '75px', 
                       width: 'auto', 
-                      maxWidth: '180px', 
+                      maxWidth: '220px', 
                       objectFit: 'contain',
                       filter: 'drop-shadow(0px 4px 8px rgba(0,0,0,0.4))'
                     }} 
@@ -282,14 +282,10 @@ export default function Home() {
                   <span style={{ 
                     fontSize: '1.45rem', 
                     fontWeight: 800, 
-                    color: 'var(--text-main)', 
+                    color: '#000000', 
                     letterSpacing: '1px', 
                     lineHeight: '1.2',
-                    textTransform: 'uppercase', 
-                    background: 'linear-gradient(90deg, #ffffff, #ebd3d5)', 
-                    WebkitBackgroundClip: 'text', 
-                    WebkitTextFillColor: 'transparent',
-                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))'
+                    textTransform: 'uppercase'
                   }}>
                     {sponsor.value}
                   </span>
@@ -452,7 +448,7 @@ export default function Home() {
               <span className="brand-supported-label">Supported by</span>
               <div className="brand-logo-wrapper">
                 <img
-                  src="/sponsor-logo-custom.png"
+                  src="/sponsor-logo-custom-removebg-preview.png"
                   alt="Aapaavani Environmental Solutions"
                   className="brand-logo-img"
                 />

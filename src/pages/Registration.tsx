@@ -1066,7 +1066,7 @@ export default function Registration() {
           .qr-placeholder {
             width: 60px;
             height: 60px;
-            background: white;
+            background: var(--white);
             border-radius: 8px;
             display: flex;
             align-items: center;

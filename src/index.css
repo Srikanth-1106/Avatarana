@@ -8,6 +8,7 @@
   --muted: #827C75;
   --secondary: #5C9E9C;
   --tertiary: #387490;
+  --white: #ffffff;
 
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-heading: 'Outfit', var(--font-sans);

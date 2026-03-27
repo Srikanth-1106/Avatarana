@@ -21,7 +21,7 @@ export default function Footer() {
 
         <div className="footer-contact">
           <h4>Organized By</h4>
-          <div className="brand-logo-wrapper" style={{ margin: '0.5rem 0', width: 'fit-content', background: '#ffffff', borderRadius: '8px', padding: '0.6rem 0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="brand-logo-wrapper" style={{ margin: '0.5rem 0', width: 'fit-content', background: 'var(--white)', borderRadius: '8px', padding: '0.6rem 0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <img src="/logo.png" alt="Youth Karada Mangaluru" style={{ height: '32px', width: 'auto', mixBlendMode: 'multiply', filter: 'contrast(1.1)' }} />
           </div>
           <p>Youth Karada Mangaluru</p>
