@@ -119,7 +119,7 @@ export default function Home() {
   const allSponsors: SponsorItem[] = [
     { name: 'Aapaavani', type: 'image', value: '/sponsor-logo-custom.png', height: '65px' },
     { name: 'Kashi Sadana', type: 'name', value: 'Kashi Sadana' },
-    { name: 'Mangalore Karada', type: 'image', value: '/logo.png', height: '80px' }
+    { name: 'Brindavan Samaj', type: 'image', value: '/brindavan-samaj-logo.png', height: '90px' }
   ];
 
   const handleSponsorClick = (sponsor: { type: 'image' | 'name', value: string }) => {

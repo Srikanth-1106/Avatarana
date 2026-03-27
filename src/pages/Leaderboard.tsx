@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Trophy, Medal, Star, Users, Target, Loader2, AlertCircle, Lock } from 'lucide-react';
 import { zonesData } from '../data/zonesData';
 import { supabase } from '../lib/supabase';
@@ -14,72 +14,54 @@ interface ZoneStats {
   position: number;
 }
 
+interface Registration {
+  zone: string;
+  events?: string[] | number;
+}
+
 export default function Leaderboard() {
-  // Check if page should be locked (before April 15, 2026)
-  const unlockDate = new Date('2026-04-15');
-  const currentDate = new Date();
-  const isLocked = currentDate < unlockDate;
-
-  if (isLocked) {
-    return (
-      <div className="page-container">
-        <motion.div
-          className="glass-card"
-          style={{
-            maxWidth: '600px',
-            margin: '5rem auto',
-            padding: '3rem',
-            textAlign: 'center',
-            background: 'linear-gradient(135deg, rgba(218, 93, 101, 0.1), rgba(245, 194, 144, 0.1))',
-            border: '2px solid var(--primary)',
-            borderRadius: '15px',
-          }}
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Lock size={64} style={{ margin: '0 auto 1.5rem', color: 'var(--primary)' }} />
-          <h2 style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary)', marginBottom: '1rem' }}>
-            🏆 Leaderboard Coming Soon!
-          </h2>
-          <p style={{
-            fontSize: '1.1rem',
-            color: 'var(--text-secondary)',
-            marginBottom: '1.5rem',
-            lineHeight: '1.8',
-          }}>
-            This section will be opened once the registration closes — stay tuned! 🚀
-          </p>
-          <p style={{
-            fontSize: '0.95rem',
-            color: 'var(--muted)',
-            marginBottom: '1rem',
-          }}>
-            The battle for supremacy is about to begin! Check back after April 15th to see which zone reigns supreme!
-          </p>
-          <div style={{
-            marginTop: '2rem',
-            padding: '1rem',
-            background: 'rgba(218, 93, 101, 0.2)',
-            borderRadius: '8px',
-            color: 'var(--primary)',
-            fontWeight: '600',
-          }}>
-            🗓️ Unlock Date: April 15, 2026
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
-
+  // Initialize all hooks at the top level (unconditional)
   const [view, setView] = useState<'points' | 'registrations'>('points');
   const [zoneStats, setZoneStats] = useState<ZoneStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
+  // Check if page should be locked (before April 15, 2026)
+  const unlockDate = new Date('2026-04-15');
+  const currentDate = new Date();
+  const isLocked = currentDate < unlockDate;
+
+  // Fallback data when no connection
+  const initializeFallbackData = useCallback(() => {
+    const statsArray: ZoneStats[] = zonesData.map((zone, index) => {
+      const isMangalore = zone.name === 'Mangalore';
+      return {
+        id: zone.id,
+        name: zone.name,
+        displayName: zone.displayName,
+        shortCode: zone.shortCode,
+        // Mangalore always has highest fixed points & registrations
+        points: isMangalore ? 297 : Math.floor(Math.random() * 200) + 50,
+        registrations: isMangalore ? 163 : Math.floor(Math.random() * 80) + 20,
+        position: index + 1
+      };
+    });
+
+    // Always sort Mangalore to top
+    statsArray.sort((a, b) => {
+      if (a.name === 'Mangalore') return -1;
+      if (b.name === 'Mangalore') return 1;
+      return b.points - a.points;
+    });
+    statsArray.forEach((stat, i) => { stat.position = i + 1; });
+
+    setZoneStats(statsArray);
+    setLoading(false);
+  }, []);
+
   // Fetch and calculate zone statistics
-  const fetchZoneStats = async () => {
+  const fetchZoneStats = useCallback(async () => {
     try {
       // Fetch all registrations
       const { data: registrations, error: regError } = await supabase
@@ -107,7 +89,7 @@ export default function Leaderboard() {
       });
 
       // Process registrations
-      registrations.forEach((reg: any) => {
+      registrations.forEach((reg: Registration) => {
         if (reg.zone && stats[reg.zone]) {
           stats[reg.zone].registrations += 1;
 
@@ -168,40 +150,12 @@ export default function Leaderboard() {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Fallback data when no connection
-  const initializeFallbackData = () => {
-    const statsArray: ZoneStats[] = zonesData.map((zone, index) => {
-      const isMangalore = zone.name === 'Mangalore';
-      return {
-        id: zone.id,
-        name: zone.name,
-        displayName: zone.displayName,
-        shortCode: zone.shortCode,
-        // Mangalore always has highest fixed points & registrations
-        points: isMangalore ? 297 : Math.floor(Math.random() * 200) + 50,
-        registrations: isMangalore ? 163 : Math.floor(Math.random() * 80) + 20,
-        position: index + 1
-      };
-    });
-
-    // Always sort Mangalore to top
-    statsArray.sort((a, b) => {
-      if (a.name === 'Mangalore') return -1;
-      if (b.name === 'Mangalore') return 1;
-      return b.points - a.points;
-    });
-    statsArray.forEach((stat, i) => { stat.position = i + 1; });
-
-    setZoneStats(statsArray);
-    setLoading(false);
-  };
+  }, [view, initializeFallbackData]);
 
   // Initial fetch
   useEffect(() => {
     fetchZoneStats();
-  }, []);
+  }, [fetchZoneStats]);
 
   // Real-time subscription to registrations table
   useEffect(() => {
@@ -228,7 +182,60 @@ export default function Leaderboard() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [view]);
+  }, [fetchZoneStats]);
+
+  // Render locked view if not unlocked
+  if (isLocked) {
+    return (
+      <div className="page-container">
+        <motion.div
+          className="glass-card"
+          style={{
+            maxWidth: '600px',
+            margin: '5rem auto',
+            padding: '3rem',
+            textAlign: 'center',
+            background: 'linear-gradient(135deg, rgba(218, 93, 101, 0.1), rgba(245, 194, 144, 0.1))',
+            border: '2px solid var(--primary)',
+            borderRadius: '15px',
+          }}
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Lock size={64} style={{ margin: '0 auto 1.5rem', color: 'var(--primary)' }} />
+          <h2 style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary)', marginBottom: '1rem' }}>
+            🏆 Leaderboard Coming Soon!
+          </h2>
+          <p style={{
+            fontSize: '1.1rem',
+            color: 'var(--text-secondary)',
+            marginBottom: '1.5rem',
+            lineHeight: '1.8',
+          }}>
+            This section will be opened once the registration closes — stay tuned! 🚀
+          </p>
+          <p style={{
+            fontSize: '0.95rem',
+            color: 'var(--muted)',
+            marginBottom: '1rem',
+          }}>
+            The battle for supremacy is about to begin! Check back after April 15th to see which zone reigns supreme!
+          </p>
+          <div style={{
+            marginTop: '2rem',
+            padding: '1rem',
+            background: 'rgba(218, 93, 101, 0.2)',
+            borderRadius: '8px',
+            color: 'var(--primary)',
+            fontWeight: '600',
+          }}>
+            🗓️ Unlock Date: April 15, 2026
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   const sortedData = [...zoneStats].sort((a, b) => {
     // Mangalore always on top
