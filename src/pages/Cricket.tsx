@@ -1,95 +1,94 @@
-import { useState } from 'react';
-import { Trophy, TrendingUp, Users, Flame, Target, Lock } from 'lucide-react';
-import { zonesData, cricketTeamsData } from '../data/zonesData';
+import { useState, useEffect, useCallback } from 'react';
+import { Trophy, TrendingUp, Users, Flame, Target, Loader2, AlertCircle } from 'lucide-react';
+import { zonesData } from '../data/zonesData';
 import { AnimatedSection } from '../components/AnimatedSection';
 import { motion } from 'framer-motion';
+import { supabase } from '../lib/supabase';
+
+export interface CricketTeam {
+  name: string;
+  zone: string;
+  players: number;
+  wins: number;
+  losses: number;
+  points: number;
+  nrr?: number;
+}
 
 export default function CricketPointsTable() {
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'points' | 'wins' | 'nrr'>('points');
+  const [teams, setTeams] = useState<CricketTeam[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Check if page should be locked (before April 15, 2026)
-  const unlockDate = new Date('2026-04-15');
-  const currentDate = new Date();
-  const isLocked = currentDate < unlockDate;
+  const fetchTeams = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('cricket_teams')
+        .select('*');
+      
+      if (error) {
+        if (error.code === '42P01') {
+          // Table doesn't exist yet (migration not run)
+          setError('Cricket Leaderboard is being configured! Admins need to run the final setup logic.');
+        } else {
+          setError(error.message);
+        }
+        setTeams([]);
+        return;
+      }
+      
+      if (data) {
+        setTeams(data);
+      }
+      setError(null);
+    } catch (err: any) {
+      setError('Connection error');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  if (isLocked) {
-    return (
-      <div className="page-container">
-        <motion.div
-          className="glass-card"
-          style={{
-            maxWidth: '600px',
-            margin: '5rem auto',
-            padding: '3rem',
-            textAlign: 'center',
-            background: 'linear-gradient(135deg, rgba(218, 93, 101, 0.1), rgba(245, 194, 144, 0.1))',
-            border: '2px solid var(--primary)',
-            borderRadius: '15px',
-          }}
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Lock size={64} style={{ margin: '0 auto 1.5rem', color: 'var(--primary)' }} />
-          <h2 style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary)', marginBottom: '1rem' }}>
-            🏏 Championship Coming Soon!
-          </h2>
-          <p style={{
-            fontSize: '1.1rem',
-            color: 'var(--text-secondary)',
-            marginBottom: '1.5rem',
-            lineHeight: '1.8',
-          }}>
-            This section will be opened once the registration closes — stay tuned! 🚀
-          </p>
-          <p style={{
-            fontSize: '0.95rem',
-            color: 'var(--muted)',
-            marginBottom: '1rem',
-          }}>
-            The epic cricket championship awaits! Check back after April 15th to see live standings and team performances.
-          </p>
-          <div style={{
-            marginTop: '2rem',
-            padding: '1rem',
-            background: 'rgba(218, 93, 101, 0.2)',
-            borderRadius: '8px',
-            color: 'var(--primary)',
-            fontWeight: '600',
-          }}>
-            🗓️ Unlock Date: April 15, 2026
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    fetchTeams();
+  }, [fetchTeams]);
+
 
   // Filter teams based on selected zone
   const filteredTeams = selectedZone
-    ? cricketTeamsData.filter(team => 
+    ? teams.filter((team: CricketTeam) => 
         zonesData.find(z => z.name === team.zone && z.id === selectedZone)
       )
-    : cricketTeamsData;
+    : teams;
 
-  // Sort teams
-  const sortedTeams = [...filteredTeams].sort((a, b) => {
+  // Sort teams with standard cricket tie-breakers
+  const sortedTeams = [...filteredTeams].sort((a: CricketTeam, b: CricketTeam) => {
     if (sortBy === 'points') {
-      return b.points - a.points;
-    } else if (sortBy === 'wins') {
-      return b.wins - a.wins;
-    } else {
+      if (b.points !== a.points) return b.points - a.points;
+      if (b.wins !== a.wins) return b.wins - a.wins;
       return (b.nrr || 0) - (a.nrr || 0);
+    } else if (sortBy === 'wins') {
+      if (b.wins !== a.wins) return b.wins - a.wins;
+      if (b.points !== a.points) return b.points - a.points;
+      return (b.nrr || 0) - (a.nrr || 0);
+    } else {
+      if ((b.nrr || 0) !== (a.nrr || 0)) return (b.nrr || 0) - (a.nrr || 0);
+      if (b.points !== a.points) return b.points - a.points;
+      return b.wins - a.wins;
     }
   });
 
   // Calculate zone-wise points
   const zonePoints = zonesData.map(zone => {
-    const zoneTeams = cricketTeamsData.filter(team => team.zone === zone.name);
-    const totalPoints = zoneTeams.reduce((sum, team) => sum + team.points, 0);
-    const totalWins = zoneTeams.reduce((sum, team) => sum + team.wins, 0);
+    const zoneTeams = teams.filter((team: CricketTeam) => team.zone === zone.name);
+    const totalPoints = zoneTeams.reduce((sum: number, team: CricketTeam) => sum + team.points, 0);
+    const totalWins = zoneTeams.reduce((sum: number, team: CricketTeam) => sum + team.wins, 0);
     return { zone, totalPoints, totalWins, teamCount: zoneTeams.length };
-  }).sort((a, b) => b.totalPoints - a.totalPoints);
+  }).sort((a, b) => {
+    if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+    return b.totalWins - a.totalWins;
+  });
 
   return (
     <div className="page-container">
@@ -103,8 +102,37 @@ export default function CricketPointsTable() {
         </div>
       </AnimatedSection>
 
-      {/* Zone Overview Cards */}
-      <AnimatedSection delay={0.1}>
+      {error && (
+        <div style={{
+          padding: '0.75rem 1rem',
+          marginBottom: '1.5rem',
+          borderRadius: '8px',
+          background: 'rgba(255, 100, 100, 0.1)',
+          border: '1px solid rgba(255, 100, 100, 0.3)',
+          display: 'flex',
+          gap: '0.5rem',
+          alignItems: 'start',
+          fontSize: '0.8rem',
+          color: '#ff6464'
+        }}>
+          <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '1px' }} />
+          <div>
+            <strong>Status:</strong> {error}
+          </div>
+        </div>
+      )}
+
+      {loading && (
+        <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--muted)' }}>
+          <Loader2 size={28} style={{ animation: 'spin 1s linear infinite', margin: '0 auto 0.75rem' }} />
+          <p style={{ fontSize: '0.9rem' }}>Loading live cricket standings...</p>
+        </div>
+      )}
+
+      {!loading && !error && (
+        <>
+          {/* Zone Overview Cards */}
+          <AnimatedSection delay={0.1}>
         <div style={{ marginBottom: '3rem' }}>
           <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', color: 'var(--primary)' }}>
             <Flame size={24} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />
@@ -547,8 +575,14 @@ export default function CricketPointsTable() {
           </ul>
         </div>
       </AnimatedSection>
+      </>
+      )}
 
       <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
         .center-align {
           text-align: center;
         }

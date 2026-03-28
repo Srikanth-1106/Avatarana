@@ -86,9 +86,9 @@ const RegistrationCounter = () => {
         .select('*', { count: 'exact', head: true });
 
       if (!error && count !== null) {
-        setRegCount(count + 24); // Adding user's specific starting number for effect
+        setRegCount(count); 
       } else {
-        setRegCount(24); // Fallback
+        setRegCount(0); 
       }
     };
     fetchCount();
@@ -97,7 +97,7 @@ const RegistrationCounter = () => {
   return (
     <div className="reg-counter-badge">
       <Sparkles size={18} />
-      <span>Registered Participants: {regCount} and counting!</span>
+      <span>Registered Participants: {regCount}</span>
     </div>
   );
 };

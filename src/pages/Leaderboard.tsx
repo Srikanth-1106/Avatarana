@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Trophy, Medal, Star, Users, Target, Loader2, AlertCircle, Lock } from 'lucide-react';
+import { Trophy, Medal, Star, Users, Target, Loader2, AlertCircle } from 'lucide-react';
 import { zonesData } from '../data/zonesData';
 import { supabase } from '../lib/supabase';
 import { motion } from 'framer-motion';
@@ -15,7 +15,7 @@ interface ZoneStats {
 }
 
 interface Registration {
-  zone: string;
+  region: string;
   events?: string[] | number;
 }
 
@@ -27,31 +27,25 @@ export default function Leaderboard() {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
-  // Check if page should be locked (before April 15, 2026)
-  const unlockDate = new Date('2026-04-15');
-  const currentDate = new Date();
-  const isLocked = currentDate < unlockDate;
+  // Page unlocked
 
   // Fallback data when no connection
   const initializeFallbackData = useCallback(() => {
     const statsArray: ZoneStats[] = zonesData.map((zone, index) => {
-      const isMangalore = zone.name === 'Mangalore';
       return {
         id: zone.id,
         name: zone.name,
         displayName: zone.displayName,
         shortCode: zone.shortCode,
-        // Mangalore always has highest fixed points & registrations
-        points: isMangalore ? 297 : Math.floor(Math.random() * 200) + 50,
-        registrations: isMangalore ? 163 : Math.floor(Math.random() * 80) + 20,
+        // Initialize exactly at 0 if no real data
+        points: 0,
+        registrations: 0,
         position: index + 1
       };
     });
 
-    // Always sort Mangalore to top
+    // Sort exactly by points
     statsArray.sort((a, b) => {
-      if (a.name === 'Mangalore') return -1;
-      if (b.name === 'Mangalore') return 1;
       return b.points - a.points;
     });
     statsArray.forEach((stat, i) => { stat.position = i + 1; });
@@ -66,16 +60,21 @@ export default function Leaderboard() {
       // Fetch all registrations
       const { data: registrations, error: regError } = await supabase
         .from('registrations')
-        .select('zone, events');
+        .select('region, events');
 
-      if (regError) {
-        console.warn('Could not fetch live data:', regError.message);
-        // Use fallback data if no connection
+      // Fetch all cricket points
+      const { data: cricketTeams, error: cricketError } = await supabase
+        .from('cricket_teams')
+        .select('zone, points');
+
+      if (regError && cricketError) {
+        console.warn('Could not fetch any live data:', regError?.message || cricketError?.message);
+        // Use fallback data if no connection at all
         initializeFallbackData();
         return;
       }
 
-      if (!registrations || registrations.length === 0) {
+      if ((!registrations || registrations.length === 0) && (!cricketTeams || cricketTeams.length === 0)) {
         initializeFallbackData();
         return;
       }
@@ -89,29 +88,36 @@ export default function Leaderboard() {
       });
 
       // Process registrations
-      registrations.forEach((reg: Registration) => {
-        if (reg.zone && stats[reg.zone]) {
-          stats[reg.zone].registrations += 1;
+      if (registrations) {
+        registrations.forEach((reg: Registration) => {
+          const zoneObj = zonesData.find(z => z.displayName === reg.region || z.id === reg.region || z.name === reg.region);
+          
+          if (zoneObj && stats[zoneObj.id]) {
+            stats[zoneObj.id].registrations += 1;
 
-          // Calculate points based on events
-          if (reg.events && Array.isArray(reg.events)) {
-            // Simple calculation: 5 points per event registered
-            stats[reg.zone].points += reg.events.length * 5;
+            // Calculate points based on events
+            if (reg.events && Array.isArray(reg.events)) {
+              // Simple calculation: 5 points per event registered
+              stats[zoneObj.id].points += reg.events.length * 5;
+            }
           }
-        }
-      });
+        });
+      }
+
+      // Process cricket points
+      if (cricketTeams) {
+        cricketTeams.forEach((team: any) => {
+          const zoneObj = zonesData.find(z => z.displayName === team.zone || z.id === team.zone || z.name === team.zone);
+          if (zoneObj && stats[zoneObj.id] && team.points) {
+            stats[zoneObj.id].points += team.points;
+          }
+        });
+      }
 
       // Create zone stats array
       const statsArray: ZoneStats[] = zonesData.map(zone => {
         let points = stats[zone.id]?.points || 0;
         let registrations = stats[zone.id]?.registrations || 0;
-
-        // Boost Mangalore as champion zone (strong multiplier + bonus)
-        if (zone.name === 'Mangalore') {
-          // Make Mangalore significantly higher as the champion zone
-          points = Math.floor(points * 5) + 250;  // 5x + 250 bonus for massive points lead
-          registrations = Math.floor(registrations * 3) + 100;  // 3x + 100 bonus
-        }
 
         return {
           id: zone.id,
@@ -126,10 +132,6 @@ export default function Leaderboard() {
 
       // Set positions based on current view
       statsArray.sort((a, b) => {
-        // Mangalore always on top
-        if (a.name === 'Mangalore') return -1;
-        if (b.name === 'Mangalore') return 1;
-
         if (view === 'points') {
           return b.points - a.points;
         } else {
@@ -157,91 +159,9 @@ export default function Leaderboard() {
     fetchZoneStats();
   }, [fetchZoneStats]);
 
-  // Real-time subscription to registrations table
-  useEffect(() => {
-    const channel = supabase
-      .channel('public:registrations')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'registrations'
-        },
-        () => {
-          // Refetch stats when any registration changes
-          fetchZoneStats();
-        }
-      )
-      .subscribe((status) => {
-        if (status === 'CLOSED') {
-          console.log('Real-time subscription closed');
-        }
-      });
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [fetchZoneStats]);
-
-  // Render locked view if not unlocked
-  if (isLocked) {
-    return (
-      <div className="page-container">
-        <motion.div
-          className="glass-card"
-          style={{
-            maxWidth: '600px',
-            margin: '5rem auto',
-            padding: '3rem',
-            textAlign: 'center',
-            background: 'linear-gradient(135deg, rgba(218, 93, 101, 0.1), rgba(245, 194, 144, 0.1))',
-            border: '2px solid var(--primary)',
-            borderRadius: '15px',
-          }}
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Lock size={64} style={{ margin: '0 auto 1.5rem', color: 'var(--primary)' }} />
-          <h2 style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary)', marginBottom: '1rem' }}>
-            🏆 Leaderboard Coming Soon!
-          </h2>
-          <p style={{
-            fontSize: '1.1rem',
-            color: 'var(--text-secondary)',
-            marginBottom: '1.5rem',
-            lineHeight: '1.8',
-          }}>
-            This section will be opened once the registration closes — stay tuned! 🚀
-          </p>
-          <p style={{
-            fontSize: '0.95rem',
-            color: 'var(--muted)',
-            marginBottom: '1rem',
-          }}>
-            The battle for supremacy is about to begin! Check back after April 15th to see which zone reigns supreme!
-          </p>
-          <div style={{
-            marginTop: '2rem',
-            padding: '1rem',
-            background: 'rgba(218, 93, 101, 0.2)',
-            borderRadius: '8px',
-            color: 'var(--primary)',
-            fontWeight: '600',
-          }}>
-            🗓️ Unlock Date: April 15, 2026
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
 
   const sortedData = [...zoneStats].sort((a, b) => {
-    // Mangalore always on top
-    if (a.name === 'Mangalore') return -1;
-    if (b.name === 'Mangalore') return 1;
-
     if (view === 'points') {
       return b.points - a.points;
     } else {
