@@ -188,6 +188,15 @@ export default function Registration() {
             throw new Error(`${event.name} requires a minimum of ${event.minPlayers} players. You have currently provided details for ${totalPlayers}.`);
           }
 
+          if (event.maxPlayers && totalPlayers > event.maxPlayers) {
+            throw new Error(`${event.name} allows a maximum of ${event.maxPlayers} players. Please remove extra members.`);
+          }
+
+          // Special check for Rangoli (exactly 2)
+          if (event.name === 'Rangoli' && totalPlayers !== 2) {
+             throw new Error(`Rangoli requires exactly 2 participants per team.`);
+          }
+
           // Check for valid phone numbers of filled members
           const invalidPhone = filledMembers.find(m => m.phone.length < 10);
           if (invalidPhone) {
@@ -502,7 +511,10 @@ export default function Registration() {
         if (isAdding) {
           // Initialize required number of members (minus captain) for this specific sport
           const requiredMembersCount = (event.minPlayers || 1) - 1;
-          const newMembers = Array(requiredMembersCount).fill(null).map(() => ({ name: '', phone: '' }));
+          // For Rangoli, it's exactly 2 total, so 1 extra member
+          const initialMembersCount = event.name === 'Rangoli' ? 1 : requiredMembersCount;
+          
+          const newMembers = Array(initialMembersCount).fill(null).map(() => ({ name: '', phone: '' }));
 
           setFormData(f => ({
             ...f,
@@ -1332,7 +1344,11 @@ export default function Registration() {
                       id="category"
                       required
                       value={formData.category}
-                      onChange={e => setFormData({ ...formData, category: e.target.value })}
+                      onChange={e => {
+                        const newCategory = e.target.value;
+                        setFormData({ ...formData, category: newCategory, teams: {} });
+                        setSelectedEvents([]);
+                      }}
                     >
                       <option value="">Select category...</option>
                       <option value="Men">Men</option>
@@ -1467,9 +1483,11 @@ export default function Registration() {
                         );
                       })}
 
-                      <button type="button" onClick={() => addTeamMember(eventId)} className="btn-outline add-member-btn">
-                        <Sparkles size={16} /> Add Extra Player for {event.name}
-                      </button>
+                      {(!event.maxPlayers || teamData.members.length < event.maxPlayers - 1) && (
+                        <button type="button" onClick={() => addTeamMember(eventId)} className="btn-outline add-member-btn">
+                          <Sparkles size={16} /> Add Extra Player for {event.name}
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
