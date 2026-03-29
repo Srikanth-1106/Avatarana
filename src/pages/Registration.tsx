@@ -79,8 +79,6 @@ export default function Registration() {
     // 3. Validate all Captain/Player combinations
     for (const event of selectedEventsData) {
       if (!event) continue;
-      const eventSearchStr = `${event.name} (${event.category})`;
-
       // Players to check for this specific sport
       const playersForThisSport = [];
 
@@ -106,25 +104,8 @@ export default function Registration() {
           .or(`phone.eq.${player.phone},team_members.cs.[{"phone":"${player.phone}"}]`);
 
         if (globalZoneCheck && globalZoneCheck.length > 0) {
-          // --- Name consistency check ---
-          let existingName = null;
-          for (const record of globalZoneCheck) {
-            if (record.phone === player.phone) {
-              existingName = record.full_name;
-              break;
-            } else if (record.team_members) {
-              const matchedMember = record.team_members.find((m: any) => m.phone === player.phone);
-              if (matchedMember) {
-                existingName = matchedMember.name;
-                break;
-              }
-            }
-          }
+          // --- Name consistency check --- (Removed to allow coordinators/managers to register for multiple people)
           
-          if (existingName && existingName.toLowerCase().trim() !== player.name.toLowerCase().trim()) {
-            return `Phone number ${player.phone} is already registered under the name "${existingName}". Each person must use their own unique phone number.`;
-          }
-
           // --- Zone consistency check ---
           const firstExisting = globalZoneCheck[0];
           const currentZoneName = zonesData.find(z => z.id === formData.zone)?.displayName || formData.zone;
@@ -135,30 +116,8 @@ export default function Registration() {
           }
         }
 
-        // DB Check 2: Same Event check
-        const { data: sameEventCheck } = await supabase
-          .from('registrations')
-          .select('full_name, events, team_name')
-          .or(`phone.eq.${player.phone},team_members.cs.[{"phone":"${player.phone}"}]`);
-
-        if (sameEventCheck) {
-          for (const reg of sameEventCheck) {
-            const eventsArr = reg.events;
-            let isMatchedEvent = false;
-            if (Array.isArray(eventsArr)) {
-              isMatchedEvent = eventsArr.includes(eventSearchStr);
-            } else if (typeof eventsArr === 'string') {
-              isMatchedEvent = eventsArr.includes(eventSearchStr);
-            }
-
-            if (isMatchedEvent) {
-              if (event.type === 'Group' && reg.team_name) {
-                return `${player.role} (${player.name}) is already registered for ${event.name} in team "${reg.team_name}". A player cannot be on multiple teams for the same sport.`;
-              }
-              return `${player.role} (${player.name}) is already registered for ${event.name}.`;
-            }
-          }
-        }
+        // DB Check 2: Same Event check (REMOVED to allow registering multiple teams/events from same zone)
+        // This is often needed when a zone coordinator registers all entries using their phone number.
 
 
       }

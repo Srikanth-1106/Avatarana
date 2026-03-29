@@ -43,5 +43,10 @@ export const eventsData: EventItem[] = [
   { id: 'g1', name: 'Cooking Without Fire', category: 'General', type: 'Group', minPlayers: 2, description: 'Prepare dish without using gas or flame', points: { first: 10, second: 5 } },
   { id: 'g2', name: 'Housie Housie (Tambola)', category: 'General', type: 'Individual', description: 'Bingo style number game', points: { first: 5, second: 3, third: 2 } },
   { id: 'g3', name: 'Treasure Hunt', category: 'General', type: 'Group', minPlayers: 3, description: 'Teams follow clues to find treasure', points: { first: 10, second: 5 } },
-  { id: 'g4', name: 'Lagori', category: 'General', type: 'Group', minPlayers: 7, description: 'Traditional game where teams knock down and rebuild a stone pile', points: { first: 10, second: 5 } },
+  
+  // Logori in every category
+  { id: 'logori_m', name: 'Logori', category: 'Men', type: 'Group', minPlayers: 7, description: 'Traditional game where teams knock down and rebuild a stone pile', points: { first: 10, second: 5 } },
+  { id: 'logori_w', name: 'Logori', category: 'Women', type: 'Group', minPlayers: 7, description: 'Traditional game where teams knock down and rebuild a stone pile', points: { first: 10, second: 5 } },
+  { id: 'logori_k', name: 'Logori', category: 'Kids', type: 'Group', minPlayers: 7, description: 'Traditional game where teams knock down and rebuild a stone pile', points: { first: 10, second: 5 } },
+  { id: 'logori_s', name: 'Logori', category: 'Senior Citizens', type: 'Group', minPlayers: 7, description: 'Traditional game where teams knock down and rebuild a stone pile', points: { first: 10, second: 5 } },
 ];
