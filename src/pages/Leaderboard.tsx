@@ -21,11 +21,11 @@ interface Registration {
 
 export default function Leaderboard() {
   // Initialize all hooks at the top level (unconditional)
-  const [view, setView] = useState<'points' | 'registrations'>('points');
+  const [view, setView] = useState<'points' | 'registrations'>('registrations');
   const [zoneStats, setZoneStats] = useState<ZoneStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+
 
 
   // Fallback data when no connection
@@ -143,7 +143,7 @@ export default function Leaderboard() {
       });
 
       setZoneStats(statsArray);
-      setLastUpdate(new Date());
+
       setError(null);
     } catch (err) {
       console.error('Error fetching zone stats:', err);
@@ -173,9 +173,7 @@ export default function Leaderboard() {
       <div className="section-header center-align">
         <h1 className="title" style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>⚡ Championship Hub</h1>
         <p className="subtitle" style={{ margin: '0.5rem auto 1rem', fontSize: '0.95rem' }}>Live zone standings and registrations tracking.</p>
-        <div style={{ fontSize: '0.8rem', color: 'var(--muted)', marginBottom: '1rem' }}>
-          Last updated: {lastUpdate.toLocaleTimeString()} {error && '(using cached data)'}
-        </div>
+
 
         <div className="timeline-tabs" style={{ marginBottom: '1.5rem' }}>
           <button
