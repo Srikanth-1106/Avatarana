@@ -15,7 +15,7 @@ interface Registration {
   category: string;
   events: string[];
   team_name: string | null;
-  team_members: any;
+  team_members: Record<string, string> | null;
   created_at: string;
 }
 

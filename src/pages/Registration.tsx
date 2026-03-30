@@ -262,7 +262,7 @@ export default function Registration() {
       }
       setSubmitted(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (err: any) {
+    } catch (err: Error | unknown) {
       console.error('Registration Submission Error:', err);
 
       let errorMessage = 'An unexpected error occurred. Please try again.';
@@ -425,7 +425,7 @@ export default function Registration() {
       pdf.text('Avatarana 2026 - Official Participant ID', pageWidth / 2, footerY + 7.5, { align: 'center' });
 
       // Create a very safe filename (no special chars that might break extension detection)
-      const safeName = formData.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_\-]/g, '') || 'Guest';
+      const safeName = formData.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '') || 'Guest';
       const fileName = `Avatarana_Pass_${safeName}.pdf`;
 
       // Use a pure Base64 Data URI. This format is synchronous, doesn't expire, and prevents 

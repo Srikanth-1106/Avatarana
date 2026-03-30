@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Trophy, TrendingUp, Users, Flame, Target, Loader2, AlertCircle, Lock } from 'lucide-react';
 import { zonesData } from '../data/zonesData';
 import { AnimatedSection } from '../components/AnimatedSection';
@@ -21,6 +21,39 @@ export default function CricketPointsTable() {
   const [teams, setTeams] = useState<CricketTeam[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Fetch cricket teams data
+  useEffect(() => {
+    const fetchTeams = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('cricket_teams')
+          .select('*');
+        
+        if (error) {
+          if (error.code === '42P01') {
+            // Table doesn't exist yet (migration not run)
+            setError('Cricket Leaderboard is being configured! Admins need to run the final setup logic.');
+          } else {
+            setError(error.message);
+          }
+          setTeams([]);
+          return;
+        }
+        
+        if (data) {
+          setTeams(data);
+        }
+        setError(null);
+      } catch (error: unknown) {
+        setError('Connection error');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchTeams();
+  }, []);
 
   // Check if page should be locked (before April 15, 2026)
   const unlockDate = new Date('2026-04-15');
@@ -78,38 +111,6 @@ export default function CricketPointsTable() {
       </div>
     );
   }
-
-  const fetchTeams = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from('cricket_teams')
-        .select('*');
-      
-      if (error) {
-        if (error.code === '42P01') {
-          // Table doesn't exist yet (migration not run)
-          setError('Cricket Leaderboard is being configured! Admins need to run the final setup logic.');
-        } else {
-          setError(error.message);
-        }
-        setTeams([]);
-        return;
-      }
-      
-      if (data) {
-        setTeams(data);
-      }
-      setError(null);
-    } catch (err: any) {
-      setError('Connection error');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchTeams();
-  }, [fetchTeams]);
 
 
   // Filter teams based on selected zone

@@ -105,7 +105,7 @@ export default function Leaderboard() {
 
       // Process cricket points
       if (cricketTeams) {
-        cricketTeams.forEach((team: any) => {
+        cricketTeams.forEach((team: { zone: string; points: number }) => {
           const zoneObj = zonesData.find(z => z.displayName === team.zone || z.id === team.zone || z.name === team.zone);
           if (zoneObj && stats[zoneObj.id] && team.points) {
             stats[zoneObj.id].points += team.points;
@@ -115,8 +115,8 @@ export default function Leaderboard() {
 
       // Create zone stats array
       const statsArray: ZoneStats[] = zonesData.map(zone => {
-        let points = stats[zone.id]?.points || 0;
-        let registrations = stats[zone.id]?.registrations || 0;
+        const points = stats[zone.id]?.points || 0;
+        const registrations = stats[zone.id]?.registrations || 0;
 
         return {
           id: zone.id,

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import Home from './pages/Home';
@@ -23,14 +23,14 @@ import './App.css';
 // Inner component that has access to the router's location
 function AppRoutes() {
   const [showIntro, setShowIntro] = useState(true);
-  const introShownRef = useRef(false);
+  const [hasShownIntro, setHasShownIntro] = useState(false);
 
-  // Show the intro on any page load/refresh, only once per session
-  const shouldShowIntro = showIntro && !introShownRef.current;
+  // Show the intro only once per session (only if it hasn't been shown yet)
+  const shouldShowIntro = showIntro && !hasShownIntro;
 
   const handleIntroComplete = () => {
     setShowIntro(false);
-    introShownRef.current = true;
+    setHasShownIntro(true);
   };
 
   return (

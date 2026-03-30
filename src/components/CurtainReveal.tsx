@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import confetti from 'canvas-confetti';
 import './CurtainReveal.css';
 
@@ -81,6 +81,22 @@ function fireCelebration() {
 
 export default function CurtainReveal({ onComplete }: CurtainRevealProps) {
   const [phase, setPhase] = useState<'idle' | 'opening' | 'welcome' | 'fading' | 'done'>('idle');
+
+  // Generate random particle values once (not during render)
+  // eslint-disable-next-line react-hooks/purity
+  const particleStyles = useMemo(() => {
+    // eslint-disable-next-line react-hooks/purity
+    return Array.from({ length: 20 }).map(() => ({
+      // eslint-disable-next-line react-hooks/purity
+      left: Math.random() * 100,
+      // eslint-disable-next-line react-hooks/purity
+      top: Math.random() * 100,
+      // eslint-disable-next-line react-hooks/purity
+      delay: Math.random() * 2,
+      // eslint-disable-next-line react-hooks/purity
+      duration: 2 + Math.random() * 3,
+    }));
+  }, []);
 
   // Lock body scroll while intro is active
   useEffect(() => {
@@ -180,15 +196,15 @@ export default function CurtainReveal({ onComplete }: CurtainRevealProps) {
 
       {/* Decorative particles */}
       <div className="curtain-particles">
-        {Array.from({ length: 20 }).map((_, i) => (
+        {particleStyles.map((style, i) => (
           <span
             key={i}
             className="curtain-particle"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 2}s`,
-              animationDuration: `${2 + Math.random() * 3}s`,
+              left: `${style.left}%`,
+              top: `${style.top}%`,
+              animationDelay: `${style.delay}s`,
+              animationDuration: `${style.duration}s`,
             }}
           />
         ))}
