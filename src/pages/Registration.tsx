@@ -271,7 +271,8 @@ export default function Registration() {
         errorMessage = err.message;
       } else if (err && typeof err === 'object') {
         // Handle Supabase/Postgrest Error objects
-        errorMessage = err.message || err.details || JSON.stringify(err);
+        const errObj = err as Record<string, unknown>;
+        errorMessage = (errObj.message as string) || (errObj.details as string) || JSON.stringify(err);
       } else if (typeof err === 'string') {
         errorMessage = err;
       }
