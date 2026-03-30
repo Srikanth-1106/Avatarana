@@ -101,6 +101,7 @@ export default function Navbar() {
     { name: 'Leaderboard', path: '/leaderboard' },
     { name: 'Gallery', path: '/gallery' },
     { name: 'Contact', path: '/contact' },
+    { name: 'Admin', path: '/admin/login' },
   ];
 
   return (

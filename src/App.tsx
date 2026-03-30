@@ -13,8 +13,11 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Cricket from './pages/Cricket';
 import Contact from './pages/Contact';
+import AdminLogin from './pages/AdminLogin';
+import AdminDashboard from './pages/AdminDashboard';
 import CurtainReveal from './components/CurtainReveal';
 import { AuthProvider } from './context/AuthContext';
+import { AdminProvider } from './context/AdminContext';
 import './App.css';
 
 // Inner component that has access to the router's location
@@ -49,6 +52,10 @@ function AppRoutes() {
           <Route path="gallery" element={<Gallery />} />
           <Route path="contact" element={<Contact />} />
         </Route>
+        
+        {/* Admin Routes */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
       </Routes>
     </>
   );
@@ -57,9 +64,11 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <AppRoutes />
-      </Router>
+      <AdminProvider>
+        <Router>
+          <AppRoutes />
+        </Router>
+      </AdminProvider>
     </AuthProvider>
   );
 }
