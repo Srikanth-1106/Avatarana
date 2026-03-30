@@ -86,9 +86,9 @@ const RegistrationCounter = () => {
         .select('*', { count: 'exact', head: true });
 
       if (!error && count !== null) {
-        setRegCount(count + 214); // Adding user's specific starting number for effect
+        setRegCount(count); // Showing real registration count
       } else {
-        setRegCount(214); // Fallback
+        setRegCount(0); // Fallback to 0
       }
     };
     fetchCount();
