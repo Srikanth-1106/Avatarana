@@ -53,6 +53,18 @@ export const zonesData: Zone[] = [
     name: 'Bengaluru-Mysuru-Malenadu',
     displayName: 'Bengaluru-Mysuru-Malenadu',
     shortCode: 'BMM'
+  },
+  {
+    id: 'zone_9',
+    name: 'Sulya',
+    displayName: 'Sulya',
+    shortCode: 'SLY'
+  },
+  {
+    id: 'zone_10',
+    name: 'Belthangady',
+    displayName: 'Belthangady',
+    shortCode: 'BTG'
   }
 ];
 
