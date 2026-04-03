@@ -4,7 +4,7 @@ import { Users, Trophy, Medal, CalendarHeart, ArrowRight, Sparkles, Heart, Phone
 import { supabase } from '../lib/supabase';
 import { motion } from 'framer-motion';
 import { AnimatedSection } from '../components/AnimatedSection';
-import confetti from 'canvas-confetti';
+
 
 // SVG Ring Component
 const CountdownRing = ({ value, label, total }: { value: number; label: string; total: number }) => {
@@ -104,7 +104,7 @@ const RegistrationCounter = () => {
 
 export default function Home() {
   const [count, setCount] = useState(0);
-  const [selectedSponsor, setSelectedSponsor] = useState<{ type: 'image' | 'name', value: string } | null>(null);
+
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -119,44 +119,27 @@ export default function Home() {
   const allSponsors: SponsorItem[] = [
     { name: 'Aapaavani', type: 'image', value: '/sponsor-logo-custom-removebg-preview.png', height: '90px' },
     { name: 'Kashi Sadana', type: 'name', value: 'Kashi Sadana' },
-    { name: 'Brindavan Samaj', type: 'image', value: '/brindavan-samaj-logo.png', height: '90px' }
+    { name: 'Brindavan Samaj', type: 'image', value: '/brindavan-samaj-logo.png', height: '90px' },
+    { name: 'Ramakrishna Bhat Kodikanda', type: 'name', value: 'Ramakrishna Bhat Kodikanda' },
+    { name: 'Purushothama Bhat M', type: 'name', value: 'Purushothama Bhat M' },
+    { name: 'Ananthashayana Bhat Adyethimar', type: 'name', value: 'Ananthashayana Bhat Adyethimar' },
+    { name: 'Pushpakumar Ailukunje (Rtd PT Master)', type: 'name', value: 'Pushpakumar Ailukunje (Rtd PT Master)' },
+    { name: 'Thara N Bhat Kannetikana', type: 'name', value: 'Thara N Bhat Kannetikana' },
+    { name: 'Vishwanath Bhat', type: 'name', value: 'Vishwanath Bhat' },
+    { name: 'Manjunatha Bhat Gumpe', type: 'name', value: 'Manjunatha Bhat Gumpe' },
+    { name: 'Ganapathi Bhat Balike', type: 'name', value: 'Ganapathi Bhat Balike' },
+    { name: 'Sooryanarayana bhat (Kalashraya)', type: 'name', value: 'Sooryanarayana bhat (Kalashraya)' },
+    { name: 'Damodara Bhat Kannadka', type: 'name', value: 'Damodara Bhat Kannadka' },
+    { name: 'Sunil Angraje', type: 'name', value: 'Sunil Angraje' },
+    { name: 'Karada Vishwa Bengaluru', type: 'name', value: 'Karada Vishwa Bengaluru' },
+    { name: 'Jayaram Bhat Kuntalpady', type: 'name', value: 'Jayaram Bhat Kuntalpady' },
+    { name: 'Chandra Mohana Kannadka', type: 'name', value: 'Chandra Mohana Kannadka' }
   ];
 
-  const handleSponsorClick = (sponsor: { type: 'image' | 'name', value: string }) => {
-    setSelectedSponsor(sponsor);
 
-    // Trigger celebration effect
-    const colors = ['#dc5d65', '#5c9e9c', '#e4e1de'];
-
-    // Initial burst from center
-    confetti({
-      particleCount: 150,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: colors,
-      zIndex: 10000
-    });
-  };
 
   return (
     <div className="page-container home-page">
-      {/* Sponsor Modal Overlay — tap again to dismiss */}
-      {selectedSponsor && (
-        <div className="shoutout-modal-overlay" onClick={() => setSelectedSponsor(null)}>
-          <div className="shoutout-modal-card glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            {selectedSponsor.type === 'image' ? (
-              <div className="brand-logo-wrapper" style={{ margin: '0 auto 1.5rem', width: 'fit-content', background: 'var(--white)', borderRadius: '16px', padding: '1.5rem 2rem' }}>
-                <img src={selectedSponsor.value} alt="Sponsor Logo" style={{ maxWidth: '300px', width: '100%', height: 'auto', mixBlendMode: 'multiply', filter: 'contrast(1.2)' }} />
-              </div>
-            ) : (
-              <div className="brand-logo-wrapper sponsor-name-marquee" style={{ margin: '0 auto 1.5rem', width: 'fit-content', background: 'var(--white)', borderRadius: '16px', padding: '1.5rem 2.5rem' }}>
-                <span className="sponsor-name-text" style={{ fontSize: '1.4rem' }}>{selectedSponsor.value}</span>
-              </div>
-            )}
-            <span className="modal-hint">Tap anywhere to close</span>
-          </div>
-        </div>
-      )}
 
       {/* Hero Section */}
       <AnimatedSection className="hero-section" direction="up">
@@ -229,70 +212,23 @@ export default function Home() {
             Proud Sponsors
           </h2>
         </div>
-        <div className="static-sponsors-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'stretch', flexWrap: 'wrap', gap: '2.5rem', margin: '3.5rem 0' }}>
-          {allSponsors.map((sponsor, i) => (
-            <div 
-              key={`sponsor-static-${i}`} 
-              className="premium-sponsor-card" 
-              onClick={() => handleSponsorClick({ type: sponsor.type, value: sponsor.value })}
-              style={{ 
-                margin: 0, 
-                transition: 'all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: sponsor.type === 'name' ? '2rem 3rem' : '1.5rem 2.5rem',
-                minWidth: '240px',
-                minHeight: '130px',
-                borderRadius: '24px',
-                background: '#ffffff',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)'
-              }}
-              onMouseOver={e => {
-                e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
-                e.currentTarget.style.borderColor = 'rgba(218, 93, 101, 0.4)';
-                e.currentTarget.style.boxShadow = '0 15px 45px rgba(218, 93, 101, 0.15), inset 0 0 0 1px rgba(255,255,255,0.1)';
-              }}
-              onMouseOut={e => {
-                e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
-                e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.15)';
-              }}
-            >
-              {sponsor.type === 'image' ? (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                  <img 
-                    src={sponsor.value} 
-                    alt={sponsor.name} 
-                    style={{ 
-                      maxHeight: sponsor.height || '75px', 
-                      width: 'auto', 
-                      maxWidth: '220px', 
-                      objectFit: 'contain',
-                      filter: 'drop-shadow(0px 4px 8px rgba(0,0,0,0.4))'
-                    }} 
+        <div className="sponsors-marquee-wrapper">
+          <div className="sponsors-marquee-track">
+            {[...allSponsors, ...allSponsors].map((sponsor, i) => (
+              <div key={`sponsor-scroll-${i}`} className="sponsor-scroll-card">
+                {sponsor.type === 'image' ? (
+                  <img
+                    src={sponsor.value}
+                    alt={sponsor.name}
+                    className="sponsor-scroll-img"
+                    style={{ maxHeight: sponsor.height || '60px' }}
                   />
-                </div>
-              ) : (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
-                  <span style={{ 
-                    fontSize: '1.45rem', 
-                    fontWeight: 800, 
-                    color: '#000000', 
-                    letterSpacing: '1px', 
-                    lineHeight: '1.2',
-                    textTransform: 'uppercase'
-                  }}>
-                    {sponsor.value}
-                  </span>
-                </div>
-              )}
-            </div>
-          ))}
+                ) : (
+                  <span className="sponsor-scroll-name">{sponsor.value}</span>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Revamped Premium Sponsor CTA Area */}
@@ -328,12 +264,12 @@ export default function Home() {
           <p style={{ color: 'rgba(255, 255, 255, 0.65)', marginBottom: '3.5rem', fontSize: '1.15rem', textAlign: 'center', maxWidth: '540px', lineHeight: '1.6' }}>
             Join our monumental sports festival. Connect with thousands of passionate participants and amplify your brand's reach.
           </p>
-          
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', width: '100%', maxWidth: '480px', margin: '0 auto', position: 'relative', zIndex: 2 }}>
             <div style={{ marginBottom: '0.5rem', textAlign: 'center', textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '2px', color: 'var(--primary)', fontWeight: 700 }}>
               Official Coordinators
             </div>
-            
+
             <a href="tel:+919482974619" style={{
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               padding: '1.25rem 1.5rem',
