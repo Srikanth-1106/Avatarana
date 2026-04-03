@@ -1,305 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Trophy, Medal, CalendarHeart, ArrowRight, Sparkles, Heart, Phone, Handshake, ChevronRight, X, Star } from 'lucide-react';
+import { Users, Trophy, Medal, CalendarHeart, ArrowRight, Sparkles, Heart, Phone, Handshake, ChevronRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { AnimatedSection } from '../components/AnimatedSection';
-
-// ═══ Fireworks Canvas Component ═══
-type Particle = {
-  x: number; y: number;
-  vx: number; vy: number;
-  alpha: number; color: string;
-  size: number; gravity: number;
-  trail: { x: number; y: number }[];
-};
-
-const FireworksCanvas = ({ active, onDone }: { active: boolean; onDone: () => void }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const particlesRef = useRef<Particle[]>([]);
-  const rafRef = useRef<number>(0);
-  const startedRef = useRef(false);
-
-  const COLORS = [
-    '#FF6B6B','#FFD93D','#6BCB77','#4D96FF','#FF922B',
-    '#CC5DE8','#F06595','#20C997','#74C0FC','#FFA94D',
-    '#FF8787','#63E6BE','#A9E34B','#FFD43B','#845EF7',
-  ];
-
-  const createBurst = useCallback((cx: number, cy: number) => {
-    const count = 80 + Math.floor(Math.random() * 40);
-    for (let i = 0; i < count; i++) {
-      const angle = (Math.PI * 2 * i) / count + Math.random() * 0.3;
-      const speed = 3 + Math.random() * 7;
-      particlesRef.current.push({
-        x: cx, y: cy,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        alpha: 1,
-        color: COLORS[Math.floor(Math.random() * COLORS.length)],
-        size: 2.5 + Math.random() * 3,
-        gravity: 0.06 + Math.random() * 0.04,
-        trail: [],
-      });
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!active) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d')!;
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    particlesRef.current = [];
-    startedRef.current = true;
-
-    // Fire multiple bursts
-    const burstPositions = [
-      { x: canvas.width * 0.25, y: canvas.height * 0.35 },
-      { x: canvas.width * 0.75, y: canvas.height * 0.35 },
-      { x: canvas.width * 0.5, y: canvas.height * 0.25 },
-      { x: canvas.width * 0.15, y: canvas.height * 0.55 },
-      { x: canvas.width * 0.85, y: canvas.height * 0.55 },
-    ];
-
-    burstPositions.forEach((pos, i) => {
-      setTimeout(() => createBurst(pos.x, pos.y), i * 180);
-    });
-    setTimeout(() => {
-      burstPositions.forEach((pos, i) => {
-        setTimeout(() => createBurst(pos.x + (Math.random()-0.5)*120, pos.y + (Math.random()-0.5)*80), i * 120);
-      });
-    }, 600);
-
-    let done = false;
-    const animate = () => {
-      if (!startedRef.current) return;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const ps = particlesRef.current;
-      let allFaded = true;
-      for (let p of ps) {
-        p.trail.push({ x: p.x, y: p.y });
-        if (p.trail.length > 5) p.trail.shift();
-        p.x += p.vx;
-        p.y += p.vy;
-        p.vy += p.gravity;
-        p.vx *= 0.98;
-        p.alpha -= 0.012;
-        if (p.alpha > 0) {
-          allFaded = false;
-          // Trail
-          for (let t = 0; t < p.trail.length; t++) {
-            ctx.beginPath();
-            ctx.arc(p.trail[t].x, p.trail[t].y, p.size * (t / p.trail.length) * 0.6, 0, Math.PI * 2);
-            ctx.fillStyle = p.color + Math.floor((p.alpha * (t / p.trail.length)) * 99).toString(16).padStart(2, '0');
-            ctx.fill();
-          }
-          // Main particle
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-          ctx.fillStyle = p.color + Math.floor(p.alpha * 255).toString(16).padStart(2, '0');
-          ctx.fill();
-          // Sparkle glow
-          ctx.shadowBlur = 8;
-          ctx.shadowColor = p.color;
-          ctx.fill();
-          ctx.shadowBlur = 0;
-        }
-      }
-      particlesRef.current = ps.filter(p => p.alpha > 0);
-      if (allFaded && ps.length > 0 && !done) {
-        done = true;
-        onDone();
-        return;
-      }
-      rafRef.current = requestAnimationFrame(animate);
-    };
-    rafRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      startedRef.current = false;
-      cancelAnimationFrame(rafRef.current);
-    };
-  }, [active, createBurst, onDone]);
-
-  if (!active) return null;
-  return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 9998,
-        pointerEvents: 'none', width: '100vw', height: '100vh',
-      }}
-    />
-  );
-};
-
-// ═══ Sponsor Modal ═══
-type SponsorItem = { name: string; type: 'image' | 'name'; value: string; height?: string };
-
-const SponsorModal = ({ sponsor, onClose }: { sponsor: SponsorItem | null; onClose: () => void }) => {
-  useEffect(() => {
-    if (!sponsor) return;
-    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [sponsor, onClose]);
-
-  return (
-    <AnimatePresence>
-      {sponsor && (
-        <motion.div
-          key="sponsor-overlay"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          onClick={onClose}
-          style={{
-            position: 'fixed', inset: 0, zIndex: 9999,
-            background: 'rgba(0,0,0,0.75)',
-            backdropFilter: 'blur(14px)',
-            WebkitBackdropFilter: 'blur(14px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: '1.5rem',
-          }}
-        >
-          <motion.div
-            key="sponsor-card"
-            initial={{ scale: 0.5, opacity: 0, y: 60 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.8, opacity: 0, y: 40 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.05 }}
-            onClick={e => e.stopPropagation()}
-            style={{
-              position: 'relative',
-              maxWidth: '480px', width: '100%',
-              borderRadius: '28px',
-              padding: '3rem 2.5rem',
-              background: 'linear-gradient(145deg, rgba(30,32,36,0.98) 0%, rgba(18,19,22,0.98) 100%)',
-              border: '1.5px solid rgba(218,93,101,0.35)',
-              boxShadow: '0 40px 100px rgba(0,0,0,0.8), 0 0 60px rgba(218,93,101,0.12), inset 0 1px 0 rgba(255,255,255,0.06)',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem',
-              textAlign: 'center',
-              overflow: 'hidden',
-            }}
-          >
-            {/* Ambient glow top */}
-            <div style={{
-              position: 'absolute', top: '-60px', left: '50%', transform: 'translateX(-50%)',
-              width: '320px', height: '160px',
-              background: 'radial-gradient(ellipse, rgba(218,93,101,0.25) 0%, transparent 70%)',
-              pointerEvents: 'none',
-            }} />
-
-            {/* Close btn */}
-            <button
-              onClick={onClose}
-              style={{
-                position: 'absolute', top: '1.25rem', right: '1.25rem',
-                background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)',
-                borderRadius: '50%', width: '36px', height: '36px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', color: 'rgba(255,255,255,0.6)',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseOver={e => { e.currentTarget.style.background = 'rgba(218,93,101,0.2)'; e.currentTarget.style.color = '#fff'; }}
-              onMouseOut={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
-            >
-              <X size={16} />
-            </button>
-
-            {/* Star icon */}
-            <motion.div
-              initial={{ rotate: -30, scale: 0 }}
-              animate={{ rotate: 0, scale: 1 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 16, delay: 0.15 }}
-              style={{
-                width: '72px', height: '72px', borderRadius: '20px',
-                background: 'rgba(218,93,101,0.15)',
-                border: '1px solid rgba(218,93,101,0.3)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'var(--primary)',
-              }}
-            >
-              {sponsor.type === 'image' ? (
-                <img src={sponsor.value} alt={sponsor.name}
-                  style={{ maxHeight: '52px', maxWidth: '52px', objectFit: 'contain', mixBlendMode: 'multiply', filter: 'contrast(1.2)' }}
-                />
-              ) : (
-                <Star size={32} fill="currentColor" opacity={0.8} />
-              )}
-            </motion.div>
-
-            {/* Thank you label */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              style={{
-                fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.18em',
-                textTransform: 'uppercase', color: 'var(--primary)', marginBottom: '-0.5rem',
-              }}
-            >
-              🎉 Proud Sponsor
-            </motion.div>
-
-            {/* Name */}
-            <motion.h2
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 }}
-              style={{
-                fontSize: 'clamp(1.4rem, 4vw, 2rem)', fontWeight: 800, color: '#fff',
-                margin: 0, lineHeight: 1.2, letterSpacing: '-0.02em',
-              }}
-            >
-              {sponsor.name}
-            </motion.h2>
-
-            {/* Subtitle */}
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.32 }}
-              style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.95rem', margin: 0, lineHeight: 1.6 }}
-            >
-              Thank you for your generous support in making
-              <strong style={{ color: 'rgba(255,255,255,0.8)' }}> Avatarana 2026 </strong>
-              a grand celebration for our community! 🏆
-            </motion.p>
-
-            {/* Divider */}
-            <div style={{ width: '60px', height: '3px', borderRadius: '2px', background: 'var(--primary)', opacity: 0.6 }} />
-
-            {/* Close CTA */}
-            <motion.button
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.38 }}
-              onClick={onClose}
-              style={{
-                marginTop: '0.5rem',
-                padding: '0.75rem 2.5rem',
-                borderRadius: '99px',
-                background: 'var(--primary)',
-                border: 'none', cursor: 'pointer',
-                color: '#fff', fontWeight: 700, fontSize: '0.95rem',
-                boxShadow: '0 4px 20px rgba(218,93,101,0.4)',
-                transition: 'all 0.2s ease',
-              }}
-              whileHover={{ scale: 1.04, boxShadow: '0 6px 28px rgba(218,93,101,0.55)' }}
-              whileTap={{ scale: 0.97 }}
-            >
-              Awesome! 🎊
-            </motion.button>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-};
 
 
 // SVG Ring Component
@@ -400,31 +104,7 @@ const RegistrationCounter = () => {
 
 export default function Home() {
   const [count, setCount] = useState(0);
-  const [selectedSponsor, setSelectedSponsor] = useState<SponsorItem | null>(null);
-  const [fireworksActive, setFireworksActive] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const pendingSponsorRef = useRef<SponsorItem | null>(null);
 
-  const handleSponsorClick = useCallback((sponsor: SponsorItem) => {
-    pendingSponsorRef.current = sponsor;
-    setFireworksActive(true);
-    setShowModal(false);
-    setSelectedSponsor(null);
-    // After a short burst, show modal
-    setTimeout(() => {
-      setSelectedSponsor(pendingSponsorRef.current);
-      setShowModal(true);
-    }, 900);
-  }, []);
-
-  const handleFireworksDone = useCallback(() => {
-    setFireworksActive(false);
-  }, []);
-
-  const handleCloseModal = useCallback(() => {
-    setShowModal(false);
-    setSelectedSponsor(null);
-  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -434,6 +114,8 @@ export default function Home() {
     }, 50);
     return () => clearTimeout(timer);
   }, [count]);
+
+  type SponsorItem = { name: string; type: 'image' | 'name'; value: string; height?: string };
   const allSponsors: SponsorItem[] = [
     { name: 'Aapaavani', type: 'image', value: '/sponsor-logo-custom-removebg-preview.png', height: '90px' },
     { name: 'Kashi Sadana', type: 'name', value: 'Kashi Sadana' },
@@ -458,10 +140,6 @@ export default function Home() {
 
   return (
     <div className="page-container home-page">
-      {/* Fireworks Canvas */}
-      <FireworksCanvas active={fireworksActive} onDone={handleFireworksDone} />
-      {/* Sponsor Modal */}
-      {showModal && <SponsorModal sponsor={selectedSponsor} onClose={handleCloseModal} />}
 
       {/* Hero Section */}
       <AnimatedSection className="hero-section" direction="up">
@@ -537,12 +215,7 @@ export default function Home() {
         <div className="sponsors-marquee-wrapper">
           <div className="sponsors-marquee-track" style={{ marginBottom: '1.5rem' }}>
             {[...allSponsors, ...allSponsors].map((sponsor, i) => (
-              <div
-                key={`sponsor-scroll-top-${i}`}
-                className="sponsor-scroll-card sponsor-scroll-card--clickable"
-                onClick={() => handleSponsorClick(sponsor)}
-                title={`Click to celebrate ${sponsor.name}!`}
-              >
+              <div key={`sponsor-scroll-top-${i}`} className="sponsor-scroll-card">
                 {sponsor.type === 'image' ? (
                   <img
                     src={sponsor.value}
@@ -558,12 +231,7 @@ export default function Home() {
           </div>
           <div className="sponsors-marquee-track-reverse">
             {[...allSponsors, ...allSponsors].reverse().map((sponsor, i) => (
-              <div
-                key={`sponsor-scroll-bottom-${i}`}
-                className="sponsor-scroll-card sponsor-scroll-card--clickable"
-                onClick={() => handleSponsorClick(sponsor)}
-                title={`Click to celebrate ${sponsor.name}!`}
-              >
+              <div key={`sponsor-scroll-bottom-${i}`} className="sponsor-scroll-card">
                 {sponsor.type === 'image' ? (
                   <img
                     src={sponsor.value}
