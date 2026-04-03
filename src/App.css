@@ -848,7 +848,17 @@ html {
   will-change: transform;
 }
 
-.sponsors-marquee-wrapper:hover .sponsors-marquee-track {
+.sponsors-marquee-track-reverse {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  width: max-content;
+  animation: sponsors-scroll-reverse 45s linear infinite;
+  will-change: transform;
+}
+
+.sponsors-marquee-wrapper:hover .sponsors-marquee-track,
+.sponsors-marquee-wrapper:hover .sponsors-marquee-track-reverse {
   animation-play-state: paused;
 }
 
@@ -858,6 +868,15 @@ html {
   }
   100% {
     transform: translateX(-50%);
+  }
+}
+
+@keyframes sponsors-scroll-reverse {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
   }
 }
 
@@ -878,6 +897,24 @@ html {
 .sponsor-scroll-card:hover {
   transform: translateY(-4px) scale(1.04);
   box-shadow: 0 8px 30px rgba(218, 93, 101, 0.18), 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.sponsor-scroll-card--clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sponsor-scroll-card--clickable:hover {
+  transform: translateY(-6px) scale(1.06);
+  box-shadow: 0 10px 35px rgba(218, 93, 101, 0.28), 0 2px 10px rgba(0,0,0,0.15);
+  border: 2px solid rgba(218, 93, 101, 0.4);
+}
+
+.sponsor-scroll-card--clickable:active {
+  transform: translateY(-2px) scale(0.97);
+  box-shadow: 0 4px 15px rgba(218, 93, 101, 0.3);
+  border: 2px solid rgba(218, 93, 101, 0.7);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
 
 .sponsor-scroll-img {
@@ -901,7 +938,8 @@ html {
 }
 
 @media (max-width: 768px) {
-  .sponsors-marquee-track {
+  .sponsors-marquee-track,
+  .sponsors-marquee-track-reverse {
     gap: 1.25rem;
     animation-duration: 30s;
   }
