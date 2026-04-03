@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
-import { CheckCircle2, User, Phone, Calendar, Grid, Trophy, Sparkles, Check, Info, Loader2, Camera, Upload, Trash2, FileText, Globe, Download, ArrowDown } from 'lucide-react';
+import { CheckCircle2, User, Phone, Calendar, Grid, Trophy, Sparkles, Check, Info, Loader2, Camera, Upload, Trash2, FileText, Globe, Download, ArrowDown, ChevronRight } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { eventsData } from '../data/eventsData';
 import { zonesData } from '../data/zonesData';
@@ -1247,6 +1247,70 @@ export default function Registration() {
         <h1 className="title animate-fade-in"><span className="highlight">Join the</span> Championship</h1>
         <p className="subtitle animate-fade-in-delayed">Fill out the details below to secure your spot in AVATARANA 2026.</p>
         <div className="divider"></div>
+      </AnimatedSection>
+
+      {/* Rule Book Reminder Banner */}
+      <AnimatedSection direction="up" delay={0.15}>
+        <Link
+          to="/rules"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.875rem',
+            maxWidth: '680px',
+            margin: '0 auto 2rem',
+            padding: '0.9rem 1.25rem',
+            background: 'linear-gradient(135deg, rgba(244, 63, 94, 0.08), rgba(244, 63, 94, 0.03))',
+            border: '1px solid rgba(244, 63, 94, 0.2)',
+            borderRadius: '14px',
+            textDecoration: 'none',
+            transition: 'all 0.25s ease',
+            cursor: 'pointer',
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.borderColor = 'rgba(244, 63, 94, 0.4)';
+            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(244, 63, 94, 0.12), rgba(244, 63, 94, 0.05))';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.borderColor = 'rgba(244, 63, 94, 0.2)';
+            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(244, 63, 94, 0.08), rgba(244, 63, 94, 0.03))';
+          }}
+        >
+          <div style={{
+            width: '38px',
+            height: '38px',
+            borderRadius: '10px',
+            background: 'rgba(244, 63, 94, 0.12)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            color: '#F43F5E',
+          }}>
+            <Info size={20} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{
+              margin: 0,
+              fontSize: '0.9rem',
+              fontWeight: 700,
+              color: '#ffffff',
+              fontFamily: "'Outfit', 'Inter', system-ui, sans-serif",
+            }}>
+              Read the Rule Book first
+            </p>
+            <p style={{
+              margin: '2px 0 0',
+              fontSize: '0.78rem',
+              color: 'rgba(255,255,255,0.45)',
+              fontFamily: "'Inter', system-ui, sans-serif",
+              lineHeight: 1.4,
+            }}>
+              Review eligibility, formats & event rules before registering.
+            </p>
+          </div>
+          <ChevronRight size={18} style={{ color: 'rgba(255,255,255,0.3)', flexShrink: 0 }} />
+        </Link>
       </AnimatedSection>
 
       <AnimatedSection className="registration-form" direction="up" delay={0.2}>

@@ -531,20 +531,7 @@ export default function Home() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               transition={{ type: "spring", bounce: 0.4 }}
-              style={{ 
-                position: 'relative', 
-                background: 'linear-gradient(145deg, rgba(30, 30, 35, 0.95) 0%, rgba(10, 12, 16, 0.98) 100%)', 
-                padding: '3.5rem 3rem', 
-                borderRadius: '32px', 
-                maxWidth: '520px', 
-                width: '100%',
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center', 
-                textAlign: 'center',
-                boxShadow: '0 40px 100px rgba(0,0,0,0.8), inset 0 2px 0 rgba(255,255,255,0.08), inset 0 0 40px rgba(244, 63, 94, 0.05)',
-                border: '1px solid rgba(255,255,255,0.05)'
-              }}
+              className="sponsor-modal-content"
             >
               <button 
                 onClick={() => setSelectedSponsor(null)}
@@ -560,11 +547,11 @@ export default function Home() {
               </div>
               
               {selectedSponsor.type === 'image' ? (
-                <div style={{ background: 'linear-gradient(160deg, #ffffff 0%, #f8f9fa 100%)', padding: '1.5rem 2.5rem', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.2), inset 0 -4px 10px rgba(0,0,0,0.05)' }}>
-                  <img src={selectedSponsor.value} alt={selectedSponsor.name} style={{ maxWidth: '280px', maxHeight: '140px', objectFit: 'contain', filter: 'contrast(1.05)' }} />
+                <div className="sponsor-modal-image-wrapper">
+                  <img src={selectedSponsor.value} alt={selectedSponsor.name} />
                 </div>
               ) : (
-                <h3 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#ffffff', background: 'linear-gradient(to bottom right, #ffffff, #a1a1aa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1.2 }}>
+                <h3 className="sponsor-modal-title">
                   {selectedSponsor.value}
                 </h3>
               )}

@@ -95,6 +95,7 @@ export default function Navbar() {
   const links = [
     { name: 'Home', path: '/' },
     { name: 'About', path: '/about' },
+    { name: 'Rule Book', path: '/rules' },
     { name: 'Events', path: '/events' },
     { name: 'Points', path: '/points' },
     { name: 'Cricket', path: '/cricket' },
