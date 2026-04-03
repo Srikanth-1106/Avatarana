@@ -65,6 +65,7 @@ export default function Navbar() {
 
   const handleLogoClick = () => {
     setClickCount(prev => prev + 1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   useEffect(() => {
@@ -124,7 +125,6 @@ export default function Navbar() {
                 {link.name}
               </Link>
             ))}
-            <Link to="/register" className="btn-primary nav-btn">Register</Link>
           </div>
 
           {/* Mobile Toggle */}

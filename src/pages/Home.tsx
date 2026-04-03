@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Trophy, Medal, CalendarHeart, ArrowRight, Sparkles, Heart, Phone, Handshake, ChevronRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -105,6 +105,67 @@ const RegistrationCounter = () => {
 export default function Home() {
   const [count, setCount] = useState(0);
 
+  const trackRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const isHovering = useRef(false);
+  const startX = useRef(0);
+  const scrollLeft = useRef(0);
+  const rafId = useRef<number>(0);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    let lastTime = performance.now();
+    
+    const animateScroll = (time: number) => {
+      const delta = time - lastTime;
+      lastTime = time;
+
+      if (!isDragging.current && !isHovering.current && track) {
+        track.scrollLeft += delta * 0.05; 
+        
+        if (track.scrollLeft >= track.scrollWidth / 2) {
+           track.scrollLeft -= (track.scrollWidth / 2);
+        }
+      }
+      rafId.current = requestAnimationFrame(animateScroll);
+    };
+
+    rafId.current = requestAnimationFrame(animateScroll);
+
+    return () => cancelAnimationFrame(rafId.current);
+  }, []);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    isDragging.current = true;
+    startX.current = e.pageX - trackRef.current!.offsetLeft;
+    scrollLeft.current = trackRef.current!.scrollLeft;
+  };
+
+  const handleMouseEnter = () => { isHovering.current = true; };
+  const handleMouseLeave = () => { 
+    isDragging.current = false; 
+    isHovering.current = false;
+  };
+  const handleMouseUp = () => { isDragging.current = false; };
+  
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging.current || !trackRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - trackRef.current.offsetLeft;
+    const walk = (x - startX.current) * 1.5;
+    trackRef.current.scrollLeft = scrollLeft.current - walk;
+
+    if (trackRef.current.scrollLeft >= trackRef.current.scrollWidth / 2) {
+      trackRef.current.scrollLeft -= (trackRef.current.scrollWidth / 2);
+      scrollLeft.current -= (trackRef.current.scrollWidth / 2); 
+    } else if (trackRef.current.scrollLeft <= 0) {
+      trackRef.current.scrollLeft += (trackRef.current.scrollWidth / 2);
+      scrollLeft.current += (trackRef.current.scrollWidth / 2);
+    }
+  };
+
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -167,41 +228,8 @@ export default function Home() {
             Join the biggest community sports festival. Compete, celebrate, and create unforgettable memories.
           </p>
 
-          <div className="hero-actions">
-            <Link to="/register" className="btn-primary">
-              Register Now <ArrowRight size={20} />
-            </Link>
-            <Link to="/events" className="btn-secondary">
-              View Events
-            </Link>
-          </div>
-
           <RegistrationCounter />
         </div>
-      </AnimatedSection>
-
-      {/* Stats Section */}
-      <AnimatedSection className="stats-section" direction="up" staggerChildren={true}>
-        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="stat-card glass-card">
-          <Users className="icon-secondary" size={40} />
-          <h2 className="stat-number">5</h2>
-          <p className="stat-label">Categories</p>
-        </motion.div>
-        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="stat-card glass-card">
-          <Trophy className="icon-primary" size={40} />
-          <h2 className="stat-number">{count}+</h2>
-          <p className="stat-label">Events</p>
-        </motion.div>
-        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="stat-card glass-card">
-          <Medal className="icon-tertiary" size={40} />
-          <h2 className="stat-number">All</h2>
-          <p className="stat-label">Ages Welcome</p>
-        </motion.div>
-        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="stat-card glass-card">
-          <CalendarHeart className="icon-secondary" size={40} />
-          <h2 className="stat-number">1</h2>
-          <p className="stat-label">Community</p>
-        </motion.div>
       </AnimatedSection>
 
       {/* Proud Sponsors Marquee */}
@@ -212,8 +240,21 @@ export default function Home() {
             Proud Sponsors
           </h2>
         </div>
-        <div className="sponsors-marquee-wrapper">
-          <div className="sponsors-marquee-track" style={{ marginBottom: '1.5rem' }}>
+        <div 
+          className="sponsors-marquee-wrapper"
+          ref={trackRef}
+          onMouseDown={handleMouseDown}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onMouseUp={handleMouseUp}
+          onMouseMove={handleMouseMove}
+          onMouseOut={(e) => {
+            if (!trackRef.current?.contains(e.relatedTarget as Node)) {
+               handleMouseLeave();
+            }
+          }}
+        >
+          <div className="sponsors-marquee-track">
             {[...allSponsors, ...allSponsors].map((sponsor, i) => (
               <div key={`sponsor-scroll-top-${i}`} className="sponsor-scroll-card">
                 {sponsor.type === 'image' ? (
@@ -222,22 +263,8 @@ export default function Home() {
                     alt={sponsor.name}
                     className="sponsor-scroll-img"
                     style={{ maxHeight: sponsor.height || '60px' }}
-                  />
-                ) : (
-                  <span className="sponsor-scroll-name">{sponsor.value}</span>
-                )}
-              </div>
-            ))}
-          </div>
-          <div className="sponsors-marquee-track-reverse">
-            {[...allSponsors, ...allSponsors].reverse().map((sponsor, i) => (
-              <div key={`sponsor-scroll-bottom-${i}`} className="sponsor-scroll-card">
-                {sponsor.type === 'image' ? (
-                  <img
-                    src={sponsor.value}
-                    alt={sponsor.name}
-                    className="sponsor-scroll-img"
-                    style={{ maxHeight: sponsor.height || '60px' }}
+                    loading="lazy"
+                    decoding="async"
                   />
                 ) : (
                   <span className="sponsor-scroll-name">{sponsor.value}</span>
@@ -253,8 +280,8 @@ export default function Home() {
           marginTop: '5rem',
           padding: '4rem 2rem',
           borderRadius: '32px',
-          background: 'radial-gradient(120% 120% at 50% 0%, rgba(218, 93, 101, 0.07) 0%, rgba(10, 10, 10, 0.6) 100%)',
-          border: '1px solid rgba(218, 93, 101, 0.15)',
+          background: 'radial-gradient(120% 120% at 50% 0%, rgba(244, 63, 94, 0.07) 0%, rgba(9, 9, 8, 0.6) 100%)',
+          border: '1px solid rgba(244, 63, 94, 0.15)',
           boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
           display: 'flex',
           flexDirection: 'column',
@@ -265,12 +292,12 @@ export default function Home() {
           {/* Ambient Background Glows */}
           <div style={{
             position: 'absolute', top: '-50%', left: '-10%', width: '120%', height: '100%',
-            background: 'radial-gradient(ellipse at top, rgba(218, 93, 101, 0.15), transparent 70%)',
+            background: 'radial-gradient(ellipse at top, rgba(244, 63, 94, 0.15), transparent 70%)',
             pointerEvents: 'none', zIndex: -1
           }}></div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-            <div style={{ padding: '0.8rem', background: 'rgba(218, 93, 101, 0.15)', borderRadius: '16px', color: 'var(--primary)', border: '1px solid rgba(218, 93, 101, 0.2)' }}>
+            <div style={{ padding: '0.8rem', background: 'rgba(244, 63, 94, 0.15)', borderRadius: '16px', color: 'var(--primary)', border: '1px solid rgba(244, 63, 94, 0.2)' }}>
               <Handshake size={28} />
             </div>
           </div>
@@ -310,7 +337,7 @@ export default function Home() {
               e.currentTarget.style.boxShadow = 'none';
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-                <div style={{ width: '50px', height: '50px', borderRadius: '14px', backgroundColor: 'rgba(218, 93, 101, 0.15)', color: 'var(--primary)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(218, 93, 101, 0.2)' }}>
+                <div style={{ width: '50px', height: '50px', borderRadius: '14px', background: 'rgba(244, 63, 94, 0.15)', color: 'var(--primary)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(244, 63, 94, 0.2)' }}>
                   <Phone size={22} fill="currentColor" opacity={0.6} />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', textAlign: 'left' }}>
@@ -347,7 +374,7 @@ export default function Home() {
               e.currentTarget.style.boxShadow = 'none';
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-                <div style={{ width: '50px', height: '50px', borderRadius: '14px', backgroundColor: 'rgba(218, 93, 101, 0.15)', color: 'var(--primary)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(218, 93, 101, 0.2)' }}>
+                <div style={{ width: '50px', height: '50px', borderRadius: '14px', background: 'rgba(244, 63, 94, 0.15)', color: 'var(--primary)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(244, 63, 94, 0.2)' }}>
                   <Phone size={22} fill="currentColor" opacity={0.6} />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', textAlign: 'left' }}>
@@ -363,6 +390,38 @@ export default function Home() {
         </div>
       </AnimatedSection>
 
+      {/* Stats Section */}
+      <AnimatedSection className="stats-wrapper" direction="up" style={{ marginTop: '5rem', marginBottom: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div className="section-header center-align" style={{ textAlign: 'center' }}>
+          <h2 style={{ fontSize: '2.4rem', color: '#ffffff', fontWeight: 800, marginBottom: '0.5rem', textAlign: 'center' }}>
+            Avatarana by the Numbers
+          </h2>
+          <div className="title-underline" style={{ margin: '0 auto' }}></div>
+        </div>
+      </AnimatedSection>
+      <AnimatedSection className="stats-section" direction="up" staggerChildren={true}>
+        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="stat-card glass-card">
+          <Users className="icon-secondary" size={40} />
+          <h2 className="stat-number">5</h2>
+          <p className="stat-label">Categories</p>
+        </motion.div>
+        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="stat-card glass-card">
+          <Trophy className="icon-primary" size={40} />
+          <h2 className="stat-number">{count}+</h2>
+          <p className="stat-label">Events</p>
+        </motion.div>
+        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="stat-card glass-card">
+          <Medal className="icon-tertiary" size={40} />
+          <h2 className="stat-number">All</h2>
+          <p className="stat-label">Ages Welcome</p>
+        </motion.div>
+        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="stat-card glass-card">
+          <CalendarHeart className="icon-secondary" size={40} />
+          <h2 className="stat-number">1</h2>
+          <p className="stat-label">Community</p>
+        </motion.div>
+      </AnimatedSection>
+
       {/* Intro Section */}
       <AnimatedSection className="intro-section" direction="up">
         <div className="section-header">
@@ -375,7 +434,7 @@ export default function Home() {
               AVATARANA 2026 is a high-energy community sports festival organized by Youth Karada Mangaluru for members of the Karada community.
             </p>
             <p>
-              The event includes multiple competitive games and cultural activities designed to bring together participants of all ages. Participants compete either individually or as regional teams, earning points that contribute to their region’s championship standing.
+              The event includes multiple competitive games and cultural activities designed to bring together participants of all ages. Participants compete either individually or as regional teams, earning points that contribute to their region's championship standing.
             </p>
             <ul className="feature-list">
               <li>🏆 Promotes Sportsmanship & Team Spirit</li>
@@ -415,6 +474,18 @@ export default function Home() {
             </div>
           </div>
         </a>
+      </AnimatedSection>
+
+      {/* Register & Events CTA - Above Footer */}
+      <AnimatedSection className="bottom-cta-section" direction="up">
+        <div className="hero-actions" style={{ justifyContent: 'center', marginBottom: '2rem' }}>
+          <Link to="/register" className="btn-primary">
+            Register Now <ArrowRight size={20} />
+          </Link>
+          <Link to="/events" className="btn-secondary">
+            View Events
+          </Link>
+        </div>
       </AnimatedSection>
     </div>
   );
