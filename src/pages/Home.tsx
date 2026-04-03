@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Trophy, Medal, CalendarHeart, ArrowRight, Sparkles, Heart, Phone, Handshake, ChevronRight, X } from 'lucide-react';
+import { Users, Trophy, Medal, CalendarHeart, ArrowRight, Sparkles, Heart, Phone, Handshake, ChevronRight, X, Crown, Star } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedSection } from '../components/AnimatedSection';
@@ -105,68 +105,9 @@ const RegistrationCounter = () => {
 
 export default function Home() {
   const [count, setCount] = useState(0);
-  const [selectedSponsor, setSelectedSponsor] = useState<{name: string, type: string, value: string, height?: string} | null>(null);
+  const [selectedSponsor, setSelectedSponsor] = useState<{ name: string, type: string, value: string, height?: string } | null>(null);
 
-  const trackRef = useRef<HTMLDivElement>(null);
-  const isDragging = useRef(false);
-  const isHovering = useRef(false);
-  const startX = useRef(0);
-  const scrollLeft = useRef(0);
-  const rafId = useRef<number>(0);
 
-  useEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
-
-    let lastTime = performance.now();
-    
-    const animateScroll = (time: number) => {
-      const delta = time - lastTime;
-      lastTime = time;
-
-      if (!isDragging.current && !isHovering.current && track) {
-        track.scrollLeft += delta * 0.05; 
-        
-        if (track.scrollLeft >= track.scrollWidth / 2) {
-           track.scrollLeft -= (track.scrollWidth / 2);
-        }
-      }
-      rafId.current = requestAnimationFrame(animateScroll);
-    };
-
-    rafId.current = requestAnimationFrame(animateScroll);
-
-    return () => cancelAnimationFrame(rafId.current);
-  }, []);
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    isDragging.current = true;
-    startX.current = e.pageX - trackRef.current!.offsetLeft;
-    scrollLeft.current = trackRef.current!.scrollLeft;
-  };
-
-  const handleMouseEnter = () => { isHovering.current = true; };
-  const handleMouseLeave = () => { 
-    isDragging.current = false; 
-    isHovering.current = false;
-  };
-  const handleMouseUp = () => { isDragging.current = false; };
-  
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging.current || !trackRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - trackRef.current.offsetLeft;
-    const walk = (x - startX.current) * 1.5;
-    trackRef.current.scrollLeft = scrollLeft.current - walk;
-
-    if (trackRef.current.scrollLeft >= trackRef.current.scrollWidth / 2) {
-      trackRef.current.scrollLeft -= (trackRef.current.scrollWidth / 2);
-      scrollLeft.current -= (trackRef.current.scrollWidth / 2); 
-    } else if (trackRef.current.scrollLeft <= 0) {
-      trackRef.current.scrollLeft += (trackRef.current.scrollWidth / 2);
-      scrollLeft.current += (trackRef.current.scrollWidth / 2);
-    }
-  };
 
 
   useEffect(() => {
@@ -237,53 +178,48 @@ export default function Home() {
       {/* Proud Sponsors Marquee */}
       <AnimatedSection className="community-wall" direction="up">
         <div className="section-header center-align">
-          <h2 style={{ fontSize: '1.6rem', color: 'var(--primary)', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Heart size={24} style={{ marginRight: '0.75rem', fill: 'var(--primary)', opacity: 0.9 }} />
-            Proud Sponsors
+          <h2 style={{ fontSize: '1.8rem', color: '#FCD34D', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', letterSpacing: '0.05em', textTransform: 'uppercase', textShadow: '0 0 20px rgba(252, 211, 77, 0.4)' }}>
+            <Crown size={28} style={{ marginRight: '0.75rem', color: '#FCD34D', filter: 'drop-shadow(0 0 10px rgba(252, 211, 77, 0.6))' }} />
+            Premium Sponsors
           </h2>
+          <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)', marginTop: '0.5rem', fontFamily: 'Inter', fontSize: '0.9rem' }}>
+            The driving force behind Avatarana 2026
+          </p>
         </div>
-        <div 
-          className="sponsors-marquee-wrapper"
-          ref={trackRef}
-          onMouseDown={handleMouseDown}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-          onMouseUp={handleMouseUp}
-          onMouseMove={handleMouseMove}
-          onMouseOut={(e) => {
-            if (!trackRef.current?.contains(e.relatedTarget as Node)) {
-               handleMouseLeave();
-            }
-          }}
-        >
+        <div className="sponsors-marquee-wrapper">
           <div className="sponsors-marquee-track">
             {[...allSponsors, ...allSponsors].map((sponsor, i) => (
-              <div 
-                key={`sponsor-scroll-top-${i}`} 
-                className="sponsor-scroll-card"
-                onClick={() => {
-                  setSelectedSponsor(sponsor);
-                  confetti({
-                    particleCount: 150,
-                    spread: 80,
-                    origin: { y: 0.5 },
-                    colors: ['#F43F5E', '#0EA5E9', '#10B981', '#8B5CF6', '#ffffff'],
-                    zIndex: 10000
-                  });
-                }}
-              >
-                {sponsor.type === 'image' ? (
-                  <img
-                    src={sponsor.value}
-                    alt={sponsor.name}
-                    className="sponsor-scroll-img"
-                    style={{ maxHeight: sponsor.height || '60px' }}
-                    loading="lazy"
-                    decoding="async"
-                  />
-                ) : (
-                  <span className="sponsor-scroll-name">{sponsor.value}</span>
-                )}
+              <div key={`sponsor-group-${i}`} style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+                <div 
+                  className="sponsor-scroll-item"
+                  onClick={() => {
+                    setSelectedSponsor(sponsor);
+                    confetti({
+                      particleCount: 150,
+                      spread: 80,
+                      origin: { y: 0.5 },
+                      colors: ['#FCD34D', '#FFFBEB', '#B45309', '#ffffff'],
+                      zIndex: 10000
+                    });
+                  }}
+                >
+                  {sponsor.type === 'image' ? (
+                    <img
+                      src={sponsor.value}
+                      alt={sponsor.name}
+                      className="sponsor-scroll-img"
+                      style={{ maxHeight: sponsor.height || '60px' }}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : (
+                    <span className="sponsor-scroll-name">{sponsor.value}</span>
+                  )}
+                </div>
+                {/* Separator star between items */}
+                <div className="separator-star">
+                  <Star size={16} fill="currentColor" />
+                </div>
               </div>
             ))}
           </div>
@@ -422,7 +358,7 @@ export default function Home() {
           <h2 className="stat-number">5</h2>
           <p className="stat-label">Categories</p>
         </motion.div>
-        
+
         <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="stat-card">
           <div className="stat-icon-wrapper">
             <Trophy size={32} color="#0EA5E9" />
@@ -430,7 +366,7 @@ export default function Home() {
           <h2 className="stat-number">{count}+</h2>
           <p className="stat-label">Events</p>
         </motion.div>
-        
+
         <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="stat-card">
           <div className="stat-icon-wrapper">
             <Medal size={32} color="#10B981" />
@@ -438,7 +374,7 @@ export default function Home() {
           <h2 className="stat-number">All</h2>
           <p className="stat-label">Ages Welcome</p>
         </motion.div>
-        
+
         <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="stat-card">
           <div className="stat-icon-wrapper">
             <CalendarHeart size={32} color="#8B5CF6" />
@@ -518,12 +454,12 @@ export default function Home() {
       <AnimatePresence>
         {selectedSponsor && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }} 
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               onClick={() => setSelectedSponsor(null)}
-              style={{ position: 'absolute', inset: 0, background: 'rgba(10, 12, 16, 0.85)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }} 
+              style={{ position: 'absolute', inset: 0, background: 'rgba(10, 12, 16, 0.85)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
             />
             <motion.div
               layoutId={`sponsor-pop`}
@@ -533,7 +469,7 @@ export default function Home() {
               transition={{ type: "spring", bounce: 0.4 }}
               className="sponsor-modal-content"
             >
-              <button 
+              <button
                 onClick={() => setSelectedSponsor(null)}
                 style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ffffff', transition: 'all 0.2s ease', zIndex: 10 }}
                 onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
@@ -541,11 +477,11 @@ export default function Home() {
               >
                 <X size={20} />
               </button>
-              
-              <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)', fontWeight: 800, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '2px' }}>
-                <Heart size={16} fill="currentColor" /> Proud Sponsor
+
+              <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#FCD34D', fontWeight: 800, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '2px' }}>
+                <Sparkles size={16} fill="currentColor" /> Proud Sponsor
               </div>
-              
+
               {selectedSponsor.type === 'image' ? (
                 <div className="sponsor-modal-image-wrapper">
                   <img src={selectedSponsor.value} alt={selectedSponsor.name} />
@@ -555,7 +491,7 @@ export default function Home() {
                   {selectedSponsor.value}
                 </h3>
               )}
-              
+
               <p style={{ color: '#a1a1aa', marginTop: '2.5rem', fontSize: '1.1rem', lineHeight: 1.6, maxWidth: '90%' }}>
                 Thank you to <strong style={{ color: '#ffffff' }}>{selectedSponsor.name}</strong> for powering the biggest sports festival of 2026.
               </p>
