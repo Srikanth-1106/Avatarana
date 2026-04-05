@@ -986,7 +986,7 @@ html {
 @media (max-width: 768px) {
   .sponsors-marquee-track {
     gap: 1.5rem;
-    animation-duration: 25s;
+    animation-duration: 60s;
   }
 
   .sponsor-scroll-name {
