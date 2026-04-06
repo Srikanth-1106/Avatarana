@@ -60,13 +60,13 @@ export default function Registration() {
     const allFormPlayers = [];
     // Only add captain to duplicate check if they have a phone (not a child without phone)
     if (formData.phone && formData.phone.length >= 10) {
-      allFormPlayers.push({ name: formData.name, phone: formData.phone, role: 'Captain' });
+      allFormPlayers.push({ name: formData.name, phone: formData.phone, role: 'Captain', isChild: isChild() });
     }
     for (const event of selectedEventsData) {
       if (event?.type === 'Group' && formData.teams[event.id]) {
         formData.teams[event.id].members.forEach((m, i) => {
           if (m.phone && m.phone.length >= 10) {
-            allFormPlayers.push({ ...m, role: `Player ${i + 2} in ${event.name}` });
+            allFormPlayers.push({ ...m, role: `Player ${i + 2} in ${event.name}`, isChild: false });
           }
         });
       }
@@ -77,11 +77,19 @@ export default function Registration() {
       if (!player.phone || player.phone.length < 10) continue;
       const normalizedName = player.name.toLowerCase().trim();
       if (phoneToNameMap.has(player.phone)) {
-        if (phoneToNameMap.get(player.phone) !== normalizedName) {
-          return `Phone number ${player.phone} is entered for multiple different names in this form. Each person must have their own unique phone number.`;
+        const existingName = phoneToNameMap.get(player.phone).name;
+        const existingIsChild = phoneToNameMap.get(player.phone).isChild;
+        
+        // Allow same phone number if:
+        // 1. Both are children OR
+        // 2. One is child and other is adult (parent-child pair)
+        const allowSamePhone = (isChild() && existingIsChild) || (isChild() && !existingIsChild) || (!isChild() && existingIsChild);
+        
+        if (!allowSamePhone && existingName !== normalizedName) {
+          return `Phone number ${player.phone} is entered for multiple different names in this form. Same phone numbers are only allowed for children and parents.`;
         }
       } else {
-        phoneToNameMap.set(player.phone, normalizedName);
+        phoneToNameMap.set(player.phone, { name: normalizedName, isChild: player.isChild });
       }
     }
 
@@ -92,12 +100,12 @@ export default function Registration() {
       const playersForThisSport = [];
 
       // Every sport includes the Captain
-      playersForThisSport.push({ name: formData.name, phone: formData.phone, role: 'Captain' });
+      playersForThisSport.push({ name: formData.name, phone: formData.phone, role: 'Captain', isChild: isChild() });
 
       // If it's a group sport, add its specific team members
       if (event.type === 'Group' && formData.teams[event.id]) {
         formData.teams[event.id].members.forEach((m, i) => {
-          playersForThisSport.push({ ...m, role: `Player ${i + 2}` });
+          playersForThisSport.push({ ...m, role: `Player ${i + 2}`, isChild: false });
         });
       }
 
@@ -105,17 +113,14 @@ export default function Registration() {
       for (const player of playersForThisSport) {
         if (!player.phone || player.phone.length < 10) continue;
 
-        // DB Check 1: Check for DIFFERENT ZONE (Consistency) and NAME MISMATCH
-        // Skip check for players without valid phone numbers
+        // DB Check 1: Check for DIFFERENT ZONE (Consistency) and PARENT-CHILD PHONE VALIDATION
         if (player.phone && player.phone.length >= 10) {
           const { data: globalZoneCheck } = await supabase
             .from('registrations')
-            .select('region, full_name, phone, team_members')
+            .select('region, full_name, phone, age, category, team_members')
             .or(`phone.eq.${player.phone},team_members.cs.[{"phone":"${player.phone}"}]`);
 
           if (globalZoneCheck && globalZoneCheck.length > 0) {
-            // --- Name consistency check --- (Removed to allow coordinators/managers to register for multiple people)
-            
             // --- Zone consistency check ---
             const firstExisting = globalZoneCheck[0];
             const currentZoneName = zonesData.find(z => z.id === formData.zone)?.displayName || formData.zone;
@@ -124,20 +129,50 @@ export default function Registration() {
               const existingZoneName = zonesData.find(z => z.id === firstExisting.region)?.displayName || firstExisting.region;
               return `${player.role} (${player.name}) is already associated with zone "${existingZoneName}". They cannot register under a different zone ("${currentZoneName}"). A player can only represent one zone across all events.`;
             }
+
+            // --- Parent-Child Phone Validation ---
+            // Allow same phone if BOTH are children OR if one is child and one is adult
+            const existingIsChild = firstExisting.category === 'Kids' || firstExisting.age < 18;
+            const currentIsChild = isChild();
+            const allowSamePhone = (currentIsChild && existingIsChild) || (currentIsChild && !existingIsChild) || (!currentIsChild && existingIsChild);
+            
+            if (!allowSamePhone && firstExisting.phone === player.phone) {
+              return `Phone number ${player.phone} is already registered for ${firstExisting.full_name}. Same phone numbers are only allowed for children and parents. Please use a different phone number.`;
+            }
           }
         }
-
-        // DB Check 2: Same Event check (REMOVED to allow registering multiple teams/events from same zone)
-        // This is often needed when a zone coordinator registers all entries using their phone number.
-
-
       }
 
-      // 4. Simple cross-check within the current form (prevent same phone twice in one roster section)
-      const phones = playersForThisSport.map(p => p.phone).filter(p => p && p.length >= 10);
-      const uniquePhones = new Set(phones);
-      if (uniquePhones.size !== phones.length) {
-        return `Duplicate phone numbers detected in the ${event.name} roster. Please ensure each player has a unique number.`;
+      // 4. Simple cross-check within the current form (prevent duplicate phone unless both/one are children)
+      const phones = playersForThisSport.map(p => ({ phone: p.phone, isChild: p.isChild })).filter(p => p.phone && p.phone.length >= 10);
+      const phoneCounts = new Map();
+      for (const p of phones) {
+        if (!phoneCounts.has(p.phone)) {
+          phoneCounts.set(p.phone, []);
+        }
+        phoneCounts.get(p.phone).push(p.isChild);
+      }
+      
+      for (const [phone, childStatuses] of phoneCounts.entries()) {
+        if (childStatuses.length > 1) {
+          // Allow if:
+          // 1. Both are children (multiple siblings)
+          // 2. One child and one adult (parent-child)
+          // Block if both are adults
+          const allChildren = childStatuses.every(status => status === true);
+          const hasChild = childStatuses.includes(true);
+          const hasAdult = childStatuses.includes(false);
+          const allAdults = childStatuses.every(status => status === false);
+          
+          if (allAdults) {
+            return `Duplicate phone numbers detected in the ${event.name} roster (${phone}). Same phone numbers are only allowed for children and parents. Adults must have unique phone numbers.`;
+          }
+          
+          // Allow: two children OR one child + one adult
+          if (!allChildren && !(hasChild && hasAdult)) {
+            return `Duplicate phone numbers detected in the ${event.name} roster (${phone}). Please ensure each adult player has a unique number.`;
+          }
+        }
       }
     }
 
