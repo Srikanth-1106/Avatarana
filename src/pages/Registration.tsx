@@ -159,10 +159,10 @@ export default function Registration() {
           // 1. Both are children (multiple siblings)
           // 2. One child and one adult (parent-child)
           // Block if both are adults
-          const allChildren = childStatuses.every(status => status === true);
+          const allChildren = childStatuses.every((status: boolean) => status === true);
           const hasChild = childStatuses.includes(true);
           const hasAdult = childStatuses.includes(false);
-          const allAdults = childStatuses.every(status => status === false);
+          const allAdults = childStatuses.every((status: boolean) => status === false);
           
           if (allAdults) {
             return `Duplicate phone numbers detected in the ${event.name} roster (${phone}). Same phone numbers are only allowed for children and parents. Adults must have unique phone numbers.`;
