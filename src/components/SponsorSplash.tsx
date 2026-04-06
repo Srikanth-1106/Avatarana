@@ -115,7 +115,14 @@ export default function SponsorSplash({ sponsors, onComplete, duration = 9000 }:
     void bar.offsetWidth; bar.style.width = '100%';
   }, [duration]);
 
-  const dismiss = useCallback(() => { setVisible(false); setTimeout(()=>onComplete?.(), 700); }, [onComplete]);
+  const dismiss = useCallback((e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setVisible(false); 
+    setTimeout(()=>onComplete?.(), 500); 
+  }, [onComplete]);
   useEffect(() => { const t = setTimeout(dismiss, duration); return () => clearTimeout(t); }, [duration, dismiss]);
 
   return (
@@ -216,9 +223,10 @@ export default function SponsorSplash({ sponsors, onComplete, duration = 9000 }:
             onClick={dismiss} id="sponsor-splash-skip"
             onMouseEnter={e=>{e.currentTarget.style.color='#fff';e.currentTarget.style.borderColor='#DA5D65';}}
             onMouseLeave={e=>{e.currentTarget.style.color='rgba(255,255,255,0.4)';e.currentTarget.style.borderColor='rgba(255,255,255,0.15)';}}
-            style={{position:'absolute',bottom:16,right:22,background:'none',border:'1px solid rgba(255,255,255,0.15)',
-              borderRadius:20,color:'rgba(255,255,255,0.4)',fontSize:12,padding:'5px 16px',
-              cursor:'pointer',letterSpacing:1.5,zIndex:20,fontWeight:500,transition:'all .25s ease'}}>
+            style={{position:'absolute',bottom:20,right:24,background:'none',border:'1px solid rgba(255,255,255,0.15)',
+              borderRadius:20,color:'rgba(255,255,255,0.4)',fontSize:14,padding:'8px 20px',
+              cursor:'pointer',letterSpacing:1.5,zIndex:9999999,fontWeight:600,transition:'all .25s ease',
+              pointerEvents:'auto', userSelect:'none'}}>
             Skip →
           </motion.button>
 
