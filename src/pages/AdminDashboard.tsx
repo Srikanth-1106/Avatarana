@@ -77,7 +77,19 @@ export default function AdminDashboard() {
           return;
         }
 
-        setRegistrations(data || []);
+        // Deduplicate registrations based on phone + exact events + team name
+        const uniqueRegsMap = new Map();
+        if (data) {
+          data.forEach((reg: Registration) => {
+            const eventStr = Array.isArray(reg.events) ? reg.events.slice().sort().join('|') : String(reg.events || '');
+            const key = `${reg.phone}-${eventStr}-${reg.team_name || ''}`;
+            if (!uniqueRegsMap.has(key)) {
+              uniqueRegsMap.set(key, reg);
+            }
+          });
+        }
+
+        setRegistrations(Array.from(uniqueRegsMap.values()));
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch registrations');
@@ -139,18 +151,29 @@ export default function AdminDashboard() {
       setExporting(true);
 
       // Prepare data for Excel
-      const dataForExcel = filteredRegistrations.map((reg) => ({
-        'Registration ID': reg.id.substring(0, 8),
-        'Full Name': reg.full_name,
-        'Phone': reg.phone,
-        'Age': reg.age,
-        'Zone': reg.region,
-        'Category': reg.category,
-        'Events': Array.isArray(reg.events) ? reg.events.join(', ') : reg.events,
-        'Team Name': reg.team_name || '--',
-        'Team Members': reg.team_members ? JSON.stringify(reg.team_members) : '--',
-        'Registration Date': new Date(reg.created_at).toLocaleString(),
-      }));
+      const dataForExcel = filteredRegistrations.map((reg) => {
+        let teamMembersFormatted = '--';
+        if (reg.team_members) {
+           if (Array.isArray(reg.team_members)) {
+             teamMembersFormatted = reg.team_members.filter((m: any) => m && m.name).map((m: any) => `${m.name}`).join(', ');
+           } else if (typeof reg.team_members === 'object') {
+             teamMembersFormatted = Object.values(reg.team_members).join(', ');
+           } else {
+             teamMembersFormatted = String(reg.team_members);
+           }
+        }
+        
+        return {
+          'Full Name': reg.full_name,
+          'Phone': reg.phone,
+          'Age': reg.age,
+          'Category': reg.category,
+          'Events': Array.isArray(reg.events) ? reg.events.join(', ') : reg.events,
+          'Region': reg.region,
+          'Team Name': reg.team_name || '--',
+          'Team Members': teamMembersFormatted,
+        };
+      });
 
       // Create workbook and worksheet
       const worksheet = XLSX.utils.json_to_sheet(dataForExcel);
@@ -159,16 +182,14 @@ export default function AdminDashboard() {
 
       // Set column widths
       worksheet['!cols'] = [
-        { wch: 12 },
-        { wch: 25 },
-        { wch: 15 },
-        { wch: 8 },
-        { wch: 15 },
-        { wch: 15 },
-        { wch: 35 },
-        { wch: 20 },
-        { wch: 30 },
-        { wch: 20 },
+        { wch: 25 }, // Full Name
+        { wch: 15 }, // Phone
+        { wch: 8 },  // Age
+        { wch: 15 }, // Category
+        { wch: 35 }, // Events
+        { wch: 15 }, // Region
+        { wch: 20 }, // Team Name
+        { wch: 40 }, // Team Members
       ];
 
       // Generate filename with date filter info
@@ -735,8 +756,11 @@ export default function AdminDashboard() {
                       </span>
                     </td>
                     <td style={{ padding: '1rem', color: '#cbd5e1', fontSize: '0.85rem' }}>
-                      {Array.isArray(reg.events) ? reg.events.slice(0, 1).join(', ') : reg.events}
-                      {Array.isArray(reg.events) && reg.events.length > 1 && ` +${reg.events.length - 1}`}
+                      {Array.isArray(reg.events) ? (
+                        selectedEvent !== 'all' && reg.events.includes(selectedEvent)
+                          ? `${selectedEvent}${reg.events.length > 1 ? ` +${reg.events.length - 1}` : ''}`
+                          : `${reg.events[0]}${reg.events.length > 1 ? ` +${reg.events.length - 1}` : ''}`
+                      ) : reg.events}
                     </td>
                     <td style={{ padding: '1rem', color: '#cbd5e1', fontSize: '0.9rem' }}>
                       {reg.team_name ? (
