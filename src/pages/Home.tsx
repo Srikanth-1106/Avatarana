@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Trophy, Medal, CalendarHeart, ArrowRight, Sparkles, Heart, Phone, Handshake, ChevronRight } from 'lucide-react';
+import { Users, Trophy, Medal, CalendarHeart, ArrowRight, Sparkles, Heart, Phone, Handshake, ChevronRight, X, Crown, Star } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedSection } from '../components/AnimatedSection';
+import confetti from 'canvas-confetti';
 
 
 // SVG Ring Component
@@ -104,6 +105,9 @@ const RegistrationCounter = () => {
 
 export default function Home() {
   const [count, setCount] = useState(0);
+  const [selectedSponsor, setSelectedSponsor] = useState<{ name: string, type: string, value: string, height?: string } | null>(null);
+
+
 
 
   useEffect(() => {
@@ -167,81 +171,55 @@ export default function Home() {
             Join the biggest community sports festival. Compete, celebrate, and create unforgettable memories.
           </p>
 
-          <div className="hero-actions">
-            <Link to="/register" className="btn-primary">
-              Register Now <ArrowRight size={20} />
-            </Link>
-            <Link to="/events" className="btn-secondary">
-              View Events
-            </Link>
-          </div>
-
           <RegistrationCounter />
         </div>
-      </AnimatedSection>
-
-      {/* Stats Section */}
-      <AnimatedSection className="stats-section" direction="up" staggerChildren={true}>
-        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="stat-card glass-card">
-          <Users className="icon-secondary" size={40} />
-          <h2 className="stat-number">5</h2>
-          <p className="stat-label">Categories</p>
-        </motion.div>
-        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="stat-card glass-card">
-          <Trophy className="icon-primary" size={40} />
-          <h2 className="stat-number">{count}+</h2>
-          <p className="stat-label">Events</p>
-        </motion.div>
-        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="stat-card glass-card">
-          <Medal className="icon-tertiary" size={40} />
-          <h2 className="stat-number">All</h2>
-          <p className="stat-label">Ages Welcome</p>
-        </motion.div>
-        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="stat-card glass-card">
-          <CalendarHeart className="icon-secondary" size={40} />
-          <h2 className="stat-number">1</h2>
-          <p className="stat-label">Community</p>
-        </motion.div>
       </AnimatedSection>
 
       {/* Proud Sponsors Marquee */}
       <AnimatedSection className="community-wall" direction="up">
         <div className="section-header center-align">
-          <h2 style={{ fontSize: '1.6rem', color: 'var(--primary)', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Heart size={24} style={{ marginRight: '0.75rem', fill: 'var(--primary)', opacity: 0.9 }} />
-            Proud Sponsors
+          <h2 style={{ fontSize: '1.8rem', color: '#FCD34D', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', letterSpacing: '0.05em', textTransform: 'uppercase', textShadow: '0 0 20px rgba(252, 211, 77, 0.4)' }}>
+            <Crown size={28} style={{ marginRight: '0.75rem', color: '#FCD34D', filter: 'drop-shadow(0 0 10px rgba(252, 211, 77, 0.6))' }} />
+            Premium Sponsors
           </h2>
+          <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)', marginTop: '0.5rem', fontFamily: 'Inter', fontSize: '0.9rem' }}>
+            The driving force behind Avatarana 2026
+          </p>
         </div>
         <div className="sponsors-marquee-wrapper">
-          <div className="sponsors-marquee-track" style={{ marginBottom: '1.5rem' }}>
+          <div className="sponsors-marquee-track">
             {[...allSponsors, ...allSponsors].map((sponsor, i) => (
-              <div key={`sponsor-scroll-top-${i}`} className="sponsor-scroll-card">
-                {sponsor.type === 'image' ? (
-                  <img
-                    src={sponsor.value}
-                    alt={sponsor.name}
-                    className="sponsor-scroll-img"
-                    style={{ maxHeight: sponsor.height || '60px' }}
-                  />
-                ) : (
-                  <span className="sponsor-scroll-name">{sponsor.value}</span>
-                )}
-              </div>
-            ))}
-          </div>
-          <div className="sponsors-marquee-track-reverse">
-            {[...allSponsors, ...allSponsors].reverse().map((sponsor, i) => (
-              <div key={`sponsor-scroll-bottom-${i}`} className="sponsor-scroll-card">
-                {sponsor.type === 'image' ? (
-                  <img
-                    src={sponsor.value}
-                    alt={sponsor.name}
-                    className="sponsor-scroll-img"
-                    style={{ maxHeight: sponsor.height || '60px' }}
-                  />
-                ) : (
-                  <span className="sponsor-scroll-name">{sponsor.value}</span>
-                )}
+              <div key={`sponsor-group-${i}`} style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+                <div 
+                  className="sponsor-scroll-item"
+                  onClick={() => {
+                    setSelectedSponsor(sponsor);
+                    confetti({
+                      particleCount: 150,
+                      spread: 80,
+                      origin: { y: 0.5 },
+                      colors: ['#FCD34D', '#FFFBEB', '#B45309', '#ffffff'],
+                      zIndex: 10000
+                    });
+                  }}
+                >
+                  {sponsor.type === 'image' ? (
+                    <img
+                      src={sponsor.value}
+                      alt={sponsor.name}
+                      className="sponsor-scroll-img"
+                      style={{ maxHeight: sponsor.height || '60px' }}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : (
+                    <span className="sponsor-scroll-name">{sponsor.value}</span>
+                  )}
+                </div>
+                {/* Separator star between items */}
+                <div className="separator-star">
+                  <Star size={16} fill="currentColor" />
+                </div>
               </div>
             ))}
           </div>
@@ -253,8 +231,8 @@ export default function Home() {
           marginTop: '5rem',
           padding: '4rem 2rem',
           borderRadius: '32px',
-          background: 'radial-gradient(120% 120% at 50% 0%, rgba(218, 93, 101, 0.07) 0%, rgba(10, 10, 10, 0.6) 100%)',
-          border: '1px solid rgba(218, 93, 101, 0.15)',
+          background: 'radial-gradient(120% 120% at 50% 0%, rgba(244, 63, 94, 0.07) 0%, rgba(9, 9, 8, 0.6) 100%)',
+          border: '1px solid rgba(244, 63, 94, 0.15)',
           boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
           display: 'flex',
           flexDirection: 'column',
@@ -265,12 +243,12 @@ export default function Home() {
           {/* Ambient Background Glows */}
           <div style={{
             position: 'absolute', top: '-50%', left: '-10%', width: '120%', height: '100%',
-            background: 'radial-gradient(ellipse at top, rgba(218, 93, 101, 0.15), transparent 70%)',
+            background: 'radial-gradient(ellipse at top, rgba(244, 63, 94, 0.15), transparent 70%)',
             pointerEvents: 'none', zIndex: -1
           }}></div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-            <div style={{ padding: '0.8rem', background: 'rgba(218, 93, 101, 0.15)', borderRadius: '16px', color: 'var(--primary)', border: '1px solid rgba(218, 93, 101, 0.2)' }}>
+            <div style={{ padding: '0.8rem', background: 'rgba(244, 63, 94, 0.15)', borderRadius: '16px', color: 'var(--primary)', border: '1px solid rgba(244, 63, 94, 0.2)' }}>
               <Handshake size={28} />
             </div>
           </div>
@@ -310,7 +288,7 @@ export default function Home() {
               e.currentTarget.style.boxShadow = 'none';
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-                <div style={{ width: '50px', height: '50px', borderRadius: '14px', backgroundColor: 'rgba(218, 93, 101, 0.15)', color: 'var(--primary)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(218, 93, 101, 0.2)' }}>
+                <div style={{ width: '50px', height: '50px', borderRadius: '14px', background: 'rgba(244, 63, 94, 0.15)', color: 'var(--primary)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(244, 63, 94, 0.2)' }}>
                   <Phone size={22} fill="currentColor" opacity={0.6} />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', textAlign: 'left' }}>
@@ -347,7 +325,7 @@ export default function Home() {
               e.currentTarget.style.boxShadow = 'none';
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-                <div style={{ width: '50px', height: '50px', borderRadius: '14px', backgroundColor: 'rgba(218, 93, 101, 0.15)', color: 'var(--primary)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(218, 93, 101, 0.2)' }}>
+                <div style={{ width: '50px', height: '50px', borderRadius: '14px', background: 'rgba(244, 63, 94, 0.15)', color: 'var(--primary)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(244, 63, 94, 0.2)' }}>
                   <Phone size={22} fill="currentColor" opacity={0.6} />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', textAlign: 'left' }}>
@@ -363,6 +341,49 @@ export default function Home() {
         </div>
       </AnimatedSection>
 
+      {/* Stats Section */}
+      <AnimatedSection className="stats-wrapper" direction="up" style={{ marginTop: '5rem', marginBottom: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div className="section-header center-align" style={{ textAlign: 'center' }}>
+          <h2 style={{ fontSize: '2.4rem', color: '#ffffff', fontWeight: 800, marginBottom: '0.5rem', textAlign: 'center' }}>
+            Festival Highlights
+          </h2>
+          <div className="title-underline" style={{ margin: '0 auto' }}></div>
+        </div>
+      </AnimatedSection>
+      <AnimatedSection className="stats-section" direction="up" staggerChildren={true}>
+        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="stat-card">
+          <div className="stat-icon-wrapper">
+            <Users size={32} color="#F43F5E" />
+          </div>
+          <h2 className="stat-number">5</h2>
+          <p className="stat-label">Categories</p>
+        </motion.div>
+
+        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="stat-card">
+          <div className="stat-icon-wrapper">
+            <Trophy size={32} color="#0EA5E9" />
+          </div>
+          <h2 className="stat-number">{count}+</h2>
+          <p className="stat-label">Events</p>
+        </motion.div>
+
+        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="stat-card">
+          <div className="stat-icon-wrapper">
+            <Medal size={32} color="#10B981" />
+          </div>
+          <h2 className="stat-number">All</h2>
+          <p className="stat-label">Ages Welcome</p>
+        </motion.div>
+
+        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="stat-card">
+          <div className="stat-icon-wrapper">
+            <CalendarHeart size={32} color="#8B5CF6" />
+          </div>
+          <h2 className="stat-number">1</h2>
+          <p className="stat-label">Community</p>
+        </motion.div>
+      </AnimatedSection>
+
       {/* Intro Section */}
       <AnimatedSection className="intro-section" direction="up">
         <div className="section-header">
@@ -375,7 +396,7 @@ export default function Home() {
               AVATARANA 2026 is a high-energy community sports festival organized by Youth Karada Mangaluru for members of the Karada community.
             </p>
             <p>
-              The event includes multiple competitive games and cultural activities designed to bring together participants of all ages. Participants compete either individually or as regional teams, earning points that contribute to their region’s championship standing.
+              The event includes multiple competitive games and cultural activities designed to bring together participants of all ages. Participants compete either individually or as regional teams, earning points that contribute to their region's championship standing.
             </p>
             <ul className="feature-list">
               <li>🏆 Promotes Sportsmanship & Team Spirit</li>
@@ -416,6 +437,69 @@ export default function Home() {
           </div>
         </a>
       </AnimatedSection>
+
+      {/* Register & Events CTA - Above Footer */}
+      <AnimatedSection className="bottom-cta-section" direction="up">
+        <div className="hero-actions" style={{ justifyContent: 'center', marginBottom: '2rem' }}>
+          <Link to="/register" className="btn-primary">
+            Register Now <ArrowRight size={20} />
+          </Link>
+          <Link to="/events" className="btn-secondary">
+            View Events
+          </Link>
+        </div>
+      </AnimatedSection>
+
+      {/* Sponsor Highlight Modal */}
+      <AnimatePresence>
+        {selectedSponsor && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedSponsor(null)}
+              style={{ position: 'absolute', inset: 0, background: 'rgba(10, 12, 16, 0.85)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
+            />
+            <motion.div
+              layoutId={`sponsor-pop`}
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: "spring", bounce: 0.4 }}
+              className="sponsor-modal-content"
+            >
+              <button
+                onClick={() => setSelectedSponsor(null)}
+                style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ffffff', transition: 'all 0.2s ease', zIndex: 10 }}
+                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+              >
+                <X size={20} />
+              </button>
+
+              <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#FCD34D', fontWeight: 800, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '2px' }}>
+                <Sparkles size={16} fill="currentColor" /> Proud Sponsor
+              </div>
+
+              {selectedSponsor.type === 'image' ? (
+                <div className="sponsor-modal-image-wrapper">
+                  <img src={selectedSponsor.value} alt={selectedSponsor.name} />
+                </div>
+              ) : (
+                <h3 className="sponsor-modal-title">
+                  {selectedSponsor.value}
+                </h3>
+              )}
+
+              <p style={{ color: '#a1a1aa', marginTop: '2.5rem', fontSize: '1.1rem', lineHeight: 1.6, maxWidth: '90%' }}>
+                Thank you to <strong style={{ color: '#ffffff' }}>{selectedSponsor.name}</strong> for powering the biggest sports festival of 2026.
+              </p>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

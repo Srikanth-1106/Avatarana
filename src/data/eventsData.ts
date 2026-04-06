@@ -13,7 +13,7 @@ export interface EventItem {
 export const eventsData: EventItem[] = [
   // Men's Events
   { id: 'm1', name: 'Cricket', category: 'Men', type: 'Group', minPlayers: 11, description: 'Regional teams compete in league format using standard cricket rules', points: { first: 10, second: 5 } },
-  { id: 'm2', name: 'Volleyball', category: 'Men', type: 'Group', minPlayers: 6, description: '6 players per team, best of 3 sets', points: { first: 10, second: 5 } },
+  { id: 'm2', name: 'Volleyball', category: 'Men', type: 'Group', minPlayers: 6, maxPlayers: 8, description: '6–8 players per team, best of 3 sets', points: { first: 10, second: 5 } },
   { id: 'm4', name: 'Tug of War', category: 'Men', type: 'Group', minPlayers: 8, description: 'Teams pull opponent across center line', points: { first: 10, second: 5 } },
   
   // Women's Events

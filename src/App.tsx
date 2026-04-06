@@ -9,6 +9,7 @@ import Registration from './pages/Registration';
 import Leaderboard from './pages/Leaderboard';
 import Schedule from './pages/Schedule';
 import Gallery from './pages/Gallery';
+import Rules from './pages/Rules';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Cricket from './pages/Cricket';
@@ -69,6 +70,7 @@ function AppRoutes() {
           
           <Route path="about" element={<About />} />
           <Route path="gallery" element={<Gallery />} />
+          <Route path="rules" element={<Rules />} />
           <Route path="contact" element={<Contact />} />
         </Route>
         
