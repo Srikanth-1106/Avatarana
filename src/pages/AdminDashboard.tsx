@@ -16,7 +16,7 @@ interface Registration {
   category: string;
   events: string[];
   team_name: string | null;
-  team_members: Record<string, string> | null;
+  team_members: any | null;
   created_at: string;
 }
 
@@ -739,7 +739,26 @@ export default function AdminDashboard() {
                       {Array.isArray(reg.events) && reg.events.length > 1 && ` +${reg.events.length - 1}`}
                     </td>
                     <td style={{ padding: '1rem', color: '#cbd5e1', fontSize: '0.9rem' }}>
-                      {reg.team_name ? <span style={{ color: '#10b981', fontWeight: '600' }}>{reg.team_name}</span> : <span style={{ color: '#64748b' }}>--</span>}
+                      {reg.team_name ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                          <span style={{ color: '#10b981', fontWeight: '600' }}>{reg.team_name}</span>
+                          {reg.team_members && (Array.isArray(reg.team_members) ? reg.team_members.length > 0 : Object.keys(reg.team_members).length > 0) && (
+                            <div style={{ fontSize: '0.8rem', color: '#94a3b8', background: 'rgba(15, 23, 42, 0.4)', padding: '0.5rem', borderRadius: '6px', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
+                              <strong style={{ display: 'block', marginBottom: '0.25rem', color: '#cbd5e1' }}>Members:</strong>
+                              <ul style={{ paddingLeft: '1.25rem', margin: 0, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                {Array.isArray(reg.team_members) 
+                                  ? reg.team_members.filter((m: any) => m && m.name).map((m: any, i: number) => (
+                                      <li key={i}>{m.name}</li>
+                                    ))
+                                  : Object.values(reg.team_members).map((name: any, i: number) => (
+                                      <li key={i}>{name as string}</li>
+                                    ))
+                                }
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      ) : <span style={{ color: '#64748b' }}>--</span>}
                     </td>
                     <td style={{ padding: '1rem', color: '#cbd5e1', fontSize: '0.85rem' }}>
                       {new Date(reg.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: '2-digit' })}
