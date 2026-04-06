@@ -29,9 +29,18 @@ const SPLASH_SPONSORS = [
   { name: 'Kashi Sadana' },
   { name: 'Ramakrishna Bhat Kodikanda' },
   { name: 'Purushothama Bhat M' },
+  { name: 'Ananthashayana Bhat Adyethimar' },
+  { name: 'Pushpakumar Ailukunje' },
+  { name: 'Thara N Bhat Kannetikana' },
+  { name: 'Vishwanath Bhat' },
+  { name: 'Manjunatha Bhat Gumpe' },
+  { name: 'Ganapathi Bhat Balike' },
+  { name: 'Sooryanarayana Bhat Kalashraya' },
+  { name: 'Damodara Bhat Kannadka' },
+  { name: 'Sunil Angraje' },
   { name: 'Karada Vishwa Bengaluru' },
   { name: 'Jayaram Bhat Kuntalpady' },
-  { name: 'Sunil Angraje' },
+  { name: 'Chandra Mohana Kannadka' },
 ];
 
 // Inner component that has access to the router's location
@@ -53,7 +62,7 @@ function AppRoutes() {
         <SponsorSplash
           sponsors={SPLASH_SPONSORS}
           onComplete={handleSponsorComplete}
-          duration={14000}
+          duration={35000}
         />
       )}
       <Routes>

@@ -14,12 +14,11 @@ export default function SponsorSplash({ sponsors, onComplete, duration = 9000 }:
   const [phase,   setPhase]   = useState(0);
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-  const OR   = isMobile ? 165 : 360;   // wider orbit
-  const PS   = isMobile ? 80  : 115;   // bigger planets
-  const SUN  = isMobile ? 130 : 200;   // bigger sun
-  const N    = Math.min(sponsors.length, 8);
-  const TILT = 0.42; // taller ellipse for more natural orbit look
-  // Scene perfectly centered on viewport
+  const OR   = isMobile ? 200 : 520;   // very wide orbit
+  const PS   = isMobile ? 78  : 110;   // planet base size
+  const SUN  = isMobile ? 130 : 200;   // sun size
+  const N    = sponsors.length;         // ALL sponsors, no cap
+  const TILT = 0.4;                     // ellipse tilt
   const SCENE_TOP_OFFSET = '50%';
 
   // Phase sequence
@@ -77,7 +76,7 @@ export default function SponsorSplash({ sponsors, onComplete, duration = 9000 }:
   useEffect(() => {
     if (phase < 3) return;
     let raf: number;
-    const SPEED = 0.0012; // radians per frame — slow & steady orbit
+    const SPEED = 0.00028; // ultra slow — every sponsor clearly readable at front
 
     const animate = () => {
       const elapsed = Date.now() - startRef.current;
@@ -92,11 +91,12 @@ export default function SponsorSplash({ sponsors, onComplete, duration = 9000 }:
         const r   = OR * (1 - absorbP * absorbP);           // shrink orbit
         const x   = r  * Math.cos(a);
         const y   = r  * TILT * Math.sin(a);                // flatten for 3D perspective
-        const depth = (Math.sin(a) + 1) / 2;               // 0=far, 1=near
-        const scale = absorbing
-          ? (1 - absorbP) * (.72 + depth * .28)
-          : .72 + depth * .28;
-        const opacity = absorbing ? 1 - absorbP : .5 + depth * .5;
+        const depth  = (Math.sin(a) + 1) / 2;        // 0=far back, 1=front
+        // Dramatic zoom: back=tiny, front=large so name is clearly readable
+        const scale   = absorbing
+          ? (1 - absorbP) * (0.45 + depth * 0.9)
+          : 0.45 + depth * 0.9;                       // range 0.45 → 1.35
+        const opacity = absorbing ? 1 - absorbP : 0.35 + depth * 0.65; // 0.35→1.0
 
         el.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(${scale})`;
         el.style.opacity   = String(Math.max(0, opacity));
