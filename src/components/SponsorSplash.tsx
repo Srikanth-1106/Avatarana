@@ -14,9 +14,22 @@ export default function SponsorSplash({ sponsors, onComplete, duration = 9000 }:
   const [phase,   setPhase]   = useState(0);
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-  const OR   = isMobile ? 200 : 520;   // very wide orbit
-  const PS   = isMobile ? 78  : 110;   // planet base size
-  const SUN  = isMobile ? 130 : 200;   // sun size
+  const isTablet = typeof window !== 'undefined' && window.innerWidth >= 768 && window.innerWidth < 1024;
+  const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+  
+  // Responsive dimensions across all screen sizes
+  let OR = 520, PS = 110, SUN = 200;
+  if (isMobile) {
+    OR = 150; PS = 60; SUN = 100;   // Small phones (< 480px)
+    if (window.innerWidth >= 480) {
+      OR = 180; PS = 70; SUN = 120;   // Medium phones (480-768px)
+    }
+  } else if (isTablet) {
+    OR = 350; PS = 90; SUN = 160;    // Tablets (768-1024px)
+  } else if (isDesktop && window.innerWidth >= 1440) {
+    OR = 600; PS = 130; SUN = 240;   // Large screens (1440px+)
+  }
+  
   const N    = sponsors.length;         // ALL sponsors, no cap
   const TILT = 0.4;                     // ellipse tilt
   const SCENE_TOP_OFFSET = '50%';
@@ -130,30 +143,31 @@ export default function SponsorSplash({ sponsors, onComplete, duration = 9000 }:
       {visible && (
         <motion.div key="ss"
           initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:.8}}
-          style={{position:'fixed',inset:0,zIndex:99999,overflow:'hidden'}}>
+          style={{position:'fixed',inset:0,zIndex:99999,overflow:'hidden',willChange:'opacity'}}>          
 
           {/* Space background */}
-          <canvas ref={canvasRef} style={{position:'absolute',inset:0,zIndex:0,pointerEvents:'none'}}/>
+          <canvas ref={canvasRef} style={{position:'absolute',inset:0,zIndex:0,pointerEvents:'none',willChange:'contents'}}/>
 
           {/* Title */}
           <motion.div
             initial={{opacity:0,y:-24}} animate={phase>=1?{opacity:1,y:0}:{}} transition={{duration:.9,ease:[.22,1,.36,1]}}
-            style={{position:'absolute',top:isMobile?24:40,left:0,right:0,textAlign:'center',zIndex:10,pointerEvents:'none'}}>
-            <p style={{margin:0,color:'rgba(255,200,200,0.4)',fontSize:isMobile?9:11,letterSpacing:7,fontWeight:600,textTransform:'uppercase'}}>
+            style={{position:'absolute',top:isMobile?16:isTablet?28:40,left:0,right:0,textAlign:'center',zIndex:10,pointerEvents:'none',paddingX:isMobile?12:20}}>
+            <p style={{margin:0,color:'rgba(255,200,200,0.4)',fontSize:isMobile?8:isTablet?10:11,letterSpacing:isMobile?4:6,fontWeight:600,textTransform:'uppercase'}}>
               ✦ &nbsp;Avatarana 2026&nbsp; ✦
             </p>
-            <h2 style={{margin:'7px 0 0',fontWeight:900,letterSpacing:-1,fontSize:isMobile?'1.5rem':'2.5rem',lineHeight:1.07,
+            <h2 style={{margin:'6px 0 0',fontWeight:900,letterSpacing:-1,
+              fontSize:isMobile?'1.2rem':isTablet?'1.8rem':'2.5rem',lineHeight:1.07,
               background:'linear-gradient(135deg,#fff 0%,#ffccd0 40%,#DA5D65 80%)',
               WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text',
               filter:'drop-shadow(0 0 22px rgba(218,93,101,0.65))'}}>
               Our Proud Sponsors
             </h2>
-            <div style={{width:isMobile?55:90,height:2,margin:'8px auto 0',borderRadius:4,
+            <div style={{width:isMobile?40:isTablet?65:90,height:2,margin:'6px auto 0',borderRadius:4,
               background:'linear-gradient(90deg,transparent,#DA5D65,#ff8fa3,transparent)'}}/>
           </motion.div>
 
           {/* Solar System scene — centered in space below the title */}
-          <div style={{position:'absolute',top:SCENE_TOP_OFFSET,left:'50%',width:0,height:0,zIndex:5}}>
+          <div style={{position:'absolute',top:SCENE_TOP_OFFSET,left:'50%',width:0,height:0,zIndex:50,willChange:'contents'}}>
 
             {/* PLANETS — JS positions via refs, anchored at center */}
             {Array.from({length:N},(_,i) => (
@@ -200,6 +214,7 @@ export default function SponsorSplash({ sponsors, onComplete, duration = 9000 }:
               }}>
                 {/* Logo perfectly centered in the sun */}
                 <img src="/logo.png" alt="Avatarana"
+                  loading="eager"
                   style={{
                     position:'absolute',top:'50%',left:'50%',
                     transform:'translate(-50%,-50%)',
@@ -285,7 +300,7 @@ function Planet({s,size,idx}:{s:Sponsor;size:number;idx:number}) {
         }}
       >
         {s.logo && !err
-          ? <img src={s.logo} alt={s.name} onError={()=>setErr(true)}
+          ? <img src={s.logo} alt={s.name} loading="lazy" onError={()=>setErr(true)}
               style={{width:'80%',height:'80%',objectFit:'contain',borderRadius:'50%',
                 filter:hov?'brightness(1.3)':'brightness(1.05)',transition:'filter .3s'}}/>
           : <span style={{color:'rgba(255,255,255,0.95)',fontSize:size<90?22:30,fontWeight:900,
@@ -298,20 +313,20 @@ function Planet({s,size,idx}:{s:Sponsor;size:number;idx:number}) {
       {/* Readable name label below the planet — COUNTER-SCALED to remain crisp */}
       <div style={{
         position:'absolute', top: size+7, left:'50%',
-        whiteSpace:'nowrap', textAlign:'center', pointerEvents:'none', zIndex:50,
-        transform:'translateX(-50%)', scale: '1', /* Keep scale at 1 to avoid blur */
+        whiteSpace:'nowrap', textAlign:'center', pointerEvents:'none', zIndex:100,
+        transform:'translateX(-50%)', scale: '1', willChange:'transform,opacity', /* Keep scale at 1 to avoid blur */
       }}>
         <div style={{
           display:'inline-block', background:'rgba(255,255,255,0.95)',
-          borderRadius:10, padding:'3px 12px 4px',
+          borderRadius:10, padding:size<80?'2px 8px 3px':'3px 12px 4px',
           boxShadow:'0 2px 14px rgba(0,0,0,0.55)',
           border:'1px solid rgba(218,93,101,0.3)',
           backdropFilter:'blur(2px)',
         }}>
-          <div style={{color:'#5a0808',fontSize:11,fontWeight:800,lineHeight:1.2,letterSpacing:0.4,
+          <div style={{color:'#5a0808',fontSize:size<80?9:11,fontWeight:800,lineHeight:1.2,letterSpacing:0.4,
             textRendering:'geometricPrecision', WebkitFontSmoothing:'antialiased'}}>
             {line1}
-            {line2 && <><br/><span style={{fontSize:10,fontWeight:700}}>{line2}</span></>}
+            {line2 && <><br/><span style={{fontSize:size<80?8:10,fontWeight:700}}>{line2}</span></>}
           </div>
         </div>
       </div>

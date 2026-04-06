@@ -187,11 +187,11 @@ export default function Home() {
       {/* Proud Sponsors Marquee */}
       <AnimatedSection className="community-wall" direction="up">
         <div className="section-header center-align">
-          <h2 style={{ fontSize: '1.8rem', color: '#FCD34D', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', letterSpacing: '0.05em', textTransform: 'uppercase', textShadow: '0 0 20px rgba(252, 211, 77, 0.4)' }}>
-            <Crown size={28} style={{ marginRight: '0.75rem', color: '#FCD34D', filter: 'drop-shadow(0 0 10px rgba(252, 211, 77, 0.6))' }} />
-            Premium Sponsors
+          <h2 style={{ fontSize: 'clamp(1.2rem, 4vw, 1.8rem)', color: '#FCD34D', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', letterSpacing: '0.05em', textTransform: 'uppercase', textShadow: '0 0 20px rgba(252, 211, 77, 0.4)', flexWrap: 'nowrap', gap: '0.5rem' }}>
+            <Crown size={typeof window !== 'undefined' && window.innerWidth < 480 ? 20 : 28} style={{ color: '#FCD34D', filter: 'drop-shadow(0 0 10px rgba(252, 211, 77, 0.6))', flexShrink: 0 }} />
+            <span>Premium Sponsors</span>
           </h2>
-          <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)', marginTop: '0.5rem', fontFamily: 'Inter', fontSize: '0.9rem' }}>
+          <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)', marginTop: '0.25rem', fontFamily: 'Inter', fontSize: 'clamp(0.75rem, 2vw, 0.9rem)' }}>
             The driving force behind Avatarana 2026
           </p>
         </div>
@@ -235,7 +235,7 @@ export default function Home() {
         </div>
 
         {/* Revamped Premium Sponsor CTA Area */}
-        <div style={{
+        <div className="premium-sponsor-cta" style={{
           position: 'relative',
           marginTop: '5rem',
           padding: '4rem 2rem',
@@ -261,10 +261,10 @@ export default function Home() {
               <Handshake size={28} />
             </div>
           </div>
-          <h3 style={{ fontSize: '2.4rem', marginBottom: '1rem', color: '#ffffff', fontWeight: 800, textAlign: 'center', letterSpacing: '-0.5px' }}>
+          <h3 style={{ fontSize: 'clamp(1.8rem, 5vw, 2.4rem)', marginBottom: '1rem', color: '#ffffff', fontWeight: 800, textAlign: 'center', letterSpacing: '-0.5px' }}>
             Partner with Avatarana 2026?
           </h3>
-          <p style={{ color: 'rgba(255, 255, 255, 0.65)', marginBottom: '3.5rem', fontSize: '1.15rem', textAlign: 'center', maxWidth: '540px', lineHeight: '1.6' }}>
+          <p style={{ color: 'rgba(255, 255, 255, 0.65)', marginBottom: '3.5rem', fontSize: 'clamp(0.9rem, 2.5vw, 1.15rem)', textAlign: 'center', maxWidth: '540px', lineHeight: '1.6' }}>
             Join our monumental sports festival. Connect with thousands of passionate participants and amplify your brand's reach.
           </p>
 
@@ -493,7 +493,12 @@ export default function Home() {
 
               {selectedSponsor.type === 'image' ? (
                 <div className="sponsor-modal-image-wrapper">
-                  <img src={selectedSponsor.value} alt={selectedSponsor.name} />
+                  <img
+                  src={selectedSponsor.value}
+                  alt={selectedSponsor.name}
+                  loading="lazy"
+                  style={{ maxHeight: selectedSponsor.height || 'auto' }}
+                />
                 </div>
               ) : (
                 <h3 className="sponsor-modal-title">

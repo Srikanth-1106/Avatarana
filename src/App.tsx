@@ -55,7 +55,7 @@ function AppRoutes() {
     <>
       {/* Dark cover keeps homepage invisible while any intro is playing */}
       {introStage !== 'done' && (
-        <div style={{ position: 'fixed', inset: 0, background: '#0a0a0a', zIndex: 99990, pointerEvents: 'none' }} />
+        <div style={{ position: 'fixed', inset: 0, background: '#0a0a0a', zIndex: 99988, pointerEvents: 'none', willChange: 'opacity' }} />
       )}
       {introStage === 'curtain' && <CurtainReveal onComplete={handleCurtainComplete} />}
       {introStage === 'sponsors' && (

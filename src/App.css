@@ -1912,4 +1912,264 @@ html {
   .stats-section {
     grid-template-columns: 1fr !important;
   }
+
+  /* Global responsive adjustments */
+  .main-content {
+    padding-top: 70px;
+  }
+
+  .navbar {
+    height: 70px;
+  }
+
+  .hero-section {
+    min-height: 50vh;
+    padding: 1.5rem 0;
+  }
+
+  body {
+    font-size: 14px;
+  }
+
+  h1 {
+    font-size: 1.8rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  h3 {
+    font-size: 1.2rem;
+  }
+
+  /* Button sizing */
+  .btn-primary,
+  .btn-secondary,
+  .btn-outline {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+  }
+
+  /* Container padding */
+  .container {
+    padding: 1rem;
+  }
+
+  /* Spacing adjustments */
+  section {
+    padding: 2rem 1rem;
+  }
+}
+
+/* Tablet (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .main-content {
+    padding-top: 75px;
+  }
+
+  .navbar {
+    height: 75px;
+  }
+
+  h1 {
+    font-size: 2.2rem;
+  }
+
+  h2 {
+    font-size: 1.8rem;
+  }
+
+  /* Grid adjustments */
+  .grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Button sizing */
+  .btn-primary,
+  .btn-secondary,
+  .btn-outline {
+    padding: 0.875rem 1.75rem;
+    font-size: 0.95rem;
+  }
+
+  /* Container adjustments */
+  .container {
+    max-width: 100%;
+    padding: 1.5rem;
+  }
+
+  section {
+    padding: 3rem 1.5rem;
+  }
+}
+
+/* Desktop (1024px - 1439px) */
+@media (min-width: 1024px) and (max-width: 1439px) {
+  .main-content {
+    padding-top: 80px;
+  }
+
+  h1 {
+    font-size: 2.8rem;
+  }
+
+  h2 {
+    font-size: 2rem;
+  }
+
+  /* Container adjustments */
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  section {
+    padding: 4rem 2rem;
+  }
+}
+
+/* Large Desktop (1440px+) */
+@media (min-width: 1440px) {
+  .main-content {
+    padding-top: 80px;
+  }
+
+  h1 {
+    font-size: 3.2rem;
+  }
+
+  h2 {
+    font-size: 2.4rem;
+  }
+
+  /* Full container optimization */
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 3rem;
+  }
+
+  section {
+    padding: 5rem 3rem;
+  }
+
+  /* Table optimizations */
+  table {
+    font-size: 1rem;
+  }
+
+  td,
+  th {
+    padding: 1rem;
+  }
+}
+
+/* Landscape orientation adjustments */
+@media (orientation: landscape) and (max-height: 500px) {
+  .navbar {
+    height: 60px;
+  }
+
+  .main-content {
+    padding-top: 60px;
+  }
+
+  .hero-section {
+    min-height: 40vh;
+    padding: 1rem 0;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    margin: 0.5rem 0;
+  }
+
+  section {
+    padding: 1.5rem;
+  }
+}
+
+/* Print styles */
+@media print {
+  .navbar,
+  .mobile-menu,
+  button,
+  .btn-primary,
+  .btn-secondary {
+    display: none !important;
+  }
+
+  .main-content {
+    padding-top: 0;
+  }
+
+  body {
+    background: white;
+    color: black;
+  }
+}
+
+/* Premium Sponsor CTA Responsive Styles */
+.premium-sponsor-cta {
+  width: 100% !important;
+}
+
+@media (max-width: 480px) {
+  .premium-sponsor-cta {
+    margin-top: 3rem !important;
+    padding: 2rem 1.5rem !important;
+    border-radius: 20px !important;
+  }
+
+  .premium-sponsor-cta h3 {
+    font-size: 1.5rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .premium-sponsor-cta p {
+    font-size: 0.85rem !important;
+    margin-bottom: 2rem !important;
+  }
+
+  .premium-sponsor-cta .sponsor-modal-image-wrapper {
+    padding: 0.75rem 1rem !important;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 767px) {
+  .premium-sponsor-cta {
+    margin-top: 4rem !important;
+    padding: 2.5rem 1.75rem !important;
+    border-radius: 24px !important;
+  }
+
+  .premium-sponsor-cta h3 {
+    font-size: 1.8rem !important;
+    margin-bottom: 0.875rem !important;
+  }
+
+  .premium-sponsor-cta p {
+    font-size: 0.95rem !important;
+    margin-bottom: 2.5rem !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .premium-sponsor-cta {
+    margin-top: 4.5rem !important;
+    padding: 3rem 2rem !important;
+    border-radius: 28px !important;
+  }
+
+  .premium-sponsor-cta h3 {
+    font-size: 2rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .premium-sponsor-cta p {
+    font-size: 1rem !important;
+    margin-bottom: 3rem !important;
+  }
 }

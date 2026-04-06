@@ -8,11 +8,15 @@ interface CurtainRevealProps {
 
 // Fire a rich celebration burst
 function fireCelebration() {
+  // Reduce confetti on mobile/low-end devices
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const particleMultiplier = isMobile ? 0.6 : 1;
+  
   const colors = ['#DA5D65', '#B91A24', '#5C9E9C', '#F4F1EE', '#FFD700', '#FF6B6B'];
 
   // Big center burst
   confetti({
-    particleCount: 120,
+    particleCount: Math.floor(120 * particleMultiplier),
     spread: 100,
     origin: { x: 0.5, y: 0.5 },
     colors,
@@ -25,7 +29,7 @@ function fireCelebration() {
   // Left side burst
   setTimeout(() => {
     confetti({
-      particleCount: 60,
+      particleCount: Math.floor(60 * particleMultiplier),
       angle: 60,
       spread: 55,
       origin: { x: 0, y: 0.6 },
@@ -38,7 +42,7 @@ function fireCelebration() {
   // Right side burst
   setTimeout(() => {
     confetti({
-      particleCount: 60,
+      particleCount: Math.floor(60 * particleMultiplier),
       angle: 120,
       spread: 55,
       origin: { x: 1, y: 0.6 },
@@ -48,26 +52,28 @@ function fireCelebration() {
     });
   }, 400);
 
-  // Second wave — star shapes from top
-  setTimeout(() => {
-    confetti({
-      particleCount: 40,
-      spread: 160,
-      origin: { x: 0.5, y: 0.2 },
-      colors,
-      shapes: ['star'],
-      scalar: 1.4,
-      startVelocity: 30,
-      gravity: 0.5,
-      ticks: 250,
-      zIndex: 999999,
-    });
-  }, 700);
+  // Second wave — star shapes from top (reduced on mobile)
+  if (!isMobile || Math.random() > 0.3) {
+    setTimeout(() => {
+      confetti({
+        particleCount: Math.floor(40 * particleMultiplier),
+        spread: 160,
+        origin: { x: 0.5, y: 0.2 },
+        colors,
+        shapes: ['star'],
+        scalar: 1.4,
+        startVelocity: 30,
+        gravity: 0.5,
+        ticks: 250,
+        zIndex: 999999,
+      });
+    }, 700);
+  }
 
   // Third wave — gentle rain
   setTimeout(() => {
     confetti({
-      particleCount: 80,
+      particleCount: Math.floor(80 * particleMultiplier),
       spread: 180,
       origin: { x: 0.5, y: 0 },
       colors,
