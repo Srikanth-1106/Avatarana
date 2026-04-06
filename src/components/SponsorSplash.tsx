@@ -151,7 +151,7 @@ export default function SponsorSplash({ sponsors, onComplete, duration = 9000 }:
           {/* Title */}
           <motion.div
             initial={{opacity:0,y:-24}} animate={phase>=1?{opacity:1,y:0}:{}} transition={{duration:.9,ease:[.22,1,.36,1]}}
-            style={{position:'absolute',top:isMobile?16:isTablet?28:40,left:0,right:0,textAlign:'center',zIndex:10,pointerEvents:'none',paddingX:isMobile?12:20}}>
+            style={{position:'absolute',top:isMobile?16:isTablet?28:40,left:0,right:0,textAlign:'center',zIndex:10,pointerEvents:'none',paddingLeft:isMobile?12:20,paddingRight:isMobile?12:20}}>
             <p style={{margin:0,color:'rgba(255,200,200,0.4)',fontSize:isMobile?8:isTablet?10:11,letterSpacing:isMobile?4:6,fontWeight:600,textTransform:'uppercase'}}>
               ✦ &nbsp;Avatarana 2026&nbsp; ✦
             </p>
