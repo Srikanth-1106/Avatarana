@@ -295,20 +295,23 @@ function Planet({s,size,idx}:{s:Sponsor;size:number;idx:number}) {
         }
       </div>
 
-      {/* Readable name label below the planet */}
+      {/* Readable name label below the planet — COUNTER-SCALED to remain crisp */}
       <div style={{
-        position:'absolute', top: size+7, left:'50%', transform:'translateX(-50%)',
+        position:'absolute', top: size+7, left:'50%',
         whiteSpace:'nowrap', textAlign:'center', pointerEvents:'none', zIndex:50,
+        transform:'translateX(-50%)', scale: '1', /* Keep scale at 1 to avoid blur */
       }}>
         <div style={{
           display:'inline-block', background:'rgba(255,255,255,0.95)',
           borderRadius:10, padding:'3px 12px 4px',
           boxShadow:'0 2px 14px rgba(0,0,0,0.55)',
           border:'1px solid rgba(218,93,101,0.3)',
+          backdropFilter:'blur(2px)',
         }}>
-          <div style={{color:'#5a0808',fontSize:11,fontWeight:800,lineHeight:1.3,letterSpacing:0.3}}>
+          <div style={{color:'#5a0808',fontSize:11,fontWeight:800,lineHeight:1.2,letterSpacing:0.4,
+            textRendering:'geometricPrecision', WebkitFontSmoothing:'antialiased'}}>
             {line1}
-            {line2 && <><br/><span style={{fontSize:10}}>{line2}</span></>}
+            {line2 && <><br/><span style={{fontSize:10,fontWeight:700}}>{line2}</span></>}
           </div>
         </div>
       </div>

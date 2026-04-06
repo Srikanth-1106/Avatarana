@@ -82,14 +82,23 @@ const RegistrationCounter = () => {
 
   useEffect(() => {
     const fetchCount = async () => {
-      const { count, error } = await supabase
+      const { data, error } = await supabase
         .from('registrations')
-        .select('*', { count: 'exact', head: true });
+        .select('phone, events, team_name');
 
-      if (!error && count !== null) {
-        setRegCount(count); // Showing real registration count
+      if (!error && data) {
+        // Deduplicate based on phone + events + team_name (same as AdminDashboard)
+        const uniqueRegsMap = new Map();
+        data.forEach((reg: any) => {
+          const eventStr = Array.isArray(reg.events) ? reg.events.slice().sort().join('|') : String(reg.events || '');
+          const key = `${reg.phone}-${eventStr}-${reg.team_name || ''}`;
+          if (!uniqueRegsMap.has(key)) {
+            uniqueRegsMap.set(key, reg);
+          }
+        });
+        setRegCount(uniqueRegsMap.size);
       } else {
-        setRegCount(0); // Fallback to 0
+        setRegCount(0);
       }
     };
     fetchCount();

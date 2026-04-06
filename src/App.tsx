@@ -17,26 +17,54 @@ import Contact from './pages/Contact';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import CurtainReveal from './components/CurtainReveal';
+import SponsorSplash from './components/SponsorSplash';
 import { AuthProvider } from './context/AuthContext';
 import { AdminProvider } from './context/AdminContext';
 import './App.css';
 
+// ── Sponsor data for the splash screen ──────────────────────────────────────
+const SPLASH_SPONSORS = [
+  { name: 'Aapaavani', logo: '/sponsor-logo-custom-removebg-preview.png', url: 'https://aapaavani.com/' },
+  { name: 'Brindavan Samaj', logo: '/brindavan-samaj-logo.png' },
+  { name: 'Kashi Sadana' },
+  { name: 'Ramakrishna Bhat Kodikanda' },
+  { name: 'Purushothama Bhat M' },
+  { name: 'Ananthashayana Bhat Adyethimar' },
+  { name: 'Pushpakumar Ailukunje' },
+  { name: 'Thara N Bhat Kannetikana' },
+  { name: 'Vishwanath Bhat' },
+  { name: 'Manjunatha Bhat Gumpe' },
+  { name: 'Ganapathi Bhat Balike' },
+  { name: 'Sooryanarayana Bhat Kalashraya' },
+  { name: 'Damodara Bhat Kannadka' },
+  { name: 'Sunil Angraje' },
+  { name: 'Karada Vishwa Bengaluru' },
+  { name: 'Jayaram Bhat Kuntalpady' },
+  { name: 'Chandra Mohana Kannadka' },
+];
+
 // Inner component that has access to the router's location
 function AppRoutes() {
-  const [showIntro, setShowIntro] = useState(true);
-  const [hasShownIntro, setHasShownIntro] = useState(false);
+  // Stage: 'curtain' → 'sponsors' → 'done'
+  const [introStage, setIntroStage] = useState<'curtain' | 'sponsors' | 'done'>('curtain');
 
-  // Show the intro only once per session (only if it hasn't been shown yet)
-  const shouldShowIntro = showIntro && !hasShownIntro;
-
-  const handleIntroComplete = () => {
-    setShowIntro(false);
-    setHasShownIntro(true);
-  };
+  const handleCurtainComplete = () => setIntroStage('sponsors');
+  const handleSponsorComplete = () => setIntroStage('done');
 
   return (
     <>
-      {shouldShowIntro && <CurtainReveal onComplete={handleIntroComplete} />}
+      {/* Dark cover keeps homepage invisible while any intro is playing */}
+      {introStage !== 'done' && (
+        <div style={{ position: 'fixed', inset: 0, background: '#0a0a0a', zIndex: 99990, pointerEvents: 'none' }} />
+      )}
+      {introStage === 'curtain' && <CurtainReveal onComplete={handleCurtainComplete} />}
+      {introStage === 'sponsors' && (
+        <SponsorSplash
+          sponsors={SPLASH_SPONSORS}
+          onComplete={handleSponsorComplete}
+          duration={35000}
+        />
+      )}
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
