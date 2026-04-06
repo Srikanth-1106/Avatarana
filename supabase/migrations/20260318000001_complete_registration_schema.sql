@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS registrations (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id uuid REFERENCES auth.users(id),
   full_name TEXT NOT NULL,
-  phone TEXT NOT NULL,
+  phone TEXT, -- NULL allowed for children registering without phone numbers
   age INT NOT NULL,
   region TEXT NOT NULL,
   category TEXT NOT NULL,

@@ -46,13 +46,22 @@ export default function Registration() {
     }
   }, [searchParams]);
 
+  // Helper function to check if registrant is a child
+  const isChild = () => {
+    const age = parseInt(formData.age);
+    return formData.category === 'Kids' || age < 18;
+  };
+
   const checkDuplicateRegistrations = async () => {
     // 1. Gather all events to check (Individual + Group)
     const selectedEventsData = selectedEvents.map(id => eventsData.find(e => e.id === id)).filter(Boolean);
 
     // 2. Form-level name consistency check (global across all selected events)
     const allFormPlayers = [];
-    allFormPlayers.push({ name: formData.name, phone: formData.phone, role: 'Captain' });
+    // Only add captain to duplicate check if they have a phone (not a child without phone)
+    if (formData.phone && formData.phone.length >= 10) {
+      allFormPlayers.push({ name: formData.name, phone: formData.phone, role: 'Captain' });
+    }
     for (const event of selectedEventsData) {
       if (event?.type === 'Group' && formData.teams[event.id]) {
         formData.teams[event.id].members.forEach((m, i) => {
@@ -97,22 +106,24 @@ export default function Registration() {
         if (!player.phone || player.phone.length < 10) continue;
 
         // DB Check 1: Check for DIFFERENT ZONE (Consistency) and NAME MISMATCH
-        // Check both as primary and as member
-        const { data: globalZoneCheck } = await supabase
-          .from('registrations')
-          .select('region, full_name, phone, team_members')
-          .or(`phone.eq.${player.phone},team_members.cs.[{"phone":"${player.phone}"}]`);
+        // Skip check for players without valid phone numbers
+        if (player.phone && player.phone.length >= 10) {
+          const { data: globalZoneCheck } = await supabase
+            .from('registrations')
+            .select('region, full_name, phone, team_members')
+            .or(`phone.eq.${player.phone},team_members.cs.[{"phone":"${player.phone}"}]`);
 
-        if (globalZoneCheck && globalZoneCheck.length > 0) {
-          // --- Name consistency check --- (Removed to allow coordinators/managers to register for multiple people)
-          
-          // --- Zone consistency check ---
-          const firstExisting = globalZoneCheck[0];
-          const currentZoneName = zonesData.find(z => z.id === formData.zone)?.displayName || formData.zone;
-          
-          if (firstExisting.region && firstExisting.region !== formData.zone && firstExisting.region !== currentZoneName) {
-            const existingZoneName = zonesData.find(z => z.id === firstExisting.region)?.displayName || firstExisting.region;
-            return `${player.role} (${player.name}) is already associated with zone "${existingZoneName}". They cannot register under a different zone ("${currentZoneName}"). A player can only represent one zone across all events.`;
+          if (globalZoneCheck && globalZoneCheck.length > 0) {
+            // --- Name consistency check --- (Removed to allow coordinators/managers to register for multiple people)
+            
+            // --- Zone consistency check ---
+            const firstExisting = globalZoneCheck[0];
+            const currentZoneName = zonesData.find(z => z.id === formData.zone)?.displayName || formData.zone;
+            
+            if (firstExisting.region && firstExisting.region !== formData.zone && firstExisting.region !== currentZoneName) {
+              const existingZoneName = zonesData.find(z => z.id === firstExisting.region)?.displayName || firstExisting.region;
+              return `${player.role} (${player.name}) is already associated with zone "${existingZoneName}". They cannot register under a different zone ("${currentZoneName}"). A player can only represent one zone across all events.`;
+            }
           }
         }
 
@@ -181,7 +192,8 @@ export default function Registration() {
             throw new Error(`Team name is required for ${event.name}.`);
           }
 
-          const filledMembers = team.members.filter(m => m.name.trim() && m.phone.trim());
+          // For team members, name is required but phone is optional for children
+          const filledMembers = team.members.filter(m => m.name.trim());
           const totalPlayers = filledMembers.length + 1; // +1 for Captain
 
           if (totalPlayers < (event.minPlayers || 1)) {
@@ -197,10 +209,10 @@ export default function Registration() {
              throw new Error(`Rangoli requires exactly 2 participants per team.`);
           }
 
-          // Check for valid phone numbers of filled members
-          const invalidPhone = filledMembers.find(m => m.phone.length < 10);
+          // Check for valid phone numbers only for non-children members
+          const invalidPhone = filledMembers.find(m => m.phone && m.phone.length > 0 && m.phone.length < 10);
           if (invalidPhone) {
-            throw new Error(`Please provide a valid 10-digit phone number for ${invalidPhone.name}.`);
+            throw new Error(`Please provide a valid 10-digit phone number for ${invalidPhone.name} or leave it blank if they don't have one.`);
           }
         }
       }
@@ -214,6 +226,11 @@ export default function Registration() {
         throw new Error('Please enter a valid age.');
       }
 
+      // Validate phone based on age/category (required for non-children, optional for children)
+      if (!isChild() && (!formData.phone || formData.phone.length < 10)) {
+        throw new Error('Phone number is required for adults. Please provide a valid 10-digit number.');
+      }
+
       const zoneNameForDb = zonesData.find(z => z.id === formData.zone)?.displayName || formData.zone || null;
 
       const registrationRecords = [];
@@ -225,7 +242,7 @@ export default function Registration() {
         registrationRecords.push({
           user_id: user?.id || null,
           full_name: formData.name,
-          phone: formData.phone,
+          phone: formData.phone || null, // Allow null for children
           age: parsedAge,
           region: zoneNameForDb,
           category: formData.category,
@@ -240,7 +257,7 @@ export default function Registration() {
         registrationRecords.push({
           user_id: user?.id || null,
           full_name: formData.name,
-          phone: formData.phone,
+          phone: formData.phone || null, // Allow null for children
           age: parsedAge,
           region: zoneNameForDb,
           category: formData.category,
@@ -762,7 +779,13 @@ export default function Registration() {
               </div>
               <div className="footer-text">
                 <p>Present this at the registration desk</p>
-                <small>Our regional lead will contact you at {formData.phone}</small>
+                <small>
+                  {formData.phone ? (
+                    <>Our regional lead will contact you at {formData.phone}</>
+                  ) : (
+                    <>Our regional lead will contact you via your parent's contact information</>
+                  )}
+                </small>
               </div>
             </div>
           </div>
@@ -1338,7 +1361,9 @@ export default function Registration() {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="phone">Phone Number</label>
+                  <label htmlFor="phone">
+                    Phone Number {!isChild() ? <span style={{ color: 'var(--primary)' }}>*</span> : <span style={{ color: 'var(--secondary)', fontSize: '0.8rem' }}>(Optional for children)</span>}
+                  </label>
                   <div className="input-wrapper">
                     <Phone className="input-icon" size={18} />
                     <input
@@ -1346,10 +1371,10 @@ export default function Registration() {
                       id="phone"
                       name="phone"
                       autoComplete="tel"
-                      required
+                      required={!isChild()}
                       maxLength={10}
                       pattern="[0-9]{10}"
-                      placeholder="10-digit number"
+                      placeholder={isChild() ? "Optional" : "10-digit number"}
                       value={formData.phone}
                       onChange={e => {
                         const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
@@ -1360,6 +1385,11 @@ export default function Registration() {
                   {formData.phone.length > 0 && formData.phone.length < 10 && (
                     <span className="field-hint" style={{ fontSize: '0.7rem', color: 'var(--primary)', opacity: 0.8, marginTop: '0.25rem', display: 'block' }}>
                       {10 - formData.phone.length} more digit{10 - formData.phone.length !== 1 ? 's' : ''} needed
+                    </span>
+                  )}
+                  {isChild() && formData.phone.length === 0 && (
+                    <span className="field-hint" style={{ fontSize: '0.7rem', color: 'var(--secondary)', opacity: 0.7, marginTop: '0.25rem', display: 'block' }}>
+                      Children can register without a phone number
                     </span>
                   )}
                 </div>
@@ -1508,7 +1538,7 @@ export default function Registration() {
                       </div>
 
                       {teamData.members.map((member, idx) => {
-                        const isFilled = member.name.trim() && member.phone.trim() && member.phone.length >= 10;
+                        const isFilled = member.name.trim() && (member.phone.length >= 10 || member.phone.length === 0);
                         return (
                           <div key={idx} className={`member-row animate-fade-in ${isFilled ? 'filled' : ''}`}>
                             <div className="member-number">
@@ -1524,7 +1554,7 @@ export default function Registration() {
                               />
                               <input
                                 type="tel"
-                                placeholder="10-digit number"
+                                placeholder="Phone (optional if no number)"
                                 maxLength={10}
                                 pattern="[0-9]{10}"
                                 value={member.phone}
@@ -1533,6 +1563,7 @@ export default function Registration() {
                                   updateTeamMember(eventId, idx, 'phone', digits);
                                 }}
                                 className="compact-input"
+                                title="Leave blank if team member doesn't have a phone number"
                               />
                             </div>
                             {teamData.members.length > (event.minPlayers || 1) - 1 && (
