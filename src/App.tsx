@@ -46,7 +46,7 @@ const SPLASH_SPONSORS = [
 // Inner component that has access to the router's location
 function AppRoutes() {
   // Stage: 'curtain' → 'sponsors' → 'done'
-  const [introStage, setIntroStage] = useState<'curtain' | 'sponsors' | 'done'>('curtain');
+  const [introStage, setIntroStage] = useState<'curtain' | 'sponsors' | 'done'>('sponsors');
 
   const handleCurtainComplete = () => setIntroStage('sponsors');
   const handleSponsorComplete = () => setIntroStage('done');
