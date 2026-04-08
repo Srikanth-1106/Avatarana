@@ -52,23 +52,6 @@ export default function Registration() {
     return formData.category === 'Kids' || age < 18;
   };
 
-  // Helper function to check if any selected event is a group event
-  const hasGroupEvent = () => {
-    return selectedEvents.some(id => {
-      const event = eventsData.find(e => e.id === id);
-      return event?.type === 'Group';
-    });
-  };
-
-  // Helper function to check if only individual events are selected
-  const hasOnlyIndividualEvents = () => {
-    if (selectedEvents.length === 0) return false;
-    return selectedEvents.every(id => {
-      const event = eventsData.find(e => e.id === id);
-      return event?.type === 'Individual';
-    });
-  };
-
   const checkDuplicateRegistrations = async () => {
     // 1. Gather all events to check (Individual + Group)
     const selectedEventsData = selectedEvents.map(id => eventsData.find(e => e.id === id)).filter(Boolean);
