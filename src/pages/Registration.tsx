@@ -52,6 +52,23 @@ export default function Registration() {
     return formData.category === 'Kids' || age < 18;
   };
 
+  // Helper function to check if any selected event is a group event
+  const hasGroupEvent = () => {
+    return selectedEvents.some(id => {
+      const event = eventsData.find(e => e.id === id);
+      return event?.type === 'Group';
+    });
+  };
+
+  // Helper function to check if only individual events are selected
+  const hasOnlyIndividualEvents = () => {
+    if (selectedEvents.length === 0) return false;
+    return selectedEvents.every(id => {
+      const event = eventsData.find(e => e.id === id);
+      return event?.type === 'Individual';
+    });
+  };
+
   const checkDuplicateRegistrations = async () => {
     // 1. Gather all events to check (Individual + Group)
     const selectedEventsData = selectedEvents.map(id => eventsData.find(e => e.id === id)).filter(Boolean);
@@ -113,7 +130,7 @@ export default function Registration() {
       for (const player of playersForThisSport) {
         if (!player.phone || player.phone.length < 10) continue;
 
-        // DB Check 1: Check for DIFFERENT ZONE (Consistency) and PARENT-CHILD PHONE VALIDATION
+        // DB Check 1: Check for DIFFERENT ZONE (Consistency)
         if (player.phone && player.phone.length >= 10) {
           const { data: globalZoneCheck } = await supabase
             .from('registrations')
@@ -129,51 +146,11 @@ export default function Registration() {
               const existingZoneName = zonesData.find(z => z.id === firstExisting.region)?.displayName || firstExisting.region;
               return `${player.role} (${player.name}) is already associated with zone "${existingZoneName}". They cannot register under a different zone ("${currentZoneName}"). A player can only represent one zone across all events.`;
             }
-
-            // --- Parent-Child Phone Validation ---
-            // Allow same phone if BOTH are children OR if one is child and one is adult
-            const existingIsChild = firstExisting.category === 'Kids' || firstExisting.age < 18;
-            const currentIsChild = isChild();
-            const allowSamePhone = (currentIsChild && existingIsChild) || (currentIsChild && !existingIsChild) || (!currentIsChild && existingIsChild);
-            
-            if (!allowSamePhone && firstExisting.phone === player.phone) {
-              return `Phone number ${player.phone} is already registered for ${firstExisting.full_name}. Same phone numbers are only allowed for children and parents. Please use a different phone number.`;
-            }
           }
         }
       }
 
-      // 4. Simple cross-check within the current form (prevent duplicate phone unless both/one are children)
-      const phones = playersForThisSport.map(p => ({ phone: p.phone, isChild: p.isChild })).filter(p => p.phone && p.phone.length >= 10);
-      const phoneCounts = new Map();
-      for (const p of phones) {
-        if (!phoneCounts.has(p.phone)) {
-          phoneCounts.set(p.phone, []);
-        }
-        phoneCounts.get(p.phone).push(p.isChild);
-      }
-      
-      for (const [phone, childStatuses] of phoneCounts.entries()) {
-        if (childStatuses.length > 1) {
-          // Allow if:
-          // 1. Both are children (multiple siblings)
-          // 2. One child and one adult (parent-child)
-          // Block if both are adults
-          const allChildren = childStatuses.every((status: boolean) => status === true);
-          const hasChild = childStatuses.includes(true);
-          const hasAdult = childStatuses.includes(false);
-          const allAdults = childStatuses.every((status: boolean) => status === false);
-          
-          if (allAdults) {
-            return `Duplicate phone numbers detected in the ${event.name} roster (${phone}). Same phone numbers are only allowed for children and parents. Adults must have unique phone numbers.`;
-          }
-          
-          // Allow: two children OR one child + one adult
-          if (!allChildren && !(hasChild && hasAdult)) {
-            return `Duplicate phone numbers detected in the ${event.name} roster (${phone}). Please ensure each adult player has a unique number.`;
-          }
-        }
-      }
+      // 4. Phone number constraint removed - allowing multiple registrations with same phone number
     }
 
     return null;
@@ -261,9 +238,11 @@ export default function Registration() {
         throw new Error('Please enter a valid age.');
       }
 
-      // Validate phone based on age/category (required for non-children, optional for children)
+      // Validate phone based on age:
+      // - Phone REQUIRED for all adults (individual or group events) to enforce zone consistency
+      // - Phone OPTIONAL for children
       if (!isChild() && (!formData.phone || formData.phone.length < 10)) {
-        throw new Error('Phone number is required for adults. Please provide a valid 10-digit number.');
+        throw new Error('Phone number is required for adults to prevent registration across multiple zones. Please provide a valid 10-digit number.');
       }
 
       const zoneNameForDb = zonesData.find(z => z.id === formData.zone)?.displayName || formData.zone || null;
@@ -1638,7 +1617,7 @@ export default function Registration() {
                 marginBottom: '1.5rem'
               }}>
                 <Info size={18} style={{ flexShrink: 0, opacity: 0.8 }} />
-                <span>For team events, only the <strong style={{ color: 'var(--primary)', fontWeight: 700 }}>team captain</strong> should register.</span>
+                <span>For <strong style={{ color: 'var(--primary)', fontWeight: 700 }}>team/group events</strong>, only the <strong style={{ color: 'var(--primary)', fontWeight: 700 }}>team captain</strong> should register. Adults must provide phone number to prevent registration across multiple zones.</span>
               </div>
 
               <div className="events-selection-grid">
@@ -1658,7 +1637,7 @@ export default function Registration() {
                             background: 'rgba(218, 93, 101, 0.15)', color: 'var(--primary)',
                             border: '1px solid rgba(218, 93, 101, 0.2)',
                             whiteSpace: 'nowrap'
-                          }}>Captain Only</span>
+                          }}>Team Event - Captain Only</span>
                         )}
                       </div>
                       {selectedEvents.includes(event.id) && <Check size={14} className="check-icon" style={{ flexShrink: 0 }} />}
