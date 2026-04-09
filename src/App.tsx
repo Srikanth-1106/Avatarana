@@ -25,7 +25,7 @@ import './App.css';
 // ── Sponsor data for the splash screen ──────────────────────────────────────
 const SPLASH_SPONSORS = [
   { name: 'Aapaavani', logo: '/sponsor-logo-custom-removebg-preview.png', url: 'https://aapaavani.com/' },
-  { name: 'Brindavan Samaj', logo: '/brindavan-samaj-logo.png' },
+  { name: 'Karada Brahmana Samaja Mangalore', logo: '/brindavan-samaj-logo.png' },
   { name: 'Kashi Sadana' },
   { name: 'Ramakrishna Bhat Kodikanda' },
   { name: 'Purushothama Bhat M' },

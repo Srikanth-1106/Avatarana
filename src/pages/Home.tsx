@@ -132,7 +132,7 @@ export default function Home() {
   const allSponsors: SponsorItem[] = [
     { name: 'Aapaavani', type: 'image', value: '/sponsor-logo-custom-removebg-preview.png', height: '90px' },
     { name: 'Kashi Sadana', type: 'name', value: 'Kashi Sadana' },
-    { name: 'Brindavan Samaj', type: 'image', value: '/brindavan-samaj-logo.png', height: '90px' },
+    { name: 'Karada Brahmana Samaja Mangalore', type: 'image', value: '/brindavan-samaj-logo.png', height: '90px' },
     { name: 'Ramakrishna Bhat Kodikanda', type: 'name', value: 'Ramakrishna Bhat Kodikanda' },
     { name: 'Purushothama Bhat M', type: 'name', value: 'Purushothama Bhat M' },
     { name: 'Ananthashayana Bhat Adyethimar', type: 'name', value: 'Ananthashayana Bhat Adyethimar' },

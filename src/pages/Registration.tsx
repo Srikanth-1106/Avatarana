@@ -204,18 +204,10 @@ export default function Registration() {
              throw new Error(`Rangoli requires exactly 2 participants per team.`);
           }
 
-          // Phone is REQUIRED for all adult members in group events
-          if (!isChild()) {
-            const missingPhone = filledMembers.find(m => !m.phone || m.phone.length < 10);
-            if (missingPhone) {
-              throw new Error(`Phone number is required for ${missingPhone.name || 'all players'}. Adults must provide a valid 10-digit phone number.`);
-            }
-          } else {
-            // For children, if phone is provided it must be valid
-            const invalidPhone = filledMembers.find(m => m.phone && m.phone.length > 0 && m.phone.length < 10);
-            if (invalidPhone) {
-              throw new Error(`Please provide a valid 10-digit phone number for ${invalidPhone.name} or leave it blank if they don't have one.`);
-            }
+          // Check for valid phone numbers only for non-children members
+          const invalidPhone = filledMembers.find(m => m.phone && m.phone.length > 0 && m.phone.length < 10);
+          if (invalidPhone) {
+            throw new Error(`Please provide a valid 10-digit phone number for ${invalidPhone.name} or leave it blank if they don't have one.`);
           }
         }
       }
@@ -1379,7 +1371,7 @@ export default function Registration() {
                       required={!isChild()}
                       maxLength={10}
                       pattern="[0-9]{10}"
-                      placeholder={isChild() ? "Phone (Optional)" : "Phone Number (Required)"}
+                      placeholder={isChild() ? "Optional" : "10-digit number"}
                       value={formData.phone}
                       onChange={e => {
                         const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
@@ -1559,7 +1551,7 @@ export default function Registration() {
                               />
                               <input
                                 type="tel"
-                                placeholder={isChild() ? "Phone (optional)" : "Phone Number (Required)"}
+                                placeholder="Phone (optional if no number)"
                                 maxLength={10}
                                 pattern="[0-9]{10}"
                                 value={member.phone}
@@ -1568,7 +1560,7 @@ export default function Registration() {
                                   updateTeamMember(eventId, idx, 'phone', digits);
                                 }}
                                 className="compact-input"
-                                title={isChild() ? "Leave blank if team member doesn't have a phone number" : "10-digit phone number is required for adults"}
+                                title="Leave blank if team member doesn't have a phone number"
                               />
                             </div>
                             {teamData.members.length > (event.minPlayers || 1) - 1 && (
