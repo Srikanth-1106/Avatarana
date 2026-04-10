@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
-import { CheckCircle2, User, Phone, Calendar, Grid, Trophy, Sparkles, Check, Info, Loader2, Camera, Upload, Trash2, FileText, Globe, Download, ArrowDown, ChevronRight } from 'lucide-react';
+import { CheckCircle2, User, Phone, Calendar, Grid, Trophy, Sparkles, Check, Info, Loader2, Camera, Upload, Trash2, Lock, FileText, Globe, Download, ArrowDown, ChevronRight } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { eventsData } from '../data/eventsData';
 import { zonesData } from '../data/zonesData';
@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
 import { AnimatedSection } from '../components/AnimatedSection';
+import { REGISTRATION_OPEN } from '../data/config';
 
 export default function Registration() {
   const [submitted, setSubmitted] = useState(false);
@@ -606,6 +607,165 @@ export default function Registration() {
     if (!formData.category) return true;
     return event.category === formData.category || event.category === 'General';
   });
+  if (!REGISTRATION_OPEN) {
+    return (
+      <div className="page-container registration-closed-view">
+        <div className="background-decorations">
+          <div className="decor-blob blob-1"></div>
+          <div className="decor-blob blob-2" style={{ background: 'var(--tertiary)' }}></div>
+        </div>
+
+        <motion.div
+          className="closed-content glass-card"
+          initial={{ scale: 0.9, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          transition={{ type: "spring", bounce: 0.4, duration: 0.8 }}
+        >
+          <div className="closed-header">
+            <div className="icon-wrapper">
+              <Calendar size={60} className="closed-icon" />
+              <div className="lock-badge">
+                <Lock size={20} />
+              </div>
+            </div>
+            <h1 className="title highlight">Registration Closed</h1>
+            <p className="subtitle">Thank you for your overwhelming interest! Registration for AVATARANA 2026 is now officially closed.</p>
+          </div>
+
+          <div className="closed-info">
+            <div className="info-stat">
+              <span className="stat-label">Event Date</span>
+              <span className="stat-value">April 18, 2026</span>
+            </div>
+            <div className="info-stat">
+              <span className="stat-label">Status</span>
+              <span className="stat-value secondary-color">Closed</span>
+            </div>
+          </div>
+
+          <div className="closed-actions">
+            <Link to="/events" className="btn-primary">
+              View Event Schedule <ChevronRight size={20} />
+            </Link>
+            <Link to="/" className="btn-secondary">
+              Back to Home
+            </Link>
+          </div>
+
+          <div className="contact-notice">
+            <p>If you have already registered and need to make changes, please contact your regional coordinator.</p>
+          </div>
+        </motion.div>
+
+        <style>{`
+          .registration-closed-view {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+          }
+          .closed-content {
+            max-width: 600px;
+            width: 100%;
+            padding: 4rem 3rem;
+            text-align: center;
+            background: rgba(14, 16, 21, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(218, 93, 101, 0.2);
+            border-radius: 32px;
+            position: relative;
+            z-index: 10;
+          }
+          .closed-header .icon-wrapper {
+            position: relative;
+            width: fit-content;
+            margin: 0 auto 2.5rem;
+          }
+          .closed-icon {
+            color: var(--primary);
+            filter: drop-shadow(0 0 15px rgba(218, 93, 101, 0.4));
+          }
+          .lock-badge {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            background: var(--bg-main);
+            color: var(--primary);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--primary);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+          }
+          .closed-header .title {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 800;
+          }
+          .closed-header .subtitle {
+            font-size: 1.15rem;
+            color: var(--muted);
+            line-height: 1.6;
+            margin-bottom: 3rem;
+          }
+          .closed-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 3.5rem;
+            padding: 2rem;
+            background: rgba(255,255,255,0.03);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+          }
+          .info-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+          }
+          .stat-label {
+            font-size: 0.85rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 700;
+          }
+          .stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+          }
+          .secondary-color {
+            color: var(--primary);
+          }
+          .closed-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 2.5rem;
+          }
+          .closed-actions .btn-primary {
+            justify-content: center;
+            padding: 1.25rem;
+          }
+          .contact-notice {
+            font-size: 0.95rem;
+            color: var(--muted);
+            opacity: 0.8;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+          }
+        `}</style>
+      </div>
+    );
+  }
+
   if (submitted) {
     return (
       <div className="page-container success-view">

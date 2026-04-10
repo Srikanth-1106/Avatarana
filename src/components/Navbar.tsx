@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Sparkles, PartyPopper } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import { REGISTRATION_OPEN } from '../data/config';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -152,13 +153,24 @@ export default function Navbar() {
                 {link.name}
               </Link>
             ))}
-            <Link 
-              to="/register" 
-              className="btn-primary mobile-btn"
-              onClick={() => setIsOpen(false)}
-            >
-              Register Now
-            </Link>
+            {REGISTRATION_OPEN ? (
+              <Link 
+                to="/register" 
+                className="btn-primary mobile-btn"
+                onClick={() => setIsOpen(false)}
+              >
+                Register Now
+              </Link>
+            ) : (
+              <Link 
+                to="/events" 
+                className="btn-primary mobile-btn"
+                onClick={() => setIsOpen(false)}
+                style={{ background: 'var(--muted)', borderColor: 'var(--muted)', opacity: 0.8 }}
+              >
+                Registration Closed
+              </Link>
+            )}
           </div>
         )}
       </motion.nav>

@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedSection } from '../components/AnimatedSection';
 import confetti from 'canvas-confetti';
+import { REGISTRATION_OPEN } from '../data/config';
 
 
 // SVG Ring Component
@@ -450,9 +451,15 @@ export default function Home() {
       {/* Register & Events CTA - Above Footer */}
       <AnimatedSection className="bottom-cta-section" direction="up">
         <div className="hero-actions" style={{ justifyContent: 'center', marginBottom: '2rem' }}>
-          <Link to="/register" className="btn-primary">
-            Register Now <ArrowRight size={20} />
-          </Link>
+          {REGISTRATION_OPEN ? (
+            <Link to="/register" className="btn-primary">
+              Register Now <ArrowRight size={20} />
+            </Link>
+          ) : (
+            <div className="btn-primary disabled" style={{ opacity: 0.7, cursor: 'not-allowed', background: 'var(--muted)', borderColor: 'var(--muted)', color: 'var(--bg-main)' }}>
+              Registration Closed
+            </div>
+          )}
           <Link to="/events" className="btn-secondary">
             View Events
           </Link>

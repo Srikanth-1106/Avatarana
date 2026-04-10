@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { eventsData } from '../data/eventsData';
-import { Medal } from 'lucide-react';
+import { Medal, Lock } from 'lucide-react';
+import { REGISTRATION_OPEN } from '../data/config';
 
 export default function Events() {
   const [activeCategory, setActiveCategory] = useState<string>('All');
@@ -51,7 +52,13 @@ export default function Events() {
                 <span>Points: 1st ({event.points.first}) | 2nd ({event.points.second}) {event.points.third && `| 3rd (${event.points.third})`}</span>
               </div>
               <div className="event-footer">
-                <span className="register-now">Register for this event →</span>
+                <span className={`register-now ${!REGISTRATION_OPEN ? 'closed' : ''}`}>
+                  {REGISTRATION_OPEN ? 'Register for this event →' : (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Lock size={14} /> Registration Closed
+                    </span>
+                  )}
+                </span>
               </div>
             </div>
           </Link>
@@ -115,6 +122,10 @@ export default function Events() {
           font-weight: 700;
           color: var(--primary);
           transition: opacity 0.2s;
+        }
+        .register-now.closed {
+          color: var(--muted);
+          opacity: 0.6;
         }
         .event-card-link:hover .register-now {
           opacity: 0.8;
