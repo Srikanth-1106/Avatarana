@@ -1,165 +1,256 @@
 import { useState } from 'react';
-import { Clock, MapPin, ChevronDown, ChevronUp, Calendar, Lock } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { MapPin, FileText, Download, Image as ImageIcon, Users, Trophy, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Schedule() {
-  const [activeDay, setActiveDay] = useState(1);
-  const [expandedItem, setExpandedItem] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<'fixtures' | 'womens'>('fixtures');
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  // Check if page should be locked (before April 15, 2026)
-  const unlockDate = new Date('2026-04-15');
-  const currentDate = new Date();
-  const isLocked = currentDate < unlockDate;
-
-  if (isLocked) {
-    return (
-      <div className="page-container">
-        <motion.div
-          className="glass-card"
-          style={{
-            maxWidth: '600px',
-            margin: '5rem auto',
-            padding: '3rem',
-            textAlign: 'center',
-            background: 'linear-gradient(135deg, rgba(218, 93, 101, 0.1), rgba(245, 194, 144, 0.1))',
-            border: '2px solid var(--primary)',
-            borderRadius: '15px',
-          }}
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Lock size={64} style={{ margin: '0 auto 1.5rem', color: 'var(--primary)' }} />
-          <h2 style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary)', marginBottom: '1rem' }}>
-            📅 Schedule Unlocking Soon!
-          </h2>
-          <p style={{
-            fontSize: '1.1rem',
-            color: 'var(--text-secondary)',
-            marginBottom: '1.5rem',
-            lineHeight: '1.8',
-          }}>
-            This section will be opened once the registration closes — stay tuned! 🚀
-          </p>
-          <p style={{
-            fontSize: '0.95rem',
-            color: 'var(--muted)',
-            marginBottom: '1rem',
-          }}>
-            Get ready for an action-packed schedule! Check back after April 15th to see the complete timeline of events.
-          </p>
-          <div style={{
-            marginTop: '2rem',
-            padding: '1rem',
-            background: 'rgba(218, 93, 101, 0.2)',
-            borderRadius: '8px',
-            color: 'var(--primary)',
-            fontWeight: '600',
-          }}>
-            🗓️ Unlock Date: April 15, 2026
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
-
-
-
-
-
-  const day1Data = [
-    { time: '08:00 AM', event: 'Opening Ceremony & Torch Relay', location: 'Main Stadium', category: 'General', details: 'A grand kick-off featuring traditional lamp lighting and our symbolic community torch relay through the arena.' },
-    { time: '09:00 AM', event: 'Kids 50m & 100m Races', location: 'Track A', category: 'Kids', details: 'Speed trials for our youngest stars. Categories divided into LKG-1st, 2nd-5th, and 6th-10th Std.' },
-    { time: '10:30 AM', event: 'Men\'s Volleyball Preliminaries', location: 'Court 1 & 2', category: 'Men', details: 'Regional teams battle it out in the qualifying rounds. Best of 3 sets.' },
-    { time: '11:00 AM', event: 'Women\'s Throwball & Dodgeball', location: 'Court 3 & 4', category: 'Women', details: 'High-energy team sports for women. Come cheer for your zone!' },
-    { time: '01:00 PM', event: 'Lunch Break & Community Gather', location: 'Food Court', category: 'General', details: 'A perfect time for socializing and enjoying authentic Karada community cuisine.' },
-    { time: '02:00 PM', event: 'Senior Citizens Fast Walking', location: 'Track B', category: 'Senior', details: 'A display of fitness and spirit by our revered elders. Strict walking rules apply!' },
-    { time: '03:30 PM', event: 'Cooking Without Fire', location: 'Hall A', category: 'General', details: 'Creative culinary competition. Participants craft amazing dishes without any heat source.' },
-    { time: '05:00 PM', event: 'Tug of War & Lagori Finals', location: 'Main Arena', category: 'Men/Women', details: 'The grand finals for the most traditional and exciting team events.' },
-    { time: '07:30 PM', event: 'Closing Ceremony & Prizes', location: 'Main Stage', category: 'General', details: 'Awarding the Champions of Day 1 and cultural performances.' },
+  const womensThrowballData = [
+    { time: '07:20 AM', event: 'Match 1: Power Smashers Mangalore vs Rukumai Tanda', location: 'Throwball Court' },
+    { time: '07:40 AM', event: 'Match 2: Parnikas of Padre vs Shakti Strikers Mangalore', location: 'Throwball Court' },
+    { time: '08:00 AM', event: 'Match 3: Thunder Queens (Agalpady) vs Ghate Nidpalli Queens', location: 'Throwball Court' },
+    { time: '08:20 AM', event: 'Match 4: Queens Agalpady vs SVR Gundayadka A', location: 'Throwball Court' },
+    { time: '08:40 AM', event: 'Break (Lagori Qualifiers)', location: 'Shared Ground' },
+    { time: '09:40 AM', event: 'Semi Final 1: Winner Match 1 vs Winner Match 2', location: 'Throwball Court' },
+    { time: '10:00 AM', event: 'Semi Final 2: Winner Match 3 vs Winner Match 4', location: 'Throwball Court' },
+    { time: '10:20 AM', event: 'Throwball FINAL', location: 'Throwball Court' },
   ];
 
-  const day2Data = [
-    { time: '09:00 AM', event: 'Cricket Championship Finals', location: 'Main Arena', category: 'Men', details: 'The final showdown between the top two regional cricket teams.' },
-    { time: '11:00 AM', event: 'Kannada Crossword Challenge', location: 'Hall B', category: 'Senior', details: 'A mental agility contest featuring the beloved "Padabandha" puzzles.' },
-    { time: '01:00 PM', event: 'Grand Feast (Bhojana)', location: 'Food Court', category: 'General', details: 'Traditional community meal for all registered participants and guests.' },
-    { time: '03:00 PM', event: 'Cultural Showcase & Talent Hunt', location: 'Grand Ballroom', category: 'General', details: 'Music, dance, and variety performances by talented members of our community.' },
-    { time: '06:00 PM', event: 'Grand Finale & Championship Trophy', location: 'Main Arena', category: 'General', details: 'The ultimate award ceremony where the Overall Championship zone is crowned!' },
+  const womensLagoriData = [
+    { time: '08:00 AM', event: 'Lagori Match 1: Karkala Queens vs Mangalore A', location: 'Shared Ground' },
+    { time: '08:20 AM', event: 'Lagori Match 2: Vijaya vs Parnikas of Padre', location: 'Shared Ground' },
+    { time: '08:40 AM', event: 'Lagori Match 3: Thunder Queens vs Shakti Strikers', location: 'Shared Ground' },
+    { time: '09:00 AM', event: 'Lagori Match 4: Queens Agalpady vs Team C Mangalore', location: 'Shared Ground' },
+    { time: '09:20 AM', event: 'Lagori Match 5: SVR Gundayadka A vs Ghate Nidpalli', location: 'Shared Ground' },
+    { time: '09:40 AM', event: 'Dodgeball Match 1: Mangalore Queens C vs Karkala Queens', location: 'Shared Ground' },
+    { time: '09:55 AM', event: 'Dodgeball Match 2: Mangalore Rising Stars vs SVR Gundayadka B', location: 'Shared Ground' },
+    { time: '10:10 AM', event: 'Break (Watch Throwball Final)', location: 'Main Arena' },
+    { time: '10:40 AM', event: 'Lagori Semi Final 1', location: 'Shared Ground' },
+    { time: '11:00 AM', event: 'Lagori Semi Final 2', location: 'Shared Ground' },
+    { time: '11:20 AM', event: 'Lagori FINAL', location: 'Shared Ground' },
+    { time: '11:40 AM', event: 'Dodgeball Match 3: Thunder Queens vs SVR Gundayadka A', location: 'Shared Ground' },
+    { time: '12:00 PM', event: 'Cooking Without Fire', location: 'Main Hall', details: 'All registered participants' },
+    { time: '12:45 PM', event: 'Dodgeball Match 4: Queens Agalpady vs Ghate Nidpalli Queens', location: 'Shared Ground' },
+    { time: '01:00 PM', event: 'Dodgeball Match 5: Team B Mangalore vs Parnikas of Padre', location: 'Shared Ground' },
+    { time: '01:15 PM', event: 'Dodgeball Semi Final 1', location: 'Shared Ground' },
+    { time: '01:30 PM', event: 'Dodgeball Semi Final 2', location: 'Shared Ground' },
+    { time: '01:45 PM', event: 'Dodgeball FINAL', location: 'Shared Ground' },
+    { time: '02:00 PM', event: 'Rangoli Event', location: 'Main Hall' },
   ];
 
-  const currentData = activeDay === 1 ? day1Data : day2Data;
+  const files = [
+    { name: "Avatarana_Playbook.pdf", size: "1.1 MB", type: "pdf", title: "Avatarana 2026 Playbook" },
+    { name: "Volleyball_Tournament_Schedule.pdf", size: "524 KB", type: "pdf", title: "Volleyball Fixtures & Rules" },
+    { name: "Womens_Playbook.pdf", size: "916 KB", type: "pdf", title: "Women's Events Playbook" },
+    { name: "Womens_Schedule.pdf", size: "546 KB", type: "pdf", title: "Women's Specific Schedule" },
+  ];
+
+  const images = [
+    { url: "/fixtures/Event_Schedule.jpeg", title: "Main Event Timeline" },
+    { url: "/fixtures/Cricket_Fixtures.jpeg", title: "Cricket Fixtures" },
+    { url: "/fixtures/Women_Sports_Tournaments.jpeg", title: "Women's Snapshot" },
+    { url: "/fixtures/Cricket_Snapshot.png", title: "Cricket Guide" },
+  ];
 
   return (
-    <div className="page-container" style={{maxWidth: '850px'}}>
+    <div className="page-container" style={{maxWidth: '1000px'}}>
       <div className="section-header center-align">
-        <h1 className="title" style={{fontSize: '3rem'}}>Event Schedule</h1>
-        <p className="subtitle" style={{margin: '1rem auto 2rem'}}>Plan your perfect festival day. Click events for more info.</p>
+        <motion.h1 
+          className="title" 
+          style={{fontSize: '3.5rem', marginBottom: '0.5rem'}}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          Event Schedule & Fixtures
+        </motion.h1>
+        <p className="subtitle" style={{margin: '1rem auto 2rem', fontSize: '1.2rem'}}>
+          Complete timeline, playbooks, and match fixtures for Avatarana 2026.
+        </p>
         
-        <div className="timeline-tabs" style={{marginBottom: '3rem'}}>
+        <div className="nav-pills">
           <button 
-            className={`tab-btn ${activeDay === 1 ? 'active' : ''}`}
-            onClick={() => { setActiveDay(1); setExpandedItem(null); }}
+            className={`pill-btn ${activeTab === 'fixtures' ? 'active' : ''}`}
+            onClick={() => setActiveTab('fixtures')}
           >
-            <Calendar size={18} style={{marginRight: '0.5rem', verticalAlign: 'middle'}} />
-            April 18 (Day 1)
+            <Trophy size={18} /> Playbooks & Info
           </button>
           <button 
-            className={`tab-btn ${activeDay === 2 ? 'active' : ''}`}
-            onClick={() => { setActiveDay(2); setExpandedItem(null); }}
+            className={`pill-btn ${activeTab === 'womens' ? 'active' : ''}`}
+            onClick={() => setActiveTab('womens')}
           >
-            <Calendar size={18} style={{marginRight: '0.5rem', verticalAlign: 'middle'}} />
-            April 19 (Day 2)
+            <Users size={18} /> Women's Fixtures
           </button>
         </div>
-        
-        <div className="divider" style={{margin: '0 auto'}}></div>
       </div>
 
-      <div className="schedule-timeline">
-        {currentData.map((item, index) => (
-          <div 
-            key={index} 
-            className={`timeline-item glass-card expandable ${expandedItem === index ? 'active-item' : ''}`}
-            onClick={() => setExpandedItem(expandedItem === index ? null : index)}
+      <AnimatePresence mode="wait">
+        {activeTab === 'womens' && (
+          <motion.div 
+            key="womens"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.3 }}
           >
-            <div className="time-block">
-              <Clock size={20} className="icon-secondary" />
-              <span className="time-text">{item.time}</span>
-            </div>
-            
-            <div className="event-details">
-              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                <h3 className="event-name">{item.event}</h3>
-                {expandedItem === index ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-              </div>
-              <div className="event-meta">
-                <span className="meta-item"><MapPin size={16} /> {item.location}</span>
-                <span className="meta-badge">{item.category}</span>
-              </div>
+            <div className="grid" style={{gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem'}}>
               
-              {expandedItem === index && (
-                <div className="event-details-expanded">
-                  {item.details}
+              <div className="glass-card" style={{padding: '2rem'}}>
+                <h3 style={{color: 'var(--primary)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.5rem'}}>
+                  <Trophy size={24} /> Throwball Court
+                </h3>
+                <div className="mini-timeline">
+                  {womensThrowballData.map((item, i) => (
+                    <div key={i} className="mini-item">
+                      <span className="mini-time">{item.time}</span>
+                      <div className="mini-content">
+                        <strong>{item.event}</strong>
+                        <span className="mini-location"><MapPin size={12}/> {item.location}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              )}
+              </div>
+
+              <div className="glass-card" style={{padding: '2rem'}}>
+                <h3 style={{color: 'var(--primary)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.5rem'}}>
+                  <Trophy size={24} /> Lagori & Dodgeball (Shared Ground)
+                </h3>
+                <div className="mini-timeline">
+                  {womensLagoriData.map((item, i) => (
+                    <div key={i} className="mini-item">
+                      <span className="mini-time">{item.time}</span>
+                      <div className="mini-content">
+                        <strong>{item.event}</strong>
+                        <span className="mini-location"><MapPin size={12}/> {item.location}</span>
+                        {item.details && <span style={{fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block'}}>{item.details}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
             </div>
-          </div>
-        ))}
-      </div>
+          </motion.div>
+        )}
+
+        {activeTab === 'fixtures' && (
+          <motion.div 
+            key="fixtures"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <h2 style={{color: 'var(--text-main)', marginBottom: '1.5rem', fontSize: '1.8rem'}}>Playbooks & Documents</h2>
+            <div className="docs-grid">
+              {files.map((file, i) => (
+                <a href={`/fixtures/${file.name}`} download key={i} className="doc-card glass-card">
+                  <FileText size={32} className="icon-primary" style={{color: 'var(--primary)'}} />
+                  <div className="doc-info">
+                    <h4>{file.title}</h4>
+                    <span>{file.size} • PDF Document</span>
+                  </div>
+                  <Download size={20} className="download-icon" />
+                </a>
+              ))}
+            </div>
+
+            <h2 style={{color: 'var(--text-main)', margin: '3rem 0 1.5rem', fontSize: '1.8rem'}}>Latest Snapshots</h2>
+            <div className="gallery-grid">
+              {images.map((img, i) => (
+                <div 
+                  key={i} 
+                  className="gallery-item glass-card"
+                  onClick={() => setSelectedImage(img.url)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div className="img-wrapper">
+                    <img src={img.url} alt={img.title} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {selectedImage && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+              backgroundColor: 'rgba(9, 9, 8, 0.95)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              zIndex: 9999, padding: '2rem'
+            }}
+            onClick={() => setSelectedImage(null)}
+          >
+            <button 
+              onClick={() => setSelectedImage(null)}
+              style={{
+                position: 'absolute', top: '1.5rem', right: '1.5rem',
+                background: 'rgba(255,255,255,0.1)', border: 'none',
+                color: 'white', cursor: 'pointer', padding: '0.75rem',
+                borderRadius: '50%', display: 'flex', alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <X size={28} />
+            </button>
+            <motion.img 
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              src={selectedImage} 
+              alt="Full view" 
+              style={{
+                maxWidth: '100%', maxHeight: '100%',
+                objectFit: 'contain', borderRadius: '12px',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.4)'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <style>{`
         .center-align { text-align: center; }
-        .schedule-timeline { display: flex; flex-direction: column; gap: 1.5rem; position: relative; }
-        .schedule-timeline::before { content: ''; position: absolute; left: 120px; top: 20px; bottom: 20px; width: 2px; background: rgba(218, 93, 101, 0.2); z-index: 0; }
-        .timeline-item { display: flex; gap: 2rem; align-items: flex-start; padding: 2rem; position: relative; z-index: 1; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .timeline-item.active-item { border-color: var(--primary); background: rgba(218, 93, 101, 0.05); }
-        .time-block { min-width: 100px; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; color: var(--text-main); font-weight: 700; margin-top: 0.25rem; }
-        .event-details { flex: 1; display: flex; flex-direction: column; gap: 0.75rem; }
-        .event-name { margin: 0; font-size: 1.5rem; color: var(--text-main); font-weight: 700; }
-        .event-meta { display: flex; align-items: center; gap: 1.5rem; font-size: 0.9rem; color: var(--muted); }
-        .meta-item { display: flex; align-items: center; gap: 0.4rem; }
-        .meta-badge { background: rgba(228, 225, 222, 0.1); padding: 0.25rem 0.75rem; border-radius: 6px; font-weight: 600; color: var(--secondary); font-size: 0.8rem; }
-        @media (max-width: 600px) { .schedule-timeline::before { display: none; } .timeline-item { flex-direction: column; align-items: flex-start; gap: 1.5rem; padding: 1.5rem; } .time-block { flex-direction: row; min-width: auto; } }
+        .nav-pills { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 3rem; }
+        .pill-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.8rem 1.5rem; border-radius: 50px; background: rgba(228, 225, 222, 0.1); border: 2px solid transparent; color: var(--text-main); font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .pill-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(218, 93, 101, 0.3); }
+
+        .mini-timeline { display: flex; flex-direction: column; gap: 1.25rem; }
+        .mini-item { display: flex; gap: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1rem; }
+        .mini-item:last-child { border-bottom: none; }
+        .mini-time { font-weight: 700; color: var(--primary); min-width: 80px; font-size: 0.95rem; }
+        .mini-content { display: flex; flex-direction: column; gap: 0.3rem; }
+        .mini-content strong { color: var(--text-main); font-size: 1.05rem; }
+        .mini-location { display: flex; align-items: center; gap: 0.3rem; font-size: 0.85rem; color: var(--muted); }
+
+        .docs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+        .doc-card { display: flex; align-items: center; padding: 1.5rem; gap: 1.5rem; text-decoration: none; color: inherit; transition: all 0.3s; border: 1px solid transparent; }
+        .doc-card:hover { border-color: var(--primary); transform: translateY(-3px); }
+        .doc-info { flex: 1; }
+        .doc-info h4 { margin: 0 0 0.25rem 0; color: var(--text-main); font-size: 1.1rem; }
+        .doc-info span { color: var(--muted); font-size: 0.85rem; }
+        .download-icon { color: var(--text-secondary); transition: color 0.3s; }
+        .doc-card:hover .download-icon { color: var(--primary); }
+
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+        .gallery-item { overflow: hidden; padding: 0; display: flex; flex-direction: column; border-radius: 14px; }
+        .img-wrapper { height: 260px; overflow: hidden; border-radius: 14px; }
+        .img-wrapper img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .gallery-item:hover .img-wrapper img { transform: scale(1.08); }
+
+        @media (max-width: 768px) { 
+          .mini-item { flex-direction: column; gap: 0.5rem; }
+          .mini-time { margin-bottom: 0.25rem; }
+        }
       `}</style>
     </div>
   );
