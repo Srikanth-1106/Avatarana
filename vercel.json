@@ -1,6 +1,7 @@
 {
   "rewrites": [
-    { "source": "/fixtures/(.*)", "destination": "/fixtures/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/fixtures/:path*", "destination": "/fixtures/:path*" },
+    { "source": "/gallery/:path*", "destination": "/gallery/:path*" },
+    { "source": "/:path((?!.*\\..*).*)", "destination": "/index.html" }
   ]
 }
