@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MapPin, FileText, Download, Image as ImageIcon, Users, Trophy, X } from 'lucide-react';
+import { MapPin, FileText, Download, Users, Trophy, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Schedule() {
