@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Trophy, Medal, CalendarHeart, ArrowRight, Sparkles, Heart, Phone, Handshake, ChevronRight, X, Crown, Star, FileText, Download, Image as ImageIcon } from 'lucide-react';
+import { Users, Trophy, Medal, CalendarHeart, ArrowRight, Sparkles, Heart, Phone, Handshake, ChevronRight, X, Crown, Star } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedSection } from '../components/AnimatedSection';
@@ -116,21 +116,6 @@ const RegistrationCounter = () => {
 export default function Home() {
   const [count, setCount] = useState(0);
   const [selectedSponsor, setSelectedSponsor] = useState<{ name: string, type: string, value: string, height?: string } | null>(null);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-
-  const eventResources = [
-    { title: "Avatarana 2026 Playbook", file: "Avatarana_Playbook.pdf", size: "1.1 MB", type: "pdf" },
-    { title: "Volleyball Tournament Schedule", file: "Volleyball_Tournament_Schedule.pdf", size: "524 KB", type: "pdf" },
-    { title: "Women's Events Playbook", file: "Womens_Playbook.pdf", size: "916 KB", type: "pdf" },
-    { title: "Women's Specific Schedule", file: "Womens_Schedule.pdf", size: "546 KB", type: "pdf" }
-  ];
-
-  const snapshots = [
-    { title: "Main Event Timeline", file: "Event_Schedule.jpeg" },
-    { title: "Cricket Match Fixtures", file: "Cricket_Fixtures.jpeg" },
-    { title: "Women's Snapshot", file: "Women_Sports_Tournaments.jpeg" },
-    { title: "Cricket Guide", file: "Cricket_Snapshot.png" }
-  ];
 
 
 
@@ -197,6 +182,46 @@ export default function Home() {
           </p>
 
           <RegistrationCounter />
+
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 1 }}
+            style={{ marginTop: '2rem', width: '100%', maxWidth: '560px', margin: '2rem auto 0' }}
+          >
+            <Link to="/schedule" style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.85rem',
+              width: '100%',
+              padding: '1.15rem 2rem',
+              borderRadius: '50px',
+              background: 'linear-gradient(90deg, #e8304a 0%, #f97316 100%)',
+              color: '#ffffff',
+              fontWeight: 800,
+              fontSize: 'clamp(0.95rem, 2.5vw, 1.1rem)',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              textDecoration: 'none',
+              boxShadow: '0 0 30px rgba(232, 48, 74, 0.45), 0 8px 24px rgba(249, 115, 22, 0.3)',
+              border: '2px solid rgba(255,255,255,0.15)',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseOver={e => {
+              (e.currentTarget as HTMLElement).style.transform = 'scale(1.03)';
+              (e.currentTarget as HTMLElement).style.boxShadow = '0 0 45px rgba(232, 48, 74, 0.6), 0 12px 32px rgba(249, 115, 22, 0.5)';
+            }}
+            onMouseOut={e => {
+              (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
+              (e.currentTarget as HTMLElement).style.boxShadow = '0 0 30px rgba(232, 48, 74, 0.45), 0 8px 24px rgba(249, 115, 22, 0.3)';
+            }}
+            >
+              <CalendarHeart size={22} />
+              View Event Schedule &amp; Fixtures
+              <ArrowRight size={20} />
+            </Link>
+          </motion.div>
         </div>
       </AnimatedSection>
 
@@ -409,103 +434,6 @@ export default function Home() {
         </motion.div>
       </AnimatedSection>
 
-      {/* Professional Resources & Schedule Section */}
-      <AnimatedSection className="resources-section" direction="up" style={{ marginTop: '5rem', marginBottom: '4rem' }}>
-        <div className="section-header center-align" style={{ marginBottom: '3rem' }}>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#ffffff' }}>Schedule & Resources</h2>
-          <div className="title-underline" style={{ margin: '0.5rem auto 1.5rem' }}></div>
-          <p style={{ color: 'rgba(255,255,255,0.6)', maxWidth: '600px', margin: '0 auto' }}>
-            Get all the official game timings, tournament rules, and match fixtures. Download the playbooks or view snapshots below.
-          </p>
-        </div>
-
-        <div className="resources-grid" style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: '1.5rem',
-          marginBottom: '4rem'
-        }}>
-          {eventResources.map((res, i) => (
-            <a 
-              key={i} 
-              href={`/fixtures/${res.file}`} 
-              download 
-              className="glass-card resource-card"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '1.25rem',
-                padding: '1.5rem',
-                textDecoration: 'none',
-                transition: 'all 0.3s ease',
-                border: '1px solid rgba(255,255,255,0.05)'
-              }}
-            >
-              <div style={{
-                width: '50px',
-                height: '50px',
-                borderRadius: '12px',
-                background: 'rgba(244, 63, 94, 0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--primary)'
-              }}>
-                <FileText size={24} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <h4 style={{ margin: 0, color: '#ffffff', fontSize: '1.05rem' }}>{res.title}</h4>
-                <p style={{ margin: '0.2rem 0 0', color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>{res.size} • PDF</p>
-              </div>
-              <Download size={18} style={{ color: 'rgba(255,255,255,0.3)' }} />
-            </a>
-          ))}
-        </div>
-
-        <div className="snapshots-grid" style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: '1.5rem'
-        }}>
-          {snapshots.map((snap, i) => (
-            <div 
-              key={i} 
-              className="snapshot-item glass-card"
-              onClick={() => setSelectedImage(`/fixtures/${snap.file}`)}
-              style={{
-                cursor: 'pointer',
-                overflow: 'hidden',
-                borderRadius: '20px',
-                border: '1px solid rgba(255,255,255,0.05)',
-                aspectRatio: '16/10'
-              }}
-            >
-              <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                <img 
-                  src={`/fixtures/${snap.file}`} 
-                  alt={snap.title} 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-                <div style={{
-                  position: 'absolute',
-                  inset: 0,
-                  background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)',
-                  display: 'flex',
-                  alignItems: 'flex-end',
-                  padding: '1.25rem',
-                  opacity: 1,
-                  transition: 'opacity 0.3s ease'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
-                    <ImageIcon size={14} />
-                    <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{snap.title}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </AnimatedSection>
 
       {/* Intro Section */}
       <AnimatedSection className="intro-section" direction="up">
@@ -634,48 +562,6 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {selectedImage && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{
-              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-              backgroundColor: 'rgba(9, 9, 8, 0.95)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              zIndex: 10000, padding: '2rem'
-            }}
-            onClick={() => setSelectedImage(null)}
-          >
-            <button 
-              onClick={() => setSelectedImage(null)}
-              style={{
-                position: 'absolute', top: '1.5rem', right: '1.5rem',
-                background: 'rgba(255,255,255,0.1)', border: 'none',
-                color: 'white', cursor: 'pointer', padding: '0.75rem',
-                borderRadius: '50%', display: 'flex', alignItems: 'center',
-                justifyContent: 'center', zIndex: 10001
-              }}
-            >
-              <X size={28} />
-            </button>
-            <motion.img 
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
-              src={selectedImage} 
-              alt="Snapshot Viewer" 
-              style={{
-                maxWidth: '100%', maxHeight: '100%',
-                objectFit: 'contain', borderRadius: '12px',
-                boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
-              }}
-              onClick={(e) => e.stopPropagation()}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
 
     </div>
   );
