@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { MapPin, FileText, Download, Users, Trophy, X } from 'lucide-react';
+import { MapPin, FileText, Download, Users, Trophy, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Schedule() {
   const [activeTab, setActiveTab] = useState<'fixtures' | 'womens'>('fixtures');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [zoom, setZoom] = useState(1);
 
   const womensThrowballData = [
     { time: '07:20 AM', event: 'Match 1: Power Smashers Mangalore vs Rukumai Tanda', location: 'Throwball Court' },
@@ -183,37 +184,133 @@ export default function Schedule() {
             exit={{ opacity: 0 }}
             style={{
               position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-              backgroundColor: 'rgba(9, 9, 8, 0.95)',
+              backgroundColor: 'rgba(9, 9, 8, 0.98)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              zIndex: 9999, padding: '2rem'
+              zIndex: 9999, padding: '1rem',
+              touchAction: 'none'
             }}
-            onClick={() => setSelectedImage(null)}
+            onClick={() => { setSelectedImage(null); setZoom(1); }}
           >
+            {/* Control Bar */}
+            <div 
+              style={{
+                position: 'fixed', bottom: '2.5rem', left: '50%',
+                transform: 'translateX(-50%)',
+                background: 'linear-gradient(135deg, rgba(30, 30, 35, 0.95), rgba(15, 15, 20, 0.98))',
+                backdropFilter: 'blur(20px)',
+                padding: '0.8rem 1.8rem',
+                borderRadius: '50px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1.5rem',
+                zIndex: 10000,
+                border: '1px solid rgba(255,255,255,0.15)',
+                boxShadow: '0 10px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(218, 93, 101, 0.2)'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button 
+                onClick={() => setZoom(prev => Math.max(prev - 0.25, 0.5))}
+                style={{ background: 'none', border: 'none', color: '#ffffff', cursor: 'pointer', display: 'flex', transition: 'transform 0.2s' }}
+                onMouseOver={e => e.currentTarget.style.transform = 'scale(1.15)'}
+                onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
+                title="Zoom Out"
+              >
+                <ZoomOut size={22} strokeWidth={2.5} />
+              </button>
+              
+              <div style={{ 
+                background: 'rgba(255,255,255,0.1)', 
+                padding: '0.3rem 0.8rem', 
+                borderRadius: '12px',
+                color: '#ffffff', 
+                fontWeight: 800, 
+                fontSize: '0.9rem',
+                minWidth: '55px', 
+                textAlign: 'center',
+                fontFamily: 'monospace'
+              }}>
+                {Math.round(zoom * 100)}%
+              </div>
+
+              <button 
+                onClick={() => setZoom(prev => Math.min(prev + 0.25, 3))}
+                style={{ background: 'none', border: 'none', color: '#ffffff', cursor: 'pointer', display: 'flex', transition: 'transform 0.2s' }}
+                onMouseOver={e => e.currentTarget.style.transform = 'scale(1.15)'}
+                onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
+                title="Zoom In"
+              >
+                <ZoomIn size={22} strokeWidth={2.5} />
+              </button>
+
+              <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.2)' }} />
+
+              <a 
+                href={selectedImage} 
+                download 
+                style={{ 
+                  background: 'var(--primary)', 
+                  border: 'none', 
+                  color: 'white', 
+                  cursor: 'pointer', 
+                  display: 'flex', 
+                  padding: '0.5rem',
+                  borderRadius: '50%',
+                  textDecoration: 'none',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 12px rgba(218, 93, 101, 0.3)'
+                }}
+                onMouseOver={e => {
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                  e.currentTarget.style.backgroundColor = '#ffffff';
+                  e.currentTarget.style.color = 'var(--primary)';
+                }}
+                onMouseOut={e => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.backgroundColor = 'var(--primary)';
+                  e.currentTarget.style.color = 'white';
+                }}
+                title="Download Image"
+              >
+                <Download size={20} strokeWidth={2.5} />
+              </a>
+            </div>
+
+            {/* Close Button */}
             <button 
-              onClick={() => setSelectedImage(null)}
+              onClick={() => { setSelectedImage(null); setZoom(1); }}
               style={{
                 position: 'absolute', top: '1.5rem', right: '1.5rem',
                 background: 'rgba(255,255,255,0.1)', border: 'none',
                 color: 'white', cursor: 'pointer', padding: '0.75rem',
                 borderRadius: '50%', display: 'flex', alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center', zIndex: 10001
               }}
             >
               <X size={28} />
             </button>
-            <motion.img 
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
-              src={selectedImage} 
-              alt="Full view" 
-              style={{
-                maxWidth: '100%', maxHeight: '100%',
-                objectFit: 'contain', borderRadius: '12px',
-                boxShadow: '0 20px 40px rgba(0,0,0,0.4)'
-              }}
-              onClick={(e) => e.stopPropagation()}
-            />
+
+            {/* Image Container */}
+            <div style={{ 
+              width: '100%', height: '100%', 
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              overflow: 'hidden'
+            }}>
+              <motion.img 
+                initial={{ scale: 0.9 }}
+                animate={{ scale: zoom }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                src={selectedImage} 
+                alt="Full view" 
+                style={{
+                  maxWidth: '90%', maxHeight: '90%',
+                  objectFit: 'contain', borderRadius: '4px',
+                  boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+                  cursor: zoom > 1 ? 'grab' : 'default'
+                }}
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
